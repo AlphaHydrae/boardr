@@ -1,4 +1,5 @@
 /server/_build
+/server/config/env.exs
 /server/cover
 /server/deps
 /server/doc

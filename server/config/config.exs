@@ -7,25 +7,57 @@
 # General application configuration
 use Mix.Config
 
-config :boardr,
+# Take the environment variable $USER or the Unix system username as the default
+# database username if the $BOARDR_DATABASE_USERNAME variable is not set.
+database_username = System.get_env("BOARDR_DATABASE_USERNAME", System.get_env("USER")) || (fn ->
+  {result, 0} = System.cmd("whoami", [])
+  String.trim_trailing(result)
+end).()
+
+database_socket_dir = System.get_env(
+  "BOARDR_DATABASE_SOCKET_DIR",
+  (if File.exists?("/tmp/.s.PGSQL.5432"), do: "/tmp", else: nil)
+)
+
+database_options = [
   ecto_repos: [Boardr.Repo],
-  generators: [binary_id: true]
+  generators: [binary_id: true],
+  username: database_username,
+  password: System.get_env("BOARDR_DATABASE_PASSWORD", nil),
+  database: System.get_env("BOARDR_DATABASE_NAME", "boardr"),
+  hostname: System.get_env("BOARDR_DATABASE_HOST", "localhost"),
+  port: String.to_integer(System.get_env("BOARDR_DATABASE_PORT", "5432")),
+  socket_dir: database_socket_dir,
+  url: System.get_env("BOARDR_DATABASE_URL", nil)
+]
+
+config :boardr, Boardr.Repo, database_options
 
 # Configures the endpoint
 config :boardr, BoardrWeb.Endpoint,
-  url: [host: "localhost"],
-  secret_key_base: "gO3u1FvBbSrPpZTiVZ0vZJT/f3xIWu6jcaWmkHebGN1Mqu2XDhdeQx4fT0uhiHyr",
+  url: [
+    host: System.get_env("BOARDR_HOST", "localhost"),
+    port: String.to_integer(System.get_env("BOARDR_PORT", System.get_env("PORT", "4000")))
+  ],
+  secret_key_base: System.get_env("BOARDR_SECRET_KEY_BASE", "changeme"),
   render_errors: [view: BoardrWeb.ErrorView, accepts: ~w(json)],
   pubsub: [name: Boardr.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
+  level: :info,
   metadata: [:request_id]
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-# Import environment specific config. This must remain at the bottom
-# of this file so it overrides the configuration defined above.
-import_config "#{Mix.env()}.exs"
+config_dir = Path.dirname(__ENV__.file)
+
+# Import environment-specific configuration file (e.g. "dev.exs").
+env_specific_config_file = Path.join(config_dir, "#{Mix.env()}.exs")
+if File.exists?(env_specific_config_file), do: import_config env_specific_config_file
+
+# Import generic configuration file "env.exs" (not under version control).
+generic_config_file = Path.join(config_dir, "env.exs")
+if File.exists?(generic_config_file), do: import_config generic_config_file

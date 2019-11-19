@@ -1,0 +1,2 @@
+--ignore-dir=server/_build
+--ignore-dir=server/deps

@@ -2,17 +2,11 @@ use Mix.Config
 
 # Configure your database
 config :boardr, Boardr.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "boardr_test",
-  hostname: "localhost",
+  database: System.get_env("BOARDR_TEST_DATABASE_NAME", "boardr-test"),
   pool: Ecto.Adapters.SQL.Sandbox
 
-# We don't run a server during test. If one is required,
-# you can enable the server option below.
-config :boardr, BoardrWeb.Endpoint,
-  http: [port: 4002],
-  server: false
+# We don't run a server during test.
+config :boardr, BoardrWeb.Endpoint, server: false
 
-# Print only warnings and errors during test
+# Print only warnings and errors during test.
 config :logger, level: :warn
