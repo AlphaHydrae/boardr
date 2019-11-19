@@ -1,0 +1,5 @@
+/server/_build
+/server/cover
+/server/deps
+/server/doc
+/server/erl_crash.dump
