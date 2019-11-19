@@ -7,6 +7,10 @@
 # General application configuration
 use Mix.Config
 
+config :boardr,
+  ecto_repos: [Boardr.Repo],
+  generators: [binary_id: true]
+
 # Take the environment variable $USER or the Unix system username as the default
 # database username if the $BOARDR_DATABASE_USERNAME variable is not set.
 database_username = System.get_env("BOARDR_DATABASE_USERNAME", System.get_env("USER")) || (fn ->
@@ -20,8 +24,6 @@ database_socket_dir = System.get_env(
 )
 
 database_options = [
-  ecto_repos: [Boardr.Repo],
-  generators: [binary_id: true],
   username: database_username,
   password: System.get_env("BOARDR_DATABASE_PASSWORD", nil),
   database: System.get_env("BOARDR_DATABASE_NAME", "boardr"),
