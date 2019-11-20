@@ -4,7 +4,7 @@ screen -t shell 0
 screen -t srv-shell 1
 stuff "cd server\012"
 screen -t srv-iex 2
-stuff "cd server && iex -S mix\012"
+stuff "cd server\012iex -S mix\012"
 screen -t srv-run 3
-stuff "cd server && mix phx.server\012"
+stuff "cd server\012mix phx.server\012"
 select shell
