@@ -13,3 +13,6 @@ config :phoenix, :stacktrace_depth, 20
 
 # Initialize plugs at runtime for faster development compilation.
 config :phoenix, :plug_init_mode, :runtime
+
+# Log debug messages (e.g. database queries) in development.
+config :logger, :console, level: :debug

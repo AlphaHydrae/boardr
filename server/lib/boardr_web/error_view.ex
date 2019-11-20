@@ -3,7 +3,7 @@ defmodule BoardrWeb.ErrorView do
 
   def render(_, assigns) do
     %{
-      type: "#{Routes.api_url(BoardrWeb.Endpoint, :index)}/problems/#{Map.get(assigns, :error_type, :unexpected)}",
+      type: "#{Routes.api_url(BoardrWeb.Endpoint, :index)}/problems/#{Map.get(assigns, :error_type) || :unexpected}",
       title: Map.get(assigns, :error_title) || "An unexpected error occurred."
     }
   end

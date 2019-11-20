@@ -3,18 +3,12 @@ defmodule BoardrWeb.ApiView do
 
   def render("index.json", _) do
     %{
-      _links: %{
-        'boardr:games' => Routes.games_url(BoardrWeb.Endpoint, :index),
-        curies: [
-          %{
-            name: "boardr",
-            href: "#{Routes.api_url(BoardrWeb.Endpoint, :index)}/{rel}",
-            templated: true
-          }
-        ],
-        self: Routes.api_url(BoardrWeb.Endpoint, :index)
-      },
       version: Boardr.MixProject.project[:version]
     }
+    |> put_hal_curies_link()
+    |> put_hal_self_link(:api_url, [:index])
+    |> put_hal_links(%{
+      'boardr:games' => Routes.games_url(BoardrWeb.Endpoint, :index)
+    })
   end
 end

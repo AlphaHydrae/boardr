@@ -22,6 +22,9 @@ defmodule BoardrWeb do
       use Phoenix.Controller, namespace: BoardrWeb
 
       import Plug.Conn
+      import Ecto.Query, only: [from: 2]
+
+      alias BoardrWeb.Endpoint, as: Endpoint
       alias BoardrWeb.Router.Helpers, as: Routes
     end
   end
@@ -32,9 +35,11 @@ defmodule BoardrWeb do
         root: "lib/boardr_web/templates",
         namespace: BoardrWeb
 
-      # Import convenience functions from controllers
+      # Import convenience functions from controllers.
       import Phoenix.Controller, only: [view_module: 1]
+      import BoardrWeb.ViewHelpers
 
+      alias BoardrWeb.Endpoint, as: Endpoint
       alias BoardrWeb.Router.Helpers, as: Routes
     end
   end

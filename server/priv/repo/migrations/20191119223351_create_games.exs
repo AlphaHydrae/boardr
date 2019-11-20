@@ -9,7 +9,7 @@ defmodule Boardr.Repo.Migrations.CreateGames do
       add :title, :string, size: 50
       add :data, :map, null: false
 
-      timestamps(inserted_at: :created_at)
+      timestamps(inserted_at: :created_at, type: :utc_datetime)
     end
   end
 end
