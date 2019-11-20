@@ -1,9 +1,9 @@
 defmodule BoardrWeb.Errors do
-  @moduledoc """
-  Exception raised when the HTTP method is not supported by the target resource
-  (e.g. send a DELETE request to a non-deletable resource).
-  """
   defmodule MethodNotAllowed do
+    @moduledoc """
+    Exception raised when the HTTP method is not supported by the target resource
+    (e.g. send a DELETE request to a non-deletable resource).
+    """
     defexception allowed_methods: [], conn: nil, message: "method not allowed", router: nil
 
     def exception(%{conn: %Plug.Conn{} = conn, allowed_methods: allowed_methods} = opts) do
@@ -20,11 +20,11 @@ defmodule BoardrWeb.Errors do
     end
   end
 
-  @moduledoc """
-  Exception raised when the HTTP request body is in a format not supported by
-  the target resource (e.g. send XML to a JSON resource).
-  """
   defmodule UnsupportedMediaType do
+    @moduledoc """
+    Exception raised when the HTTP request body is in a format not supported by
+    the target resource (e.g. send XML to a JSON resource).
+    """
     defexception conn: nil, message: "unsupported media type", router: nil
 
     def exception(%{conn: %Plug.Conn{} = conn} = opts) do
