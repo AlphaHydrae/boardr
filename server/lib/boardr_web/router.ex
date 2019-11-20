@@ -10,19 +10,23 @@ defmodule BoardrWeb.Router do
     pipe_through :api
 
     get "/", ApiController, :index
+    resources "/games", GamesController, only: [:index]
   end
 
   def handle_errors(conn, params) do
 
-    {status, title, type} = case params do
-      %{reason: %Phoenix.Router.NoRouteError{}} -> {404, "No resource found matching the request URI.", :'resource-not-found'}
-      _ -> {500, nil, nil}
-    end
+    {status, title, type} =
+      case params do
+        %{reason: %Phoenix.Router.NoRouteError{}} ->
+          {404, "No resource found matching the request URI.", :'resource-not-found'}
+        _ ->
+          {500, nil, nil}
+      end
 
     conn
-      |> merge_assigns(error_title: title, error_type: type)
       |> put_status(status)
       |> put_resp_content_type("application/problem+json")
+      |> merge_assigns(error_title: title, error_type: type)
       |> put_view(BoardrWeb.ErrorView)
       |> render("error.json")
   end

@@ -4,6 +4,7 @@ defmodule BoardrWeb.ApiView do
   def render("index.json", _) do
     %{
       _links: %{
+        'boardr:games' => Routes.games_url(BoardrWeb.Endpoint, :index),
         curies: [
           %{
             name: "boardr",
