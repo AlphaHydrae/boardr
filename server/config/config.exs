@@ -37,9 +37,11 @@ config :boardr, Boardr.Repo, database_options
 
 # Configures the endpoint
 config :boardr, BoardrWeb.Endpoint,
-  url: [
-    host: System.get_env("BOARDR_HOST", "localhost"),
+  http: [
     port: String.to_integer(System.get_env("BOARDR_PORT", System.get_env("PORT", "4000")))
+  ],
+  url: [
+    host: System.get_env("BOARDR_HOST", "localhost")
   ],
   secret_key_base: System.get_env("BOARDR_SECRET_KEY_BASE", "changeme"),
   render_errors: [view: BoardrWeb.ErrorView, accepts: ~w(json)],
