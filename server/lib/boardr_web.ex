@@ -22,7 +22,6 @@ defmodule BoardrWeb do
       use Phoenix.Controller, namespace: BoardrWeb
 
       import Plug.Conn
-      import BoardrWeb.Gettext
       alias BoardrWeb.Router.Helpers, as: Routes
     end
   end
@@ -37,7 +36,6 @@ defmodule BoardrWeb do
       import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]
 
       import BoardrWeb.ErrorHelpers
-      import BoardrWeb.Gettext
       alias BoardrWeb.Router.Helpers, as: Routes
     end
   end
@@ -53,7 +51,6 @@ defmodule BoardrWeb do
   def channel do
     quote do
       use Phoenix.Channel
-      import BoardrWeb.Gettext
     end
   end
 
