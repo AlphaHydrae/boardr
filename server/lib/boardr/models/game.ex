@@ -7,7 +7,7 @@ defmodule Boardr.Game do
 
   schema "games" do
     field :title, :string
-    field :data, :map
+    field :data, EctoJsonb
 
     timestamps(inserted_at: :created_at)
   end
