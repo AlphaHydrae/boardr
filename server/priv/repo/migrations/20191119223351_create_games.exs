@@ -7,7 +7,7 @@ defmodule Boardr.Repo.Migrations.CreateGames do
     create table(:games, primary_key: false) do
       add :id, :binary_id, primary_key: true, default: fragment("uuid_generate_v4()")
       add :title, :string, size: 50
-      add :data, :map, null: false
+      add :data, :jsonb, null: false
 
       timestamps(inserted_at: :created_at, type: :utc_datetime)
     end

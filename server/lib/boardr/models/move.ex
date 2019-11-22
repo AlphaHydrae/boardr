@@ -7,6 +7,7 @@ defmodule Boardr.Move do
 
   schema "moves" do
     field :game_id, Ecto.UUID
+    field :data, EctoJsonb
 
     timestamps()
   end
