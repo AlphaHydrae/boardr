@@ -3,10 +3,7 @@ defmodule EctoJsonb do
   def type, do: :any
 
   def cast(value) do
-    case Jason.encode(value) do
-      {:ok, cast_value} -> cast_value
-      {:error, _} -> :error
-    end
+    {:ok, value}
   end
 
   def load(data) do
