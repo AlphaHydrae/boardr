@@ -15,7 +15,7 @@ defmodule BoardrWeb.GamesController do
   end
 
   def index(conn, _) do
-    games = Repo.all(from g in Game, order_by: [desc: g.created_at])
+    games = Repo.all(from(g in Game, order_by: [desc: g.created_at]))
     render(conn, %{games: games})
   end
 

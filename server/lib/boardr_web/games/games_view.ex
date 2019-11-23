@@ -27,7 +27,7 @@ defmodule BoardrWeb.GamesView do
       title: game.title,
       updatedAt: game.updated_at
     }
-    |> omit_nil
+    |> omit_nil()
     |> put_hal_links(%{
       collection: %{ href: Routes.games_url(Endpoint, :index) }
     })
