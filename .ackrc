@@ -1,2 +1,4 @@
+--ignore-dir=client/build
+--ignore-dir=client/node_modules
 --ignore-dir=server/_build
 --ignore-dir=server/deps
