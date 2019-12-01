@@ -2,11 +2,15 @@ source $HOME/.screenrc
 
 screen -t db 0
 stuff "psql boardr\012"
-screen -t shell 1
-screen -t srv-shell 2
-stuff "cd server\012"
-screen -t srv-iex 3
-stuff "cd server\012iex -S mix\012"
-screen -t srv-run 4
+screen -t srv-run 1
 stuff "cd server\012mix phx.server\012"
+screen -t srv-iex 2
+stuff "cd server\012iex -S mix\012"
+screen -t srv-shell 3
+stuff "cd server\012"
+screen -t shell 4
+screen -t clt-shell 5
+stuff "cd client\012"
+screen -t clt-run 6
+stuff "cd client\012npm start\012"
 select shell
