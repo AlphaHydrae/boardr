@@ -12,6 +12,7 @@ defmodule BoardrWeb.Router do
 
     get "/", ApiController, :index
     resources "/games", GamesController, only: [:create, :index, :show]
+    resources "/identities", IdentitiesController, only: [:update]
     resources "/moves", MovesController, only: [:create, :index, :show]
 
     scope "/auth" do

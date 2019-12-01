@@ -1,4 +1,3 @@
-import { has } from 'lodash';
 import React from 'react';
 import GoogleLogin, { GoogleLoginResponse, GoogleLoginResponseOffline } from 'react-google-login';
 
@@ -27,12 +26,11 @@ function onGoogleResponse(res: GoogleLoginResponse | GoogleLoginResponseOffline)
     return;
   }
 
-  console.log('@@@ google ID', res.googleId);
   fetchApiObservable({
-    method: 'POST',
-    url: '/api/auth/google',
-    body: {
-      tokenId: res.tokenId
+    method: 'PUT',
+    url: `/api/identities/google:${res.googleId}`,
+    headers: {
+      Authorization: `Bearer ${res.tokenId}`
     }
   }).subscribe(result => console.log('@@@ result', result), err => console.error('@@@ error', err));
 }
@@ -41,6 +39,9 @@ function onGoogleFailure(error: unknown) {
   console.error(error);
 }
 
-function isGoogleLoginResponse(value: unknown): value is GoogleLoginResponse {
-  return value !== null && has(value, 'tokenId');
+function isGoogleLoginResponse(value: any): value is GoogleLoginResponse {
+  return value !== null &&
+    typeof value === 'object' &&
+    typeof value.googleId === 'string' &&
+    typeof value.tokenId === 'string';
 }
