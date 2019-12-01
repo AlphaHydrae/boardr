@@ -1,7 +1,9 @@
+import { has } from 'lodash';
 import React from 'react';
 import GoogleLogin, { GoogleLoginResponse, GoogleLoginResponseOffline } from 'react-google-login';
 
 import { googleOauthClientId } from '../../constants';
+import { fetchApiObservable } from '../../utils/fetch';
 
 export function HomePageComponent() {
   return (
@@ -20,10 +22,25 @@ export function HomePageComponent() {
   );
 }
 
-function onGoogleResponse(response: GoogleLoginResponse | GoogleLoginResponseOffline) {
-  console.log(response);
+function onGoogleResponse(res: GoogleLoginResponse | GoogleLoginResponseOffline) {
+  if (!isGoogleLoginResponse(res)) {
+    return;
+  }
+
+  console.log('@@@ google ID', res.googleId);
+  fetchApiObservable({
+    method: 'POST',
+    url: '/api/auth/google',
+    body: {
+      tokenId: res.tokenId
+    }
+  }).subscribe(result => console.log('@@@ result', result), err => console.error('@@@ error', err));
 }
 
 function onGoogleFailure(error: unknown) {
   console.error(error);
+}
+
+function isGoogleLoginResponse(value: unknown): value is GoogleLoginResponse {
+  return value !== null && has(value, 'tokenId');
 }

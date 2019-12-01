@@ -20,7 +20,11 @@ defmodule Boardr.MixProject do
   def application do
     [
       mod: {Boardr.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [
+        :httpoison,
+        :logger,
+        :runtime_tools
+      ]
     ]
   end
 
@@ -34,13 +38,14 @@ defmodule Boardr.MixProject do
   defp deps do
     [
       {:content_type, "~> 0.1.0"},
+      {:ecto_sql, "~> 3.1"},
+      {:httpoison, "~> 1.6"},
+      {:jason, "~> 1.0"},
       {:phoenix, "~> 1.4.11"},
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.1"},
-      {:postgrex, ">= 0.0.0"},
-      {:jason, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:postgrex, "~> 0.15.0"}
     ]
   end
 

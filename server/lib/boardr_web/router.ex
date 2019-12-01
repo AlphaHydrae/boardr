@@ -14,6 +14,10 @@ defmodule BoardrWeb.Router do
     resources "/games", GamesController, only: [:create, :index, :show]
     resources "/moves", MovesController, only: [:create, :index, :show]
 
+    scope "/auth" do
+      post "/google", AuthController, :google
+    end
+
     # Method not allowed
     [&post/3, &put/3, &patch/3, &delete/3, &connect/3, &trace/3]
     |> Enum.each(fn(verb) -> verb.("/*path", MethodNotAllowedController, :match) end)
