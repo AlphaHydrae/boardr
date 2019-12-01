@@ -1,5 +1,10 @@
 # TODO
 
+## API
+
+* https://github.com/jonasschmidt/ex_json_schema
+* https://hexdocs.pm/json_patch/JSONPatch.html
+
 ## Distribution
 
 * https://github.com/bitwalker/swarm
