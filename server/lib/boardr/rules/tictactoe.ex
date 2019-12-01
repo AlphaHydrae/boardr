@@ -1,4 +1,6 @@
 defmodule Boardr.Rules.Tictactoe do
+  defguard is_board_coordinate(value) when is_integer(value) and value >= 0 and value <= 3
+
   def init_board(_) do
     [[nil, nil, nil], [nil, nil, nil], [nil, nil, nil]]
   end
@@ -7,7 +9,7 @@ defmodule Boardr.Rules.Tictactoe do
     %{}
   end
 
-  def play_move(state, {player, [col, row]}) when is_board_coordinate(col) and is_board_coordinate(row) do
+  def play_move(_state, {_player, [col, row]}) when is_board_coordinate(col) and is_board_coordinate(row) do
     {:move, [col, row]}
   end
 
@@ -16,11 +18,7 @@ defmodule Boardr.Rules.Tictactoe do
     set_board_value(board, [col, row], player_index)
   end
 
-  defp is_board_coordinate(value) do
-    is_integer(value) and value >= 0 and value <= 3
-  end
-
-  defp set_board_value([], [col, row], _) do
+  defp set_board_value([], [_col, _row], _) do
     :board_row_out_of_bounds
   end
 
@@ -36,7 +34,7 @@ defmodule Boardr.Rules.Tictactoe do
     :board_column_out_of_bounds
   end
 
-  defp set_row_value([ headCell | tailCells ], 0, value) do
+  defp set_row_value([ _headCell | tailCells ], 0, value) do
     [ value | tailCells ]
   end
 

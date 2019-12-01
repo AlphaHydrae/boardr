@@ -1,6 +1,6 @@
 defmodule BoardrWeb.MovesController do
   use BoardrWeb, :controller
-  alias Boardr.{Repo, Game, Move}
+  alias Boardr.{Repo, Move}
 
   def create(conn, params) do
     with {:ok, move} <-

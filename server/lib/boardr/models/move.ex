@@ -11,7 +11,7 @@ defmodule Boardr.Move do
 
     belongs_to :game, Boardr.Game
 
-    timestamps(inserted_at: :created_at, )
+    timestamps(inserted_at: :created_at)
   end
 
   @doc false
