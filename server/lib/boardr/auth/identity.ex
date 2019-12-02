@@ -8,16 +8,35 @@ defmodule Boardr.Auth.Identity do
 
   schema "identities" do
     belongs_to :user, Boardr.Auth.User
-    field :last_authenticated_at, :utc_datetime
-    field :last_seen_at, :utc_datetime
-
-    timestamps(inserted_at: :created_at, updated_at: false)
+    field :email, :string
+    field :email_verified, :boolean
+    field :email_verified_at, :utc_datetime_usec
+    field :last_authenticated_at, :utc_datetime_usec
+    field :last_seen_at, :utc_datetime_usec
+    field :provider, :string
+    field :provider_id, :string
+    timestamps(inserted_at: :created_at)
   end
 
   @doc false
   def changeset(identity, attrs) do
     identity
-    |> cast(attrs, [:last_authenticated_at, :last_seen_at, :user_id])
-    |> validate_required([:last_authenticated_at, :last_seen_at])
+    |> cast(attrs, [
+      :email,
+      :email_verified,
+      :email_verified_at,
+      :last_authenticated_at,
+      :last_seen_at,
+      :provider,
+      :provider_id,
+      :user_id
+    ])
+    |> validate_required([
+      :email_verified,
+      :last_authenticated_at,
+      :last_seen_at,
+      :provider,
+      :provider_id
+    ])
   end
 end

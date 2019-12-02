@@ -1,13 +1,17 @@
 defmodule BoardrWeb.IdentitiesController do
   use BoardrWeb, :controller
   alias Boardr.Auth
+  alias Boardr.Auth.Identity
 
   action_fallback BoardrWeb.FallbackController
 
   def update(conn, %{"id" => id}) do
     with {:ok, token} <- get_authorization_token(conn),
-         {:ok, identity} <- Auth.ensure_identity(id, token),
-         do: render(conn, %{result: identity})
+         {:ok, identity} <- Auth.ensure_identity(id, token) do
+      conn
+      |> put_identity_created(identity)
+      |> render(%{identity: identity})
+    end
   end
 
   defp get_authorization_token(conn) do
@@ -25,6 +29,15 @@ defmodule BoardrWeb.IdentitiesController do
       {:ok, token}
     else
       {:client_error, :auth_header_malformed}
+    end
+  end
+
+  defp put_identity_created(conn, %Identity{} = identity) do
+    if DateTime.compare(identity.created_at, identity.updated_at) == :eq do
+      conn
+      |> put_status(:created)
+    else
+      conn
     end
   end
 end

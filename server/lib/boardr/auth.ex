@@ -6,19 +6,44 @@ defmodule Boardr.Auth do
   import Ecto.Query, warn: false
   alias Boardr.Repo
 
-  alias Boardr.Auth.User
+  alias Boardr.Auth.{Identity,User}
 
   def ensure_identity(id, auth) when is_binary(id) do
 
-    url = :uri_string.parse("https://oauth2.googleapis.com/tokeninfo")
-    query_params = :uri_string.compose_query([{"id_token", auth}])
-    url = :uri_string.recompose(Map.put(url, :query, query_params))
+    [ provider, provider_id ] = String.split id, ":", parts: 2
+
+    url = :uri_string.parse "https://oauth2.googleapis.com/tokeninfo"
+    query_params = :uri_string.compose_query [{"id_token", auth}]
+    url = :uri_string.recompose Map.put(url, :query, query_params)
 
     with {:ok, %HTTPoison.Response{body: json, status_code: 200}} <- HTTPoison.get(url),
-         {:ok, body} <- Jason.decode(json) do
-      {:ok, %{"id" => id, "email" => body["email"]}}
+         {:ok, body} <- Jason.decode(json),
+         now = DateTime.utc_now(),
+         changeset = Identity.changeset(%Identity{}, %{
+           email: body["email"],
+           email_verified: body["email_verified"],
+           email_verified_at: (if body["email_verified"], do: now, else: nil),
+           last_authenticated_at: now,
+           last_seen_at: now,
+           provider: provider,
+           provider_id: provider_id
+         }),
+         {:ok, identity} <- Repo.insert(
+           changeset,
+           conflict_target: [:provider, :provider_id],
+           on_conflict: [set: [
+             email: body["email"],
+             email_verified: body["email_verified"],
+             email_verified_at: (if body["email_verified"], do: now, else: nil),
+             last_authenticated_at: now,
+             last_seen_at: now,
+             updated_at: now
+           ]],
+           returning: [:created_at, :id, :updated_at]
+         ) do
+      {:ok, identity}
     else _ ->
-      {:auth_error, :auth_provider_unreachable}
+      {:auth_error, :auth_failed}
     end
   end
 
