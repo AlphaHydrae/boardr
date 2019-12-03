@@ -9,6 +9,7 @@ defmodule BoardrWeb.GamesController do
            |> Repo.insert(returning: [:id]) do
       conn
       |> put_status(201)
+      |> put_resp_content_type("application/hal+json")
       |> put_resp_header("location", Routes.games_url(Endpoint, :show, game.id))
       |> render(%{game: game})
     end
@@ -16,11 +17,15 @@ defmodule BoardrWeb.GamesController do
 
   def index(conn, _) do
     games = Repo.all(from(g in Game, order_by: [desc: g.created_at]))
-    render(conn, %{games: games})
+    conn
+    |> put_resp_content_type("application/hal+json")
+    |> render(%{games: games})
   end
 
   def show(conn, %{"id" => id}) do
     game = Repo.get!(Game, id)
-    render(conn, %{game: game})
+    conn
+    |> put_resp_content_type("application/hal+json")
+    |> render(%{game: game})
   end
 end
