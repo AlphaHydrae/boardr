@@ -4,14 +4,26 @@ defmodule BoardrWeb.IdentitiesController do
   alias Boardr.Auth.Identity
 
   action_fallback BoardrWeb.FallbackController
+  plug :authenticate when action in [:index, :show]
 
   def create(conn, %{"provider" => provider}) do
+
+    signer = Joken.Signer.create(
+      "RS512",
+      %{
+        "pem" => Application.get_env(:boardr, Endpoint)[:jwt_private_key]
+      }
+    )
+
+    claims = %{}
+
     with {:ok, token} <- get_authorization_token(conn),
-         {:ok, identity} <- Auth.ensure_identity(provider, token) do
+         {:ok, identity} <- Auth.ensure_identity(provider, token),
+         {:ok, jwt, _} <- Auth.Token.encode_and_sign(claims, signer) do
       conn
       |> put_identity_created(identity)
       |> put_resp_content_type("application/hal+json")
-      |> render(%{identity: identity})
+      |> render(%{identity: identity, token: jwt})
     end
   end
 
@@ -27,6 +39,30 @@ defmodule BoardrWeb.IdentitiesController do
     conn
     |> put_resp_content_type("application/hal+json")
     |> render(%{identity: identity})
+  end
+
+  defp authenticate(conn, _) do
+
+    signer = Joken.Signer.create(
+      "RS512",
+      %{
+        "pem" => Application.get_env(:boardr, Endpoint)[:jwt_private_key]
+      }
+    )
+
+    with {:ok, token} <- get_authorization_token(conn),
+         {:ok, claims} <- Auth.Token.verify_and_validate(token, signer) do
+      conn
+      |> assign(:auth_claims, claims)
+    else _ ->
+      conn
+      |> halt()
+      |> render_problem(%HttpProblemDetails{
+        title: "You are not authorized to access this resource.",
+        type: :authentication_failed,
+        status: :unauthorized
+      })
+    end
   end
 
   defp get_authorization_token(conn) do

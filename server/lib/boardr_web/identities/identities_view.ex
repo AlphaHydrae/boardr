@@ -2,8 +2,8 @@ defmodule BoardrWeb.IdentitiesView do
   use BoardrWeb, :view
   alias Boardr.Auth.Identity
 
-  def render("create.json", %{identity: %Identity{} = identity}) do
-    render_identity identity
+  def render("create.json", assigns) do
+    render "show.json", assigns
   end
 
   def render("index.json", %{identities: identities}) do
@@ -16,11 +16,17 @@ defmodule BoardrWeb.IdentitiesView do
     |> put_hal_self_link(:identities_url, [:index])
   end
 
-  def render("show.json", %{identity: %Identity{} = identity}) do
-    render_identity identity
+  def render("show.json", %{identity: %Identity{} = identity, token: token}) do
+    Map.merge(render("show.json", %{identity: identity}), %{
+      _embedded: %{
+        'boardr:token': %{
+          value: token
+        }
+      }
+    })
   end
 
-  defp render_identity(%Identity{} = identity) do
+  def render("show.json", %{identity: %Identity{} = identity}) do
     %{
       createdAt: identity.created_at,
       email: identity.email,

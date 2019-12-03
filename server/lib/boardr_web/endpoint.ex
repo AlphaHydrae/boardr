@@ -1,6 +1,32 @@
 defmodule BoardrWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :boardr
 
+  def init(:supervisor, config) do
+
+    jwt_private_key = System.get_env("BOARDR_JWT_PRIVATE_KEY", config[:jwt_private_key])
+
+    cond do
+      is_nil(jwt_private_key) ->
+        {:error, :jwt_private_key_missing}
+      true ->
+        {
+          :ok,
+          Keyword.merge(
+            config,
+            [
+              http: [
+                port: String.to_integer(System.get_env("BOARDR_PORT", System.get_env("PORT", "4000")))
+              ],
+              jwt_private_key: jwt_private_key,
+              url: [
+                host: System.get_env("BOARDR_BASE_HOST", "localhost")
+              ]
+            ]
+          )
+        }
+    end
+  end
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phx.digest

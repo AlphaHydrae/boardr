@@ -21,10 +21,12 @@ defmodule BoardrWeb do
     quote do
       use Phoenix.Controller, namespace: BoardrWeb
 
+      import BoardrWeb.ControllerHelpers
       import Plug.Conn
       import Ecto.Query, only: [from: 2]
 
       alias BoardrWeb.Endpoint, as: Endpoint
+      alias BoardrWeb.HttpProblemDetails
       alias BoardrWeb.Router.Helpers, as: Routes
     end
   end

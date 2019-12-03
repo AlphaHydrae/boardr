@@ -41,6 +41,7 @@ defmodule Boardr.MixProject do
       {:ecto_sql, "~> 3.1"},
       {:httpoison, "~> 1.6"},
       {:jason, "~> 1.0"},
+      {:joken, "~> 2.0"},
       {:phoenix, "~> 1.4.11"},
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
