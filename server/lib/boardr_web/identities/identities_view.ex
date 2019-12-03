@@ -2,7 +2,21 @@ defmodule BoardrWeb.IdentitiesView do
   use BoardrWeb, :view
   alias Boardr.Auth.Identity
 
-  def render("update.json", %{identity: %Identity{} = identity}) do
+  def render("create.json", %{identity: %Identity{} = identity}) do
+    render_identity identity
+  end
+
+  def render("index.json", %{identities: identities}) do
+    %{
+      _embedded: %{
+        'boardr:identities': render_many(identities, __MODULE__, "show.json", as: :identity)
+      }
+    }
+    |> put_hal_curies_link()
+    |> put_hal_self_link(:identities_url, [:index])
+  end
+
+  def render("show.json", %{identity: %Identity{} = identity}) do
     render_identity identity
   end
 
@@ -18,6 +32,10 @@ defmodule BoardrWeb.IdentitiesView do
       providerId: identity.provider_id,
       updatedAt: identity.updated_at
     }
-    |> omit_nil
+    |> omit_nil()
+    |> put_hal_links(%{
+      collection: %{ href: Routes.identities_url(Endpoint, :index) }
+    })
+    |> put_hal_self_link(:identities_url, [:show, identity.id])
   end
 end

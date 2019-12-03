@@ -8,13 +8,13 @@ defmodule Boardr.Auth do
 
   alias Boardr.Auth.{Identity,User}
 
-  def ensure_identity(id, auth) when is_binary(id) do
-
-    [ provider, provider_id ] = String.split id, ":", parts: 2
+  def ensure_identity(provider, auth) when is_binary(provider) do
 
     url = :uri_string.parse "https://oauth2.googleapis.com/tokeninfo"
     query_params = :uri_string.compose_query [{"id_token", auth}]
     url = :uri_string.recompose Map.put(url, :query, query_params)
+    # FIXME: check "aud" claim is correct google client ID
+    # FIXME: check supplied provider ID is the same google account ID
 
     with {:ok, %HTTPoison.Response{body: json, status_code: 200}} <- HTTPoison.get(url),
          {:ok, body} <- Jason.decode(json),
@@ -26,7 +26,7 @@ defmodule Boardr.Auth do
            last_authenticated_at: now,
            last_seen_at: now,
            provider: provider,
-           provider_id: provider_id
+           provider_id: body["sub"]
          }),
          {:ok, identity} <- Repo.insert(
            changeset,

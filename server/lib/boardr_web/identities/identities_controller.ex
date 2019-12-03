@@ -1,17 +1,32 @@
 defmodule BoardrWeb.IdentitiesController do
   use BoardrWeb, :controller
-  alias Boardr.Auth
+  alias Boardr.{Auth,Repo}
   alias Boardr.Auth.Identity
 
   action_fallback BoardrWeb.FallbackController
 
-  def update(conn, %{"id" => id}) do
+  def create(conn, %{"provider" => provider}) do
     with {:ok, token} <- get_authorization_token(conn),
-         {:ok, identity} <- Auth.ensure_identity(id, token) do
+         {:ok, identity} <- Auth.ensure_identity(provider, token) do
       conn
       |> put_identity_created(identity)
+      |> put_resp_content_type("application/hal+json")
       |> render(%{identity: identity})
     end
+  end
+
+  def index(conn, _assigns) do
+    identities = Repo.all(from(i in Identity, order_by: [desc: i.created_at]))
+    conn
+    |> put_resp_content_type("application/hal+json")
+    |> render(%{identities: identities})
+  end
+
+  def show(conn, %{"id" => id}) do
+    identity = Repo.get! Identity, id
+    conn
+    |> put_resp_content_type("application/hal+json")
+    |> render(%{identity: identity})
   end
 
   defp get_authorization_token(conn) do
@@ -36,6 +51,7 @@ defmodule BoardrWeb.IdentitiesController do
     if DateTime.compare(identity.created_at, identity.updated_at) == :eq do
       conn
       |> put_status(:created)
+      |> put_resp_header("location", Routes.identities_url(Endpoint, :show, identity.id))
     else
       conn
     end

@@ -27,10 +27,14 @@ function onGoogleResponse(res: GoogleLoginResponse | GoogleLoginResponseOffline)
   }
 
   fetchApiObservable({
-    method: 'PUT',
-    url: `/api/identities/google:${res.googleId}`,
+    method: 'POST',
+    url: '/api/identities',
     headers: {
       Authorization: `Bearer ${res.tokenId}`
+    },
+    body: {
+      provider: 'google',
+      providerId: res.googleId
     }
   }).subscribe(result => console.log('@@@ result', result), err => console.error('@@@ error', err));
 }
