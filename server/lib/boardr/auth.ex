@@ -8,10 +8,10 @@ defmodule Boardr.Auth do
 
   alias Boardr.Auth.{Identity,User}
 
-  def ensure_identity(provider, auth) when is_binary(provider) do
+  def ensure_identity(provider, token) when is_binary(provider) do
 
     url = :uri_string.parse "https://oauth2.googleapis.com/tokeninfo"
-    query_params = :uri_string.compose_query [{"id_token", auth}]
+    query_params = :uri_string.compose_query [{"id_token", token}]
     url = :uri_string.recompose Map.put(url, :query, query_params)
     # FIXME: check "aud" claim is correct google client ID
     # FIXME: check supplied provider ID is the same google account ID
@@ -41,9 +41,18 @@ defmodule Boardr.Auth do
            ]],
            returning: [:created_at, :id, :updated_at]
          ) do
-      {:ok, identity}
+      {:ok, Repo.preload(identity, :user)}
     else _ ->
       {:auth_error, :auth_failed}
+    end
+  end
+
+  def register_user(properties) when is_map(properties) do
+    changeset = User.changeset %User{}, properties
+    with {:ok, user} <- Repo.insert(changeset, returning: [:id]) do
+      {:ok, user}
+    else _ ->
+      {:error, :user_not_created}
     end
   end
 

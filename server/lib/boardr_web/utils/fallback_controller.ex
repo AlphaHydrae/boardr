@@ -3,7 +3,6 @@ defmodule BoardrWeb.FallbackController do
 
   alias BoardrWeb.HttpProblemDetails
 
-  import BoardrWeb.ControllerHelpers
   import BoardrWeb.HttpProblemDetailsHelpers
 
   def call(conn, {:auth_error, error}) do

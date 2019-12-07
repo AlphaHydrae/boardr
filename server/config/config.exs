@@ -37,6 +37,7 @@ config :boardr, Boardr.Repo, database_options
 
 # Configures the endpoint
 config :boardr, BoardrWeb.Endpoint,
+  jwt_issuer: "boardr.alphahydrae.io",
   render_errors: [view: BoardrWeb.ErrorView, accepts: ~w(json)],
   pubsub: [name: Boardr.PubSub, adapter: Phoenix.PubSub.PG2]
 

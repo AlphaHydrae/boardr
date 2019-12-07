@@ -8,6 +8,14 @@ defmodule BoardrWeb.ErrorView do
     render_problem problem
   end
 
+  def render(_, _) do
+    render_problem %BoardrWeb.HttpProblemDetails{
+      type: :unexpected,
+      title: "An unexpected error occurred.",
+      status: :internal_server_error
+    }
+  end
+
   defp render_problem(
     %BoardrWeb.HttpProblemDetails{
       title: title,
@@ -25,13 +33,5 @@ defmodule BoardrWeb.ErrorView do
     })
     |> Map.delete(:extra_properties)
     |> Map.merge(extra_properties)
-  end
-
-  def render(_, _) do
-    render_problem %BoardrWeb.HttpProblemDetails{
-      type: :unexpected,
-      title: "An unexpected error occurred.",
-      status: :internal_server_error
-    }
   end
 end

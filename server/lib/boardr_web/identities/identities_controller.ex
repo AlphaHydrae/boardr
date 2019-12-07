@@ -2,39 +2,51 @@ defmodule BoardrWeb.IdentitiesController do
   use BoardrWeb, :controller
 
   alias Boardr.{Auth,Repo}
-  alias Boardr.Auth.Identity
+  alias Boardr.Auth.{Identity,User}
 
-  plug Authenticate when not action in [:create]
+  plug Authenticate, [:'api:identities:index'] when action in [:index]
+  plug Authenticate, [:'api:identities:show'] when action in [:show]
 
-  def create(conn, %{"provider" => provider}) do
-
-    claims = %{}
-
+  def create(%Conn{} = conn, %{"provider" => provider}) do
     with {:ok, token} <- Authenticate.get_authorization_token(conn),
          {:ok, identity} <- Auth.ensure_identity(provider, token),
+         claims = create_identity_claims(identity),
          {:ok, jwt, _} <- Auth.Token.generate(claims) do
       conn
       |> put_identity_created(identity)
-      |> put_resp_content_type("application/hal+json")
-      |> render(%{identity: identity, token: jwt})
+      |> render_hal(%{identity: identity, token: jwt})
     end
   end
 
-  def index(conn, _assigns) do
+  def index(%Conn{} = conn, _) do
     identities = Repo.all(from(i in Identity, order_by: [desc: i.created_at]))
+
     conn
-    |> put_resp_content_type("application/hal+json")
-    |> render(%{identities: identities})
+    |> render_hal(%{identities: identities})
   end
 
-  def show(conn, %{"id" => id}) do
+  def show(%Conn{} = conn, %{"id" => id}) when is_binary(id) do
     identity = Repo.get! Identity, id
+
     conn
-    |> put_resp_content_type("application/hal+json")
-    |> render(%{identity: identity})
+    |> render_hal(%{identity: identity})
   end
 
-  defp put_identity_created(conn, %Identity{} = identity) do
+  defp create_identity_claims(%Identity{id: id, user: %User{}}) do
+    %{
+      scope: "api",
+      sub: id
+    }
+  end
+
+  defp create_identity_claims(%Identity{id: id, user: nil}) do
+    %{
+      scope: "register",
+      sub: id
+    }
+  end
+
+  defp put_identity_created(%Conn{} = conn, %Identity{} = identity) do
     if DateTime.compare(identity.created_at, identity.updated_at) == :eq do
       conn
       |> put_status(:created)

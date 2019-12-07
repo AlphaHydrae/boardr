@@ -5,7 +5,7 @@ defmodule Boardr.Repo.Migrations.CreateAuth do
     execute ~s/CREATE TYPE identity_providers AS ENUM ('google');/, ~s/DROP TYPE identity_providers;/
 
     create table(:users, primary_key: false) do
-      add :id, :binary_id, primary_key: true
+      add :id, :binary_id, default: fragment("uuid_generate_v4()"), primary_key: true
       add :name, :string, null: false, size: 255
       timestamps inserted_at: :created_at, type: :utc_datetime_usec
     end

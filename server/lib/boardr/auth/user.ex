@@ -2,20 +2,19 @@ defmodule Boardr.Auth.User do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
+  @primary_key {:id, :binary_id, autogenerate: false}
+  @timestamps_opts [type: :utc_datetime_usec]
 
   schema "users" do
-    field :email, :string
     field :name, :string
-
-    timestamps()
+    timestamps inserted_at: :created_at
   end
 
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:email, :name])
-    |> validate_required([:email, :name])
+    |> cast(attrs, [:name])
+    |> validate_required([:name])
   end
 end

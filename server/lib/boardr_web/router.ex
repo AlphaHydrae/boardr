@@ -14,6 +14,7 @@ defmodule BoardrWeb.Router do
     resources "/games", GamesController, only: [:create, :index, :show]
     resources "/identities", IdentitiesController, only: [:create, :index, :show]
     resources "/moves", MovesController, only: [:create, :index, :show]
+    resources "/users", UsersController, only: [:create]
 
     scope "/auth" do
       post "/google", AuthController, :google
