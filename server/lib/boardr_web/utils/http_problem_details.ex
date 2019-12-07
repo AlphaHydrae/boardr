@@ -1,8 +1,17 @@
 defmodule BoardrWeb.HttpProblemDetails do
-  defstruct type: :unexpected,
-            title: "An unexpected error occurred",
-            status: :internal_server_error,
-            detail: nil,
+  defstruct detail: nil,
+            extra_properties: %{},
             instance: nil,
-            extra_properties: %{}
+            status: nil,
+            title: nil,
+            type: nil
+
+  @type t :: %BoardrWeb.HttpProblemDetails{
+    detail: String.t,
+    extra_properties: Map.t,
+    instance: String.t,
+    status: Atom.t,
+    title: String.t,
+    type: Atom.t
+  }
 end

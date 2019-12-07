@@ -21,13 +21,18 @@ defmodule BoardrWeb do
     quote do
       use Phoenix.Controller, namespace: BoardrWeb
 
-      import BoardrWeb.ControllerHelpers
-      import Plug.Conn
-      import Ecto.Query, only: [from: 2]
-
-      alias BoardrWeb.Endpoint, as: Endpoint
+      alias BoardrWeb.Authenticate
+      alias BoardrWeb.Endpoint
       alias BoardrWeb.HttpProblemDetails
       alias BoardrWeb.Router.Helpers, as: Routes
+      alias Plug.Conn
+
+      import BoardrWeb.ControllerHelpers
+      import BoardrWeb.HttpProblemDetailsHelpers, only: [render_problem: 2]
+      import Ecto.Query, only: [from: 2]
+      import Plug.Conn
+
+      action_fallback BoardrWeb.FallbackController
     end
   end
 
@@ -43,6 +48,17 @@ defmodule BoardrWeb do
 
       alias BoardrWeb.Endpoint, as: Endpoint
       alias BoardrWeb.Router.Helpers, as: Routes
+    end
+  end
+
+  def plug do
+    quote do
+      alias BoardrWeb.HttpProblemDetails
+      alias Plug.Conn
+
+      import BoardrWeb.HttpProblemDetailsHelpers
+      import BoardrWeb.PlugHelpers
+      import Plug.Conn
     end
   end
 
