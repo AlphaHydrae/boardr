@@ -5,6 +5,7 @@ defmodule BoardrWeb.GamesController do
   alias Boardr.Game
 
   plug Authenticate, [:'api:games:create'] when action in [:create]
+  plug Authenticate, [:'api:games:show'] when action in [:show]
 
   def create(
     %Conn{assigns: %{auth: %{"sub" => identity_id}}} = conn,

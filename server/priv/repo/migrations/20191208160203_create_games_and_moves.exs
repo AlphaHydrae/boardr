@@ -18,10 +18,11 @@ defmodule Boardr.Repo.Migrations.CreateGamesAndMoves do
       timestamps inserted_at: :created_at, type: :utc_datetime, updated_at: false
     end
 
-    create table(:players, primary_key: [:game_id, :user_id]) do
-      add :game_id, references(:games, type: :binary_id, on_delete: :delete_all, on_update: :update_all), null: false
+    create table(:players, primary_key: false) do
+      add :game_id, references(:games, type: :binary_id, on_delete: :delete_all, on_update: :update_all), null: false, primary_key: true
       add :number, :smallint, null: false
-      add :user_id, references(:users, type: :binary_id, on_delete: :delete_all, on_update: :update_all), null: false
+      add :user_id, references(:users, type: :binary_id, on_delete: :delete_all, on_update: :update_all), null: false, primary_key: true
+      timestamps inserted_at: :created_at, type: :utc_datetime, updated_at: false
     end
 
     create constraint(:players, :number, check: "number >= 0")

@@ -11,14 +11,20 @@ defmodule BoardrWeb.Router do
     pipe_through :api
 
     get "/", ApiController, :index
-    resources "/games", GamesController, only: [:create, :index, :show]
-    resources "/identities", IdentitiesController, only: [:create, :index, :show]
-    resources "/moves", MovesController, only: [:create, :index, :show]
-    resources "/users", UsersController, only: [:create, :show]
 
     scope "/auth" do
       post "/google", AuthController, :google
     end
+
+    resources "/games", GamesController, as: :games, name: :game, only: [:create, :index, :show] do
+      resources "/players", PlayersController, as: :players, only: [:create, :show]
+    end
+
+    resources "/identities", IdentitiesController, only: [:create, :index, :show]
+
+    resources "/moves", MovesController, only: [:create, :index, :show]
+
+    resources "/users", UsersController, only: [:create, :show]
 
     # Method not allowed
     [&post/3, &put/3, &patch/3, &delete/3, &connect/3, &trace/3]
