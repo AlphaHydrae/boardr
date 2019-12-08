@@ -21,6 +21,7 @@ defmodule BoardrWeb do
     quote do
       use Phoenix.Controller, namespace: BoardrWeb
 
+      alias Boardr.Repo
       alias BoardrWeb.Authenticate
       alias BoardrWeb.Endpoint
       alias BoardrWeb.HttpProblemDetails

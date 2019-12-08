@@ -7,11 +7,11 @@ defmodule Boardr.Move do
   @timestamps_opts [type: :utc_datetime_usec]
 
   schema "moves" do
-    field :data, EctoJsonb
-
     belongs_to :game, Boardr.Game
 
-    timestamps(inserted_at: :created_at)
+    field :data, EctoJsonb
+
+    timestamps inserted_at: :created_at
   end
 
   @doc false

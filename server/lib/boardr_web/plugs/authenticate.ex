@@ -86,10 +86,13 @@ defmodule BoardrWeb.Authenticate do
     end
   end
 
-  defp verify_scopes(%{"scope" => token_scope, "sub" => subject}, %MapSet{} = scopes) when is_binary(subject) and is_binary(token_scope) do
-    token_scopes = String.split token_scope, " "
-    missing_scopes = MapSet.difference scopes, MapSet.new(token_scopes)
-    if MapSet.size(missing_scopes) <= 0 do
+  defp verify_scope(%MapSet{} = token_scopes, scope) when is_binary(scope) do
+    Enum.any? token_scopes, fn token_scope -> token_scope == scope or String.starts_with?(scope, "#{token_scope}:") end
+  end
+
+  defp verify_scopes(%MapSet{} = token_scopes, %MapSet{} = scopes) do
+    missing_scopes = Enum.reject scopes, fn scope -> verify_scope(token_scopes, scope) end
+    if length(missing_scopes) <= 0 do
       {:ok, scopes}
     else
       {
@@ -100,6 +103,10 @@ defmodule BoardrWeb.Authenticate do
         })
       }
     end
+  end
+
+  defp verify_scopes(%{"scope" => token_scope, "sub" => subject}, %MapSet{} = scopes) when is_binary(subject) and is_binary(token_scope) do
+    verify_scopes MapSet.new(String.split(token_scope, " ")), scopes
   end
 
   defp verify_scopes(%{"sub" => subject}, _) when is_binary(subject) do

@@ -3,10 +3,11 @@ defmodule Boardr.Auth do
   The Auth context.
   """
 
-  import Ecto.Query, warn: false
-  alias Boardr.Repo
-
   alias Boardr.Auth.{Identity,User}
+  alias Boardr.Repo
+  alias Ecto.{Changeset,Multi}
+
+  import Ecto.Query, warn: false
 
   def ensure_identity(provider, token) when is_binary(provider) do
 
@@ -47,106 +48,22 @@ defmodule Boardr.Auth do
     end
   end
 
-  def register_user(properties) when is_map(properties) do
-    changeset = User.changeset %User{}, properties
-    with {:ok, user} <- Repo.insert(changeset, returning: [:id]) do
-      {:ok, user}
-    else _ ->
-      {:error, :user_not_created}
+  def register_user(%Identity{} = identity, user_properties) when is_map(user_properties) do
+    case create_and_link_user_to_identity(identity, user_properties) do
+      {:ok, %{identity: identity, user: user}} -> {:ok, user, identity}
+      {:error, :user, %Changeset{} = validation_errors, _} -> {:validation_error, validation_errors}
+      true -> {:error, :user_registration_failed}
     end
   end
 
-  @doc """
-  Returns the list of users.
-
-  ## Examples
-
-      iex> list_users()
-      [%User{}, ...]
-
-  """
-  def list_users do
-    Repo.all(User)
-  end
-
-  @doc """
-  Gets a single user.
-
-  Raises `Ecto.NoResultsError` if the User does not exist.
-
-  ## Examples
-
-      iex> get_user!(123)
-      %User{}
-
-      iex> get_user!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_user!(id), do: Repo.get!(User, id)
-
-  @doc """
-  Creates a user.
-
-  ## Examples
-
-      iex> create_user(%{field: value})
-      {:ok, %User{}}
-
-      iex> create_user(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_user(attrs \\ %{}) do
-    %User{}
-    |> User.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Updates a user.
-
-  ## Examples
-
-      iex> update_user(user, %{field: new_value})
-      {:ok, %User{}}
-
-      iex> update_user(user, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_user(%User{} = user, attrs) do
-    user
-    |> User.changeset(attrs)
-    |> Repo.update()
-  end
-
-  @doc """
-  Deletes a User.
-
-  ## Examples
-
-      iex> delete_user(user)
-      {:ok, %User{}}
-
-      iex> delete_user(user)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_user(%User{} = user) do
-    Repo.delete(user)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking user changes.
-
-  ## Examples
-
-      iex> change_user(user)
-      %Ecto.Changeset{source: %User{}}
-
-  """
-  def change_user(%User{} = user) do
-    User.changeset(user, %{})
+  defp create_and_link_user_to_identity(%Identity{} = identity, user_properties) when is_map(user_properties) do
+    Multi.new
+    |> Multi.insert(:user, User.changeset(%User{}, user_properties), returning: [:id])
+    |> Multi.run(:identity, fn repo, %{user: user} ->
+      Identity.changeset(identity, %{})
+      |> Changeset.put_assoc(:user, user)
+      |> repo.update
+    end)
+    |> Repo.transaction
   end
 end

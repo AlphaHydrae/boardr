@@ -11,7 +11,7 @@ defmodule BoardrWeb.IdentitiesController do
     with {:ok, token} <- Authenticate.get_authorization_token(conn),
          {:ok, identity} <- Auth.ensure_identity(provider, token),
          claims = create_identity_claims(identity),
-         {:ok, jwt, _} <- Auth.Token.generate(claims) do
+         {:ok, jwt} <- Auth.Token.generate(claims) do
       conn
       |> put_identity_created(identity)
       |> render_hal(%{identity: identity, token: jwt})

@@ -1,5 +1,6 @@
 defmodule Boardr.Auth.Identity do
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @foreign_key_type :binary_id

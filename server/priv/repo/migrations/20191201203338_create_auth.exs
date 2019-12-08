@@ -2,6 +2,7 @@ defmodule Boardr.Repo.Migrations.CreateAuth do
   use Ecto.Migration
 
   def change do
+    execute ~s/CREATE EXTENSION "uuid-ossp"/, ~s/DROP EXTENSION "uuid-ossp"/
     execute ~s/CREATE TYPE identity_providers AS ENUM ('google');/, ~s/DROP TYPE identity_providers;/
 
     create table(:users, primary_key: false) do
@@ -9,6 +10,8 @@ defmodule Boardr.Repo.Migrations.CreateAuth do
       add :name, :string, null: false, size: 255
       timestamps inserted_at: :created_at, type: :utc_datetime_usec
     end
+
+    create index(:users, ["lower(name)"], name: :users_name_unique, unique: true)
 
     create table(:identities, primary_key: false) do
       add :email, :string, size: 255

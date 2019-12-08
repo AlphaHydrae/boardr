@@ -1,5 +1,6 @@
 defmodule Boardr.Auth.User do
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @foreign_key_type :binary_id
@@ -16,5 +17,6 @@ defmodule Boardr.Auth.User do
     user
     |> cast(attrs, [:name])
     |> validate_required([:name])
+    |> unique_constraint(:name, name: :users_name_unique)
   end
 end

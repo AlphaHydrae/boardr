@@ -2,7 +2,11 @@ defmodule Boardr.Auth.Token do
   alias Boardr.Auth.Token.JWT
 
   def generate(claims) do
-    JWT.encode_and_sign claims, create_signer()
+    case JWT.encode_and_sign(claims, create_signer()) do
+      {:ok, jwt, _} -> {:ok, jwt}
+      {:error, reason} -> {:error, reason}
+      true -> {:error, :unexpected}
+    end
   end
 
   def verify(token) do
