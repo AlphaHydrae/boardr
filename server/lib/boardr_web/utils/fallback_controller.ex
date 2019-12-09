@@ -20,6 +20,11 @@ defmodule BoardrWeb.FallbackController do
     |> render_problem(problem)
   end
 
+  def call(%Conn{} = conn, {:error, %Changeset{valid?: false} = changeset}) do
+    call conn, {:validation_error, changeset}
+  end
+
+  # TODO: remove this
   def call(%Conn{} = conn, {:validation_error, %Changeset{} = changeset}) do
     conn
     |> render_problem(%HttpProblemDetails{

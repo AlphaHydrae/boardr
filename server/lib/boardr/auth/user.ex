@@ -9,6 +9,7 @@ defmodule Boardr.Auth.User do
 
   schema "users" do
     field :name, :string
+
     timestamps inserted_at: :created_at
   end
 

@@ -9,7 +9,9 @@ defmodule BoardrWeb.ApiView do
     |> put_hal_self_link(:api_url, [:index])
     |> put_hal_links(%{
       'boardr:games' => Routes.games_url(BoardrWeb.Endpoint, :index),
-      'boardr:moves' => Routes.moves_url(BoardrWeb.Endpoint, :index),
+      'boardr:identities' => Routes.identities_url(BoardrWeb.Endpoint, :index),
+      # TODO: implement users index
+      'boardr:users' => Routes.users_url(BoardrWeb.Endpoint, :create),
     })
   end
 end

@@ -9,6 +9,7 @@ defmodule Boardr.Auth.Identity do
 
   schema "identities" do
     belongs_to :user, Boardr.Auth.User
+
     field :email, :string
     field :email_verified, :boolean
     field :email_verified_at, :utc_datetime_usec
@@ -16,7 +17,8 @@ defmodule Boardr.Auth.Identity do
     field :last_seen_at, :utc_datetime_usec
     field :provider, :string
     field :provider_id, :string
-    timestamps(inserted_at: :created_at)
+
+    timestamps inserted_at: :created_at
   end
 
   @doc false

@@ -9,6 +9,8 @@ defmodule Boardr.Game do
 
   schema "games" do
     belongs_to :creator, Boardr.Auth.User
+    has_many :moves, Boardr.Move
+    has_many :players, Boardr.Player
 
     field :title, :string
     field :data, EctoJsonb

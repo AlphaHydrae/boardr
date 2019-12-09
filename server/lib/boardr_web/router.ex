@@ -17,18 +17,19 @@ defmodule BoardrWeb.Router do
     end
 
     resources "/games", GamesController, as: :games, name: :game, only: [:create, :index, :show] do
+      resources "/board", BoardController, only: [:show], singleton: true
+      resources "/moves", MovesController, only: [:create, :index, :show]
       resources "/players", PlayersController, only: [:create, :show]
+      resources "/possible-moves", Games.PossibleMovesController, only: [:index]
     end
 
     resources "/identities", IdentitiesController, only: [:create, :index, :show]
-
-    resources "/moves", MovesController, only: [:create, :index, :show]
 
     resources "/users", UsersController, only: [:create, :show]
 
     # Method not allowed
     [&post/3, &put/3, &patch/3, &delete/3, &connect/3, &trace/3]
-    |> Enum.each(fn(verb) -> verb.("/*path", MethodNotAllowedController, :match) end)
+    |> Enum.each(fn verb -> verb.("/*path", MethodNotAllowedController, :match) end)
   end
 
   def handle_errors(conn, params) do

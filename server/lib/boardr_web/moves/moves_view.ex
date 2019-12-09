@@ -1,38 +1,34 @@
 defmodule BoardrWeb.MovesView do
   use BoardrWeb, :view
-  alias Boardr.{Move}
+  alias Boardr.Move
 
-  def render("create.json", %{move: move}) do
-    render_move move
+  def render("create.json", %{move: %Move{} = move}) do
+    render_one move, __MODULE__, "show.json", as: :move
   end
 
-  def render("index.json", %{moves: moves}) do
+  def render("index.json", %{game_id: game_id, moves: moves}) when is_list(moves) do
     %{
       _embedded: %{
         'boardr:moves': render_many(moves, __MODULE__, "show.json", as: :move)
       }
     }
     |> put_hal_curies_link()
-    |> put_hal_self_link(:moves_url, [:index])
+    |> put_hal_self_link(:games_moves_url, [:index, game_id])
   end
 
-  def render("show.json", %{move: move}) do
-    render_move move
-  end
-
-  defp render_move(%Move{} = move) do
+  def render("show.json", %{move: %Move{} = move}) do
     %{
-      createdAt: move.created_at,
       data: move.data,
-      id: move.id,
-      updatedAt: move.updated_at
+      playedAt: move.played_at,
+      type: move.type
     }
     |> omit_nil()
     |> put_hal_curies_link()
     |> put_hal_links(%{
-      collection: %{ href: Routes.moves_url(Endpoint, :index) },
-      'boardr:game': %{ href: Routes.games_url(Endpoint, :show, move.game_id) }
+      collection: %{ href: Routes.games_moves_url(Endpoint, :index, move.game_id) },
+      'boardr:game': %{ href: Routes.games_url(Endpoint, :show, move.game_id) },
+      'boardr:player': %{ href: Routes.games_players_url(Endpoint, :show, move.game_id, move.player_id) }
     })
-    |> put_hal_self_link(:moves_url, [:show, move.id])
+    |> put_hal_self_link(:games_moves_url, [:show, move.game_id, move.id])
   end
 end
