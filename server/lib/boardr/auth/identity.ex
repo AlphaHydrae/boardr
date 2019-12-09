@@ -14,6 +14,7 @@ defmodule Boardr.Auth.Identity do
     field :email_verified, :boolean
     field :email_verified_at, :utc_datetime_usec
     field :last_authenticated_at, :utc_datetime_usec
+    # TODO: implement last seen at
     field :last_seen_at, :utc_datetime_usec
     field :provider, :string
     field :provider_id, :string

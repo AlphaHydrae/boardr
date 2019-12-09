@@ -8,6 +8,7 @@ defmodule BoardrWeb.UsersController do
   plug Authenticate, [:register] when action in [:create]
 
   def create(%Conn{assigns: %{auth: %{"sub" => identity_id}}} = conn, body) when is_map(body) do
+    # FIXME: only allow local identity with unverified email in dev
     identity = Repo.get!(Identity, identity_id) |> Repo.preload(:user)
     with {:ok, user, linked_identity} <- Auth.register_user(identity, body),
          claims = create_user_claims(linked_identity),

@@ -2,7 +2,6 @@ defmodule BoardrWeb.BoardController do
   use BoardrWeb, :controller
 
   alias Boardr.{Board,Game}
-  alias Boardr.Rules.TicTacToe, as: Rules
 
   plug Authenticate, [:'api:games:show:board:show'] when action in [:show]
 

@@ -3,7 +3,7 @@ defmodule Boardr.Repo.Migrations.CreateAuth do
 
   def change do
     execute ~s/CREATE EXTENSION "uuid-ossp"/, ~s/DROP EXTENSION "uuid-ossp"/
-    execute ~s/CREATE TYPE identity_providers AS ENUM ('google');/, ~s/DROP TYPE identity_providers;/
+    execute ~s/CREATE TYPE identity_providers AS ENUM ('google', 'local');/, ~s/DROP TYPE identity_providers;/
 
     create table(:users, primary_key: false) do
       add :id, :binary_id, default: fragment("uuid_generate_v4()"), primary_key: true
@@ -26,7 +26,7 @@ defmodule Boardr.Repo.Migrations.CreateAuth do
       timestamps inserted_at: :created_at, type: :utc_datetime_usec
     end
 
-    create constraint(:identities, :google_email_required, check: "provider != 'google' OR email IS NOT NULL")
+    create constraint(:identities, :google_and_local_email_required, check: "provider NOT IN ('google', 'local') OR email IS NOT NULL")
     create constraint(:identities, :verified_email_required, check: "NOT email_verified OR email IS NOT NULL")
     create constraint(:identities, :verified_at_email_required, check: "email_verified_at IS NULL OR email IS NOT NULL")
     create index(:identities, [:provider, :provider_id], name: :identities_provider_and_id_unique, unique: true)

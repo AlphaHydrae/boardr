@@ -44,7 +44,7 @@ defmodule Boardr.Rules.TicTacToe do
   def possible_moves(
     %GameInformation{
       board: board,
-      last_move: %Move{player: %Player{number: last_player_number}} = last_move,
+      last_move: last_move,
       players: players
     }
   ) do

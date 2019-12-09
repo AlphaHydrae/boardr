@@ -31,16 +31,21 @@ defmodule BoardrWeb.Authenticate do
   end
 
   def get_authorization_token(%Conn{} = conn) do
+    get_authorization_token conn, true
+  end
+
+  def get_authorization_token(%Conn{} = conn, required) when is_boolean(required) do
     header_values = get_req_header conn, "authorization"
     header_values_length = length header_values
     cond do
-      header_values_length <= 0 -> {
+      header_values_length <= 0 and required -> {
         :problem,
         authentication_problem_details(%HttpProblemDetails{
           detail: ~s(This request requires user authentication. Send an Authorization header containing a valid Bearer token.),
           type: :'auth-header-missing'
         })
       }
+      header_values_length <= 0 -> {:ok, nil}
       header_values_length >= 2 -> {
         :problem,
         authentication_problem_details(%HttpProblemDetails{

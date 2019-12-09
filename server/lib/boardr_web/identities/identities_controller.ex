@@ -7,9 +7,9 @@ defmodule BoardrWeb.IdentitiesController do
   plug Authenticate, [:'api:identities:index'] when action in [:index]
   plug Authenticate, [:'api:identities:show'] when action in [:show]
 
-  def create(%Conn{} = conn, %{"provider" => provider}) do
-    with {:ok, token} <- Authenticate.get_authorization_token(conn),
-         {:ok, identity} <- Auth.ensure_identity(provider, token),
+  def create(%Conn{} = conn, identity_properties) when is_map(identity_properties) do
+    with {:ok, token} <- Authenticate.get_authorization_token(conn, false),
+         {:ok, identity} <- Auth.ensure_identity(identity_properties, token),
          claims = create_identity_claims(identity),
          {:ok, jwt} <- Auth.Token.generate(claims) do
       conn
