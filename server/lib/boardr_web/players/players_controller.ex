@@ -19,7 +19,7 @@ defmodule BoardrWeb.PlayersController do
   end
 
   def show(%Conn{} = conn, %{"game_id" => game_id, "id" => id}) do
-    player = Repo.get! Player, id
+    player = Repo.one! from p in Player, where: p.game_id == ^game_id and p.id == ^id
 
     conn
     |> put_resp_content_type("application/hal+json")
@@ -27,7 +27,10 @@ defmodule BoardrWeb.PlayersController do
   end
 
   defp join_game(game_id, user_id) when is_binary(game_id) and is_binary(user_id) do
-    %Player{game_id: game_id, number: 0, user_id: user_id}
-    |> Repo.insert()
+    player_numbers = Repo.all(from p in Player, order_by: p.number, select: p.number, where: p.game_id == ^game_id)
+    next_available_player_number = Enum.reduce_while player_numbers, 0, fn n, acc -> if n > acc, do: {:halt, acc}, else: {:cont, acc + 1} end
+
+    %Player{game_id: game_id, number: next_available_player_number, user_id: user_id}
+    |> Repo.insert(returning: [:id])
   end
 end

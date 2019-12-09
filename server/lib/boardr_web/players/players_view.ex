@@ -14,7 +14,7 @@ defmodule BoardrWeb.PlayersView do
     |> put_hal_curies_link()
     |> put_hal_links(%{
       'boardr:game': %{ href: Routes.games_url(Endpoint, :show, player.game_id) },
-      'boardr:player': %{ href: Routes.users_url(Endpoint, :show, player.user_id) }
+      'boardr:user': %{ href: Routes.users_url(Endpoint, :show, player.user_id) }
     })
     |> put_hal_self_link(:games_players_url, [:show, player.game_id, player.id])
   end

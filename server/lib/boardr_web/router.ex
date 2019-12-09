@@ -17,7 +17,7 @@ defmodule BoardrWeb.Router do
     end
 
     resources "/games", GamesController, as: :games, name: :game, only: [:create, :index, :show] do
-      resources "/players", PlayersController, as: :players, only: [:create, :show]
+      resources "/players", PlayersController, only: [:create, :show]
     end
 
     resources "/identities", IdentitiesController, only: [:create, :index, :show]
