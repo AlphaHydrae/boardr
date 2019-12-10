@@ -17,10 +17,10 @@ defmodule BoardrWeb.Router do
     end
 
     resources "/games", GamesController, as: :games, name: :game, only: [:create, :index, :show] do
+      resources "/actions", ActionsController, only: [:create, :index, :show]
       resources "/board", BoardController, only: [:show], singleton: true
-      resources "/moves", MovesController, only: [:create, :index, :show]
       resources "/players", PlayersController, only: [:create, :show]
-      resources "/possible-moves", Games.PossibleMovesController, only: [:index]
+      resources "/possible-actions", Games.PossibleActionsController, only: [:index]
     end
 
     resources "/identities", IdentitiesController, only: [:create, :index, :show]

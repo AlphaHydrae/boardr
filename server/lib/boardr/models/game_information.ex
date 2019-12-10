@@ -1,17 +1,17 @@
 defmodule Boardr.GameInformation do
   defstruct board: nil,
             data: %{},
-            last_move: nil,
+            last_action: nil,
             players: [],
-            possible_moves: [],
+            possible_actions: [],
             settings: %{}
 
   @type t :: %Boardr.GameInformation{
     board: List.t,
     data: Map.t,
-    last_move: Boardr.Move.t,
+    last_action: Boardr.Action.t,
     players: [Boardr.Player.t],
-    possible_moves: [Boardr.PossibleMove.t],
+    possible_actions: [Boardr.PossibleAction.t],
     settings: Map.t
   }
 end

@@ -3,9 +3,10 @@ defmodule BoardrWeb.BoardView do
 
   alias Boardr.Board
 
-  def render("show.json", %{board: %Board{data: data, game: game}}) do
+  def render("show.json", %{board: %Board{data: data, dimensions: dimensions, game: game}}) do
     %{
-      data: data
+      data: data,
+      dimensions: dimensions
     }
     |> omit_nil()
     |> put_hal_links(%{

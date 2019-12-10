@@ -7,12 +7,12 @@ defmodule BoardrWeb.BoardController do
 
   def show(%Conn{} = conn, %{"game_id" => game_id}) when is_binary(game_id) do
     game = Repo.get!(Game, game_id)
-    |> Repo.preload([moves: [:player], players: []])
+    |> Repo.preload([actions: [:player], players: []])
 
     conn
     |> put_resp_content_type("application/hal+json")
     |> render(%{
-      board: %Board{data: Board.board(game), game: game}
+      board: %Board{data: Board.board(game), dimensions: [3, 3], game: game}
     })
   end
 end

@@ -1,5 +1,5 @@
 defmodule Boardr.Rules.TicTacToe do
-  alias Boardr.{Game,GameInformation,Move,Player,PossibleMove}
+  alias Boardr.{Action,Game,GameInformation,Player,PossibleAction}
 
   defguard is_board_coordinate(value) when is_integer(value) and value >= 0 and value <= 3
 
@@ -7,75 +7,39 @@ defmodule Boardr.Rules.TicTacToe do
     %{}
   end
 
-  def possible_moves(%GameInformation{board: nil} = info) do
-    possible_moves %GameInformation{
+  def possible_actions(%GameInformation{board: nil} = info) do
+    possible_actions %GameInformation{
       info |
       board: initial_board()
     }
   end
 
-  def possible_moves(
+  def possible_actions(
     %GameInformation{
-      board: board,
-      last_move: nil,
+      last_action: nil,
       players: players
-    }
+    } = game_info
   ) do
-    current_player = List.first players
-
-    board
-    |> Enum.with_index()
-    |> Enum.reduce([], fn {row, row_index}, acc ->
-      acc ++ (row
-      |> Enum.with_index()
-      |> Enum.reduce([], fn {value, col_index}, col_acc ->
-        if value === nil, do: [[col_index, row_index] | col_acc], else: col_acc
-      end))
-    end)
-    |> Enum.map(fn position ->
-      %PossibleMove{
-        data: position,
-        player: current_player,
-        type: :take
-      }
-    end)
+    possible_actions_for game_info, List.first(players)
   end
 
-  def possible_moves(
+  def possible_actions(
     %GameInformation{
-      board: board,
-      last_move: last_move,
+      last_action: last_action,
       players: players
-    }
+    } = game_info
   ) do
-    current_player = next_player last_move, players
-
-    board
-    |> Enum.with_index()
-    |> Enum.reduce([], fn {row, row_index}, acc ->
-      acc ++ (row
-      |> Enum.with_index()
-      |> Enum.reduce([], fn {value, col_index}, col_acc ->
-        if value === nil, do: [[col_index, row_index] | col_acc], else: col_acc
-      end))
-    end)
-    |> Enum.map(fn position ->
-      %PossibleMove{
-        data: position,
-        player: current_player,
-        type: :take
-      }
-    end)
+    possible_actions_for game_info, next_player(last_action, players)
   end
 
   def play(
-    %GameInformation{board: board, last_move: nil, players: [%Player{number: first_number} | _]},
+    %GameInformation{board: board, last_action: nil, players: [%Player{number: first_number} | _]},
     %Player{number: player_number} = player,
     %{"data" => [col, row], "type" => "take"}
   ) when is_list(board) and player_number === first_number and is_board_coordinate(col) and is_board_coordinate(row) do
     {
       :ok,
-      %Move{
+      %Action{
         data: [col, row],
         player: player,
         type: "take"
@@ -84,14 +48,14 @@ defmodule Boardr.Rules.TicTacToe do
   end
 
   def play(%GameInformation{}, %Player{}, _) do
-    {:error, :invalid_move}
+    {:error, :invalid_action}
   end
 
   def board(%Game{}, nil, nil) do
     {:board, initial_board()}
   end
 
-  def board(%Game{}, board, %Move{data: [col, row], player: %Player{number: player_number}}) when is_list(board) and is_board_coordinate(col) and is_board_coordinate(row) do
+  def board(%Game{}, board, %Action{data: [col, row], player: %Player{number: player_number}}) when is_list(board) and is_board_coordinate(col) and is_board_coordinate(row) do
     {:board, board_with_value(board, [col, row], player_number)}
   end
 
@@ -111,22 +75,41 @@ defmodule Boardr.Rules.TicTacToe do
     [[nil, nil, nil], [nil, nil, nil], [nil, nil, nil]]
   end
 
-  defp next_player(%Move{} = move, players) when is_list(players) do
-    next_player move, players, nil
+  defp next_player(%Action{} = action, players) when is_list(players) do
+    next_player action, players, nil
   end
 
-  defp next_player(%Move{player: %Player{number: last_player_number}} = move, [%Player{number: first_player_number} = first_player | other_players], nil) do
+  defp next_player(%Action{player: %Player{number: last_player_number}} = action, [%Player{number: first_player_number} = first_player | other_players], nil) do
     cond do
       last_player_number < first_player_number -> first_player_number
-      last_player_number >= first_player_number -> next_player(move, other_players, first_player)
+      last_player_number >= first_player_number -> next_player(action, other_players, first_player)
     end
   end
 
-  defp next_player(%Move{player: %Player{number: last_player_number}}, [%Player{number: player_number} = player | _], %Player{} = first_player) do
+  defp next_player(%Action{player: %Player{number: last_player_number}}, [%Player{number: player_number} = player | _], %Player{} = first_player) do
     cond do
       last_player_number < player_number -> player
       last_player_number === player_number -> first_player
     end
+  end
+
+  defp possible_actions_for(%GameInformation{board: board}, %Player{} = player) do
+    board
+    |> Enum.with_index()
+    |> Enum.reduce([], fn {row, row_index}, acc ->
+      acc ++ (row
+      |> Enum.with_index()
+      |> Enum.reduce([], fn {value, col_index}, col_acc ->
+        if value === nil, do: [[col_index, row_index] | col_acc], else: col_acc
+      end))
+    end)
+    |> Enum.map(fn position ->
+      %PossibleAction{
+        data: position,
+        player: player,
+        type: :take
+      }
+    end)
   end
 
   defp row_with_value([], _, _) do

@@ -36,7 +36,7 @@ echo
 mkdir -p "$tmp_dir"
 
 echo "Wiping out database..."
-psql boardr -c 'DELETE FROM moves; DELETE FROM players; DELETE FROM games; DELETE FROM users; DELETE FROM identities;'
+psql boardr -c 'DELETE FROM actions; DELETE FROM players; DELETE FROM games; DELETE FROM users; DELETE FROM identities;'
 echo
 
 # Create a first identity.

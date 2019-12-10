@@ -1,10 +1,10 @@
-defmodule Boardr.PossibleMove do
+defmodule Boardr.PossibleAction do
   defstruct data: [],
             game: nil,
             player: nil,
             type: nil
 
-  @type t :: %Boardr.PossibleMove{
+  @type t :: %Boardr.PossibleAction{
     data: List.t,
     game: Boardr.Game.t,
     player: Boardr.Player.t,
