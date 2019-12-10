@@ -2,8 +2,8 @@
 
 ## Entities
 
-* **Rules** - The rules of a competitive game such as Tic-Tac-Toe or Chess.
-* **Board** - A 2-dimensional board.
+* **Board** - A 2- or 3-dimensional board.
+* **Rules** - The rules of a competitive **Board** game such as Chess, Go or Tic-Tac-Toe.
 * **Game** - A game being played on a **Board** according to a set of **Rules**.
 * **User** - A user of the boardr platform.
 * **Player** - A **User** who has joined a **Game**.
