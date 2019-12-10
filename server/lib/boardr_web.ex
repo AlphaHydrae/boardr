@@ -26,6 +26,8 @@ defmodule BoardrWeb do
       alias BoardrWeb.Endpoint
       alias BoardrWeb.HttpProblemDetails
       alias BoardrWeb.Router.Helpers, as: Routes
+      alias Ecto.Changeset
+      alias Ecto.Multi
       alias Plug.Conn
 
       import BoardrWeb.ControllerHelpers

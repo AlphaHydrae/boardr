@@ -33,29 +33,44 @@ defmodule Boardr.Rules.TicTacToe do
   end
 
   def play(
-    %GameInformation{board: board, last_action: nil, players: [%Player{number: first_number} | _]},
+    %GameInformation{board: board, last_action: nil, players: [%Player{number: first_number} | _]} = game_info,
     %Player{number: player_number} = player,
     %{"data" => [col, row], "type" => "take"}
   ) when is_list(board) and player_number === first_number and is_board_coordinate(col) and is_board_coordinate(row) do
-    {
-      :ok,
-      %Action{
-        data: [col, row],
-        player: player,
-        type: "take"
-      }
+    play_and_get_state game_info, %Action{
+      data: [col, row],
+      player: player,
+      type: "take"
     }
+  end
+
+  def play(
+    %GameInformation{last_action: last_action, players: players} = game_info,
+    %Player{number: player_number} = player,
+    %{"data" => [col, row], "type" => "take"}
+  ) when is_board_coordinate(col) and is_board_coordinate(row) do
+    current_player = next_player last_action, players
+    cond do
+      current_player.number == player_number ->
+        play_and_get_state game_info, %Action{
+          data: [col, row],
+          player: player,
+          type: "take"
+        }
+      true ->
+        {:error, :invalid_action}
+    end
   end
 
   def play(%GameInformation{}, %Player{}, _) do
     {:error, :invalid_action}
   end
 
-  def board(%Game{}, nil, nil) do
+  def board(%GameInformation{}, nil, nil) do
     {:board, initial_board()}
   end
 
-  def board(%Game{}, board, %Action{data: [col, row], player: %Player{number: player_number}}) when is_list(board) and is_board_coordinate(col) and is_board_coordinate(row) do
+  def board(%GameInformation{}, board, %Action{data: [col, row], player: %Player{number: player_number}}) when is_list(board) and is_board_coordinate(col) and is_board_coordinate(row) do
     {:board, board_with_value(board, [col, row], player_number)}
   end
 
@@ -90,6 +105,27 @@ defmodule Boardr.Rules.TicTacToe do
     cond do
       last_player_number < player_number -> player
       last_player_number === player_number -> first_player
+    end
+  end
+
+  defp play_and_get_state(
+    %GameInformation{} = game_info,
+    %Action{
+      data: [col, row],
+      player: %Player{number: player_number} = player
+    } = action
+  ) when is_board_coordinate(col) and is_board_coordinate(row) do
+    {:board, new_board} = board game_info, game_info.board, action
+
+    # TODO: check diagonal wins
+    win =
+      new_board |> Enum.at(row) |> Enum.all?(fn value -> value == player_number end) or
+      new_board |> Enum.map(fn current_row -> Enum.at(current_row, col) end) |> Enum.all?(fn value -> value == player_number end)
+
+    if win do
+      {:ok, action, :win, [player]}
+    else
+      {:ok, action, :playing, []}
     end
   end
 

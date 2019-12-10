@@ -14,4 +14,27 @@ defmodule Boardr.GameInformation do
     possible_actions: [Boardr.PossibleAction.t],
     settings: Map.t
   }
+
+  alias Boardr.Game
+  alias Boardr.Rules.TicTacToe, as: Rules
+
+  # FIXME: remove
+  def for_game(%Game{actions: actions, data: data, players: players}) when is_list(actions) and is_list(players) do
+    initial_game_info = %__MODULE__{
+      players: players,
+      settings: data
+    }
+
+    {:board, initial_board_data} = Rules.board initial_game_info, nil, nil
+    board_data = Enum.reduce actions, initial_board_data, fn action, current_board_data ->
+      {:board, new_board_data} = Rules.board initial_game_info, current_board_data, action
+      new_board_data
+    end
+
+    %__MODULE__{
+      initial_game_info |
+      board: board_data,
+      last_action: List.last(actions)
+    }
+  end
 end

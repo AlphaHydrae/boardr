@@ -11,7 +11,9 @@ defmodule Boardr.Game do
     belongs_to :creator, Boardr.Auth.User
     has_many :actions, Boardr.Action
     has_many :players, Boardr.Player
+    many_to_many :winners, Boardr.Player, join_through: "winners"
 
+    field :state, :string
     field :title, :string
     field :data, EctoJsonb
 
@@ -21,6 +23,7 @@ defmodule Boardr.Game do
   @doc false
   def changeset(game, attrs) do
     game
-      |> cast(attrs, [:title])
+    |> cast(attrs, [:state, :title])
+    |> validate_inclusion(:state, ["waiting_for_players", "playing", "draw", "win"])
   end
 end

@@ -39,26 +39,50 @@ defmodule BoardrWeb.ActionsController do
     identity = Repo.get! Identity, identity_id
 
     game = Repo.get!(Game, game_id)
-    |> Repo.preload([actions: [:player], players: []])
+    |> Repo.preload([actions: {from(a in Action, order_by: a.performed_at), [:player]}, players: []])
+    |> Repo.preload(:winners)
 
     last_action = List.last game.actions
 
     # TODO: take player from game.players to avoid extra query
     player = Repo.one! from(p in Player, where: p.game_id == ^game_id and p.user_id == ^identity.user_id)
 
-    game_information = %GameInformation{
-      board: Board.board(game),
-      data: %{},
-      last_action: last_action,
-      players: game.players,
-      settings: game.data
-    }
-
+    game_information = GameInformation.for_game game
     possible_actions = Rules.possible_actions game_information
 
-    {:ok, action} = Rules.play %GameInformation{game_information | possible_actions: possible_actions}, player, action_properties
+    {:ok, action, game_state, winners} = Rules.play %GameInformation{game_information | possible_actions: possible_actions}, player, action_properties
+    {:ok, result} = persist_action %Action{action | game_id: game.id}, game, game_state, winners
+    {:ok, result.action}
+  end
 
-    %Action{action | game_id: game_id}
-    |> Repo.insert(returning: [:id])
+  defp persist_action(%Action{} = action, %Game{} = game, :draw, []) do
+    Multi.new
+    |> Multi.insert(:action, action, returning: [:id])
+    |> Multi.run(:game, fn repo, _ ->
+      Game.changeset(game, %{state: "draw"})
+      |> repo.update
+    end)
+    |> Repo.transaction
+  end
+
+  defp persist_action(%Action{} = action, %Game{} = game, :playing, []) do
+    Multi.new
+    |> Multi.insert(:action, action, returning: [:id])
+    |> Multi.run(:game, fn repo, _ ->
+      Game.changeset(game, %{state: "playing"})
+      |> repo.update
+    end)
+    |> Repo.transaction
+  end
+
+  defp persist_action(%Action{} = action, %Game{} = game, :win, [%Player{} | _] = winners) do
+    Multi.new
+    |> Multi.insert(:action, action, returning: [:id])
+    |> Multi.run(:game, fn repo, _ ->
+      Game.changeset(game, %{state: "win"})
+      |> Changeset.put_assoc(:winners, winners)
+      |> repo.update
+    end)
+    |> Repo.transaction
   end
 end
