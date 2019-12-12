@@ -4,8 +4,6 @@ defmodule BoardrWeb.Games.PossibleActionsController do
   alias Boardr.{Action,Game,GameInformation}
   alias Boardr.Rules.TicTacToe, as: Rules
 
-  plug Authenticate, [:'api:games:show:possible-actions:index'] when action in [:index]
-
   def index(%Conn{} = conn, %{"game_id" => game_id}) do
     game = Repo.get!(Game, game_id)
     |> Repo.preload([actions: {from(a in Action, order_by: a.performed_at), [:player]}, players: []])

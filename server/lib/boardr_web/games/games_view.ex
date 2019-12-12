@@ -22,7 +22,7 @@ defmodule BoardrWeb.GamesView do
   defp render_game(game) do
     %{
       createdAt: game.created_at,
-      data: game.data,
+      settings: game.settings,
       title: game.title,
       updatedAt: game.updated_at
     }

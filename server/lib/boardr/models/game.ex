@@ -13,9 +13,9 @@ defmodule Boardr.Game do
     has_many :players, Boardr.Player
     many_to_many :winners, Boardr.Player, join_through: "winners"
 
+    field :settings, EctoJsonb
     field :state, :string
     field :title, :string
-    field :data, EctoJsonb
 
     timestamps inserted_at: :created_at
   end

@@ -1,11 +1,9 @@
 defmodule Boardr.Rules.TicTacToe do
-  alias Boardr.{Action,Game,GameInformation,Player,PossibleAction}
+  alias Boardr.{Action,GameInformation,Player,Position,PossibleAction}
+
+  require Position
 
   defguard is_board_coordinate(value) when is_integer(value) and value >= 0 and value <= 3
-
-  def init_game_data(_) do
-    %{}
-  end
 
   def possible_actions(%GameInformation{board: nil} = info) do
     possible_actions %GameInformation{
@@ -35,11 +33,11 @@ defmodule Boardr.Rules.TicTacToe do
   def play(
     %GameInformation{board: board, last_action: nil, players: [%Player{number: first_number} | _]} = game_info,
     %Player{number: player_number} = player,
-    %{"data" => [col, row], "type" => "take"}
+    %{"position" => [col, row], "type" => "take"}
   ) when is_list(board) and player_number === first_number and is_board_coordinate(col) and is_board_coordinate(row) do
     play_and_get_state game_info, %Action{
-      data: [col, row],
       player: player,
+      position: Position.dump(col, row),
       type: "take"
     }
   end
@@ -47,14 +45,14 @@ defmodule Boardr.Rules.TicTacToe do
   def play(
     %GameInformation{last_action: last_action, players: players} = game_info,
     %Player{number: player_number} = player,
-    %{"data" => [col, row], "type" => "take"}
+    %{"position" => [col, row], "type" => "take"}
   ) when is_board_coordinate(col) and is_board_coordinate(row) do
     current_player = next_player last_action, players
     cond do
-      current_player.number == player_number ->
+      current_player.number === player_number ->
         play_and_get_state game_info, %Action{
-          data: [col, row],
           player: player,
+          position: Position.dump(col, row),
           type: "take"
         }
       true ->
@@ -70,20 +68,20 @@ defmodule Boardr.Rules.TicTacToe do
     {:board, initial_board()}
   end
 
-  def board(%GameInformation{}, board, %Action{data: [col, row], player: %Player{number: player_number}}) when is_list(board) and is_board_coordinate(col) and is_board_coordinate(row) do
-    {:board, board_with_value(board, [col, row], player_number)}
+  def board(%GameInformation{}, board, %Action{player: %Player{number: player_number}, position: position}) when is_list(board) and is_integer(position) and position >= 0 do
+    {:board, board_with_value(board, Position.parse(position), player_number)}
   end
 
-  defp board_with_value([], [_col, _row], _) do
+  defp board_with_value([], {Position, _col, _row}, _) do
     :board_row_out_of_bounds
   end
 
-  defp board_with_value([ headRow | tailRows ], [col, 0], value) do
+  defp board_with_value([ headRow | tailRows ], {Position, col, 0}, value) do
     [ row_with_value(headRow, col, value) | tailRows ]
   end
 
-  defp board_with_value([ headCol | tailCols ], [col, row], value) do
-    [ headCol | board_with_value(tailCols, [col, row - 1], value) ]
+  defp board_with_value([ headCol | tailCols ], {Position, col, row}, value) do
+    [ headCol | board_with_value(tailCols, Position.d2(col: col, row: row - 1), value) ]
   end
 
   defp initial_board() do
@@ -111,16 +109,19 @@ defmodule Boardr.Rules.TicTacToe do
   defp play_and_get_state(
     %GameInformation{} = game_info,
     %Action{
-      data: [col, row],
-      player: %Player{number: player_number} = player
+      player: %Player{number: player_number} = player,
+      position: position
     } = action
-  ) when is_board_coordinate(col) and is_board_coordinate(row) do
-    {:board, new_board} = board game_info, game_info.board, action
+  ) when is_integer(position) and position >= 0 do
+    {Position, col, row} = Position.parse(position)
+    {:board, new_board} = board(game_info, game_info.board, action)
 
-    # TODO: check diagonal wins
+    rows_count = length(new_board)
     win =
-      new_board |> Enum.at(row) |> Enum.all?(fn value -> value == player_number end) or
-      new_board |> Enum.map(fn current_row -> Enum.at(current_row, col) end) |> Enum.all?(fn value -> value == player_number end)
+      new_board |> Enum.at(row) |> Enum.all?(fn value -> value === player_number end) or
+      new_board |> Enum.map(fn current_row -> Enum.at(current_row, col) end) |> Enum.all?(fn value -> value === player_number end) or
+      0..(rows_count - 1) |> Enum.all?(fn row -> new_board |> Enum.at(row) |> Enum.at(row) === player_number end) or
+      (rows_count - 1)..0 |> Enum.all?(fn row -> new_board |> Enum.at(row) |> Enum.at(rows_count - 1 - row) === player_number end)
 
     if win do
       {:ok, action, :win, [player]}
@@ -136,13 +137,13 @@ defmodule Boardr.Rules.TicTacToe do
       acc ++ (row
       |> Enum.with_index()
       |> Enum.reduce([], fn {value, col_index}, col_acc ->
-        if value === nil, do: [[col_index, row_index] | col_acc], else: col_acc
+        if value === nil, do: [Position.d2(col: col_index, row: row_index) | col_acc], else: col_acc
       end))
     end)
     |> Enum.map(fn position ->
       %PossibleAction{
-        data: position,
         player: player,
+        position: Position.dump(position),
         type: :take
       }
     end)

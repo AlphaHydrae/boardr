@@ -1,6 +1,6 @@
 defmodule BoardrWeb.ActionsView do
   use BoardrWeb, :view
-  alias Boardr.Action
+  alias Boardr.{Action,Position}
 
   def render("create.json", %{action: %Action{} = action}) do
     render_one action, __MODULE__, "show.json", as: :action
@@ -18,8 +18,8 @@ defmodule BoardrWeb.ActionsView do
 
   def render("show.json", %{action: %Action{} = action}) do
     %{
-      data: action.data,
       performedAt: action.performed_at,
+      position: action.position |> Position.parse() |> Tuple.delete_at(0) |> Tuple.to_list(),
       type: action.type
     }
     |> omit_nil()

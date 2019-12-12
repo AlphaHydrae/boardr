@@ -19,10 +19,10 @@ defmodule Boardr.GameInformation do
   alias Boardr.Rules.TicTacToe, as: Rules
 
   # FIXME: remove
-  def for_game(%Game{actions: actions, data: data, players: players}) when is_list(actions) and is_list(players) do
+  def for_game(%Game{actions: actions, players: players, settings: settings}) when is_list(actions) and is_list(players) do
     initial_game_info = %__MODULE__{
       players: players,
-      settings: data
+      settings: settings
     }
 
     {:board, initial_board_data} = Rules.board initial_game_info, nil, nil

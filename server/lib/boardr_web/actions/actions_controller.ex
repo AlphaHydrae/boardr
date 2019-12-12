@@ -2,7 +2,7 @@ defmodule BoardrWeb.ActionsController do
   use BoardrWeb, :controller
 
   alias Boardr.Auth.Identity
-  alias Boardr.{Action,Board,Game,GameInformation,Player}
+  alias Boardr.{Action,Game,GameInformation,Player}
   alias Boardr.Rules.TicTacToe, as: Rules
 
   plug Authenticate, [:'api:games:update:actions:create'] when action in [:create]
@@ -41,8 +41,6 @@ defmodule BoardrWeb.ActionsController do
     game = Repo.get!(Game, game_id)
     |> Repo.preload([actions: {from(a in Action, order_by: a.performed_at), [:player]}, players: []])
     |> Repo.preload(:winners)
-
-    last_action = List.last game.actions
 
     # TODO: take player from game.players to avoid extra query
     player = Repo.one! from(p in Player, where: p.game_id == ^game_id and p.user_id == ^identity.user_id)

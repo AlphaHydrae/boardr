@@ -1,7 +1,7 @@
 defmodule BoardrWeb.Games.PossibleActionsView do
   use BoardrWeb, :view
 
-  alias Boardr.PossibleAction
+  alias Boardr.{Position,PossibleAction}
 
   def render("index.json", %{game_id: game_id, possible_actions: possible_actions}) when is_list(possible_actions) do
     %{
@@ -15,7 +15,7 @@ defmodule BoardrWeb.Games.PossibleActionsView do
 
   def render("show.json", %{game_id: game_id, possible_action: %PossibleAction{} = possible_action}) do
     %{
-      data: possible_action.data,
+      position: possible_action.position |> Position.parse() |> Tuple.delete_at(0) |> Tuple.to_list(),
       type: possible_action.type
     }
     |> omit_nil()

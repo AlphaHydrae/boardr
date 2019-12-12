@@ -1,13 +1,13 @@
 defmodule Boardr.PossibleAction do
-  defstruct data: [],
-            game: nil,
+  defstruct game: nil,
             player: nil,
+            position: nil,
             type: nil
 
   @type t :: %Boardr.PossibleAction{
-    data: List.t,
     game: Boardr.Game.t,
     player: Boardr.Player.t,
+    position: Integer.t,
     type: Atom.t
   }
 end

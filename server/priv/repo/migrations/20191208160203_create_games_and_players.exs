@@ -6,8 +6,8 @@ defmodule Boardr.Repo.Migrations.CreateGamesAndPlayers do
 
     create table(:games, primary_key: false) do
       add :creator_id, references(:users, on_delete: :delete_all, on_update: :update_all, type: :binary_id), null: false
-      add :data, :jsonb, null: false
       add :id, :binary_id, default: fragment("uuid_generate_v4()"), primary_key: true
+      add :settings, :jsonb, null: false
       add :state, :game_states, default: "waiting_for_players", null: false
       add :title, :string, size: 50
       timestamps inserted_at: :created_at, type: :utc_datetime_usec

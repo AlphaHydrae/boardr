@@ -5,7 +5,6 @@ defmodule BoardrWeb.GamesController do
   alias Boardr.Game
 
   plug Authenticate, [:'api:games:create'] when action in [:create]
-  plug Authenticate, [:'api:games:show'] when action in [:show]
 
   def create(
     %Conn{assigns: %{auth: %{"sub" => identity_id}}} = conn,
@@ -38,7 +37,7 @@ defmodule BoardrWeb.GamesController do
   end
 
   defp create_game(game_properties, user_id) when is_binary(user_id) do
-    %Game{creator_id: user_id, data: %{}}
+    %Game{creator_id: user_id, settings: %{}}
     |> Game.changeset(game_properties)
     |> Repo.insert(returning: [:id])
   end
