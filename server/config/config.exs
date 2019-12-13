@@ -29,8 +29,7 @@ database_options = [
   database: System.get_env("BOARDR_DATABASE_NAME", "boardr"),
   hostname: System.get_env("BOARDR_DATABASE_HOST", "localhost"),
   port: String.to_integer(System.get_env("BOARDR_DATABASE_PORT", "5432")),
-  socket_dir: database_socket_dir,
-  url: System.get_env("BOARDR_DATABASE_URL", nil)
+  socket_dir: database_socket_dir
 ]
 
 config :boardr, Boardr.Repo, database_options
