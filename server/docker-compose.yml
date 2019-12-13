@@ -1,0 +1,35 @@
+version: '3.7'
+
+services:
+
+  app:
+    image: boardr/server
+    build: .
+    depends_on:
+      - db
+    environment:
+      BOARDR_DATABASE_URL: ecto://boardr:changeme@db/boardr
+      BOARDR_JWT_PRIVATE_KEY:
+      BOARDR_PORT: 4000
+    networks:
+      - db
+      - default
+    ports:
+      - "${PORT:-4000}:4000"
+
+  db:
+    image: postgres:12.1-alpine
+    environment:
+      POSTGRES_DB: boardr
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_USER: boardr
+    networks:
+      - db
+    volumes:
+      - "db_data:/var/lib/postgresql/data"
+
+networks:
+  db:
+
+volumes:
+  db_data:

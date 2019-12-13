@@ -1,0 +1,5 @@
+/_build
+/cover
+/deps
+/docker-compose.yml
+/Dockerfile
