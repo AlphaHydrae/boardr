@@ -3,7 +3,7 @@ defmodule BoardrWeb.ApiView do
 
   def render("index.json", _) do
     %{
-      version: Boardr.MixProject.project[:version]
+      version: List.to_string(Application.spec(:boardr, :vsn))
     }
     |> put_hal_curies_link()
     |> put_hal_self_link(:api_url, [:index])
