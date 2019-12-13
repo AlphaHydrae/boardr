@@ -5,7 +5,7 @@ services:
   locust:
     build: .
     environment:
-      TARGET_URL: http://google.com
+      TARGET_URL: "http://app:4000"
     image: boardr/locust
     ports:
-      - 8089:8089
+      - "8089:8089"
