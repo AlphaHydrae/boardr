@@ -1,5 +1,6 @@
 /client/.env*
 /client/node_modules
+/inventory.yml
 /server/_build
 /server/config/env.exs
 /server/cover
