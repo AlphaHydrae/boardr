@@ -6,14 +6,24 @@ defmodule Boardr.Application do
   use Application
 
   def start(_type, _args) do
+
+    topologies = [
+      main: [
+        strategy: Cluster.Strategy.Epmd,
+        config: []
+      ]
+    ]
+
     # List all child processes to be supervised
     children = [
-      # Start the Ecto repository
+      # Start the Ecto repository.
       Boardr.Repo,
-      # Start the endpoint when the application starts
-      BoardrWeb.Endpoint
-      # Starts a worker by calling: Boardr.Worker.start_link(arg)
-      # {Boardr.Worker, arg},
+      # Start the endpoint when the application starts.
+      BoardrWeb.Endpoint,
+      # Start the libcluster supervisor.
+      {Cluster.Supervisor, [topologies, [name: Boardr.ClusterSupervisor]]},
+      # Start a dynamic supervisor to manage gaming servers.
+      {DynamicSupervisor, name: Boardr.DynamicSupervisor, strategy: :one_for_one}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

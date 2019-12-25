@@ -18,4 +18,8 @@ defmodule Boardr.Repo do
       {:ok, config}
     end
   end
+
+  def init(_, config) do
+    {:ok, config}
+  end
 end

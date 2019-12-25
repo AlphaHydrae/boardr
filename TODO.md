@@ -25,6 +25,8 @@
 * https://artillery.io
 * https://k6.io
 
+* Roles: normal, maniac, interloper
+
 ### Machines
 
 * basilisk

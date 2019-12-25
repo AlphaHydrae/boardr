@@ -3,8 +3,6 @@ defmodule BoardrWeb.BoardController do
 
   alias Boardr.{Action,Board,Game,GameInformation}
 
-  plug Authenticate, [:'api:games:show:board:show'] when action in [:show]
-
   def show(%Conn{} = conn, %{"game_id" => game_id}) when is_binary(game_id) do
     game = Repo.get!(Game, game_id)
     |> Repo.preload([actions: {from(a in Action, order_by: a.performed_at), [:player]}, players: []])

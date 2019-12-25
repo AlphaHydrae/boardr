@@ -43,6 +43,8 @@ defmodule Boardr.MixProject do
       {:httpoison, "~> 1.6"},
       {:jason, "~> 1.0"},
       {:joken, "~> 2.0"},
+      {:libcluster, "~> 3.1"},
+      {:swarm, "~> 3.0"},
       {:phoenix, "~> 1.4.11"},
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
