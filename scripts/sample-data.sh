@@ -96,3 +96,5 @@ http \
   POST "$players_url" "Authorization:Bearer $BOARDR_OTHER_TOKEN"
 
 echo
+
+set +e
