@@ -1,7 +1,7 @@
 defmodule BoardrWeb.ActionsController do
   use BoardrWeb, :controller
 
-  alias Boardr.Action
+  alias Boardr.{Action,Player,Repo}
   alias Boardr.Gaming.GameServer
 
   plug Authenticate, [:'api:games:update:actions:create'] when action in [:create]
@@ -9,7 +9,8 @@ defmodule BoardrWeb.ActionsController do
   plug Authenticate, [:'api:games:show:actions:show'] when action in [:show]
 
   def create(%Conn{assigns: %{auth: %{"sub" => identity_id}}} = conn, %{"game_id" => game_id} = action_properties) do
-    with {:ok, action} <- GameServer.play(game_id, identity_id, action_properties) do
+    player_id = Repo.one!(from(p in Player, join: u in assoc(p, :user), join: id in assoc(u, :identities), select: p.id, where: p.game_id == ^game_id and id.id == ^identity_id))
+    with {:ok, action} <- GameServer.play(game_id, player_id, Map.delete(action_properties, "game_id")) do
       conn
       |> put_status(201)
       |> put_resp_content_type("application/hal+json")

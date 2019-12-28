@@ -1,18 +1,21 @@
 defmodule BoardrWeb.Games.PossibleActionsController do
   use BoardrWeb, :controller
 
-  alias Boardr.{Action,Game,GameInformation}
-  alias Boardr.Rules.TicTacToe, as: Rules
+  alias Boardr.{Game, Repo}
+  alias Boardr.Gaming.GameServer
 
   def index(%Conn{} = conn, %{"game_id" => game_id}) do
-    game = Repo.get!(Game, game_id)
-    |> Repo.preload([actions: {from(a in Action, order_by: a.performed_at), [:player]}, players: []])
 
-    game_info = GameInformation.for_game game
-    possible_actions = Rules.possible_actions game_info
+    game = Repo.get!(Game, game_id)
+    |> Repo.preload([:players])
+
+    {:ok, possible_actions} = GameServer.possible_actions(game.id)
 
     conn
     |> put_resp_content_type("application/hal+json")
-    |> render(%{game_id: game_id, possible_actions: possible_actions})
+    |> render(%{
+      game: game,
+      possible_actions: possible_actions
+    })
   end
 end

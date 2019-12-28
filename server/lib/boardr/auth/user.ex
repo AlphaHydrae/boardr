@@ -8,6 +8,8 @@ defmodule Boardr.Auth.User do
   @timestamps_opts [type: :utc_datetime_usec]
 
   schema "users" do
+    has_many :identities, Boardr.Auth.Identity
+
     field :name, :string
 
     timestamps inserted_at: :created_at

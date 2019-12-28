@@ -8,19 +8,7 @@ defmodule Boardr.Position do
   # Bitmask with 8-byte chunks equal to: 3, 255, 255, 255
   @max 67108863
 
-  def dump(col, row)
-      when is_integer(col) and col >= 0 and col <= 255 and
-           is_integer(row) and row >= 0 and row <= 255 do
-    dump(d2(col: col, row: row))
-  end
-
-  def dump(col, row, depth)
-      when is_integer(col) and col >= 0 and col <= 255 and
-           is_integer(depth) and depth >= 0 and depth <= 255 and
-           is_integer(row) and row >= 0 and row <= 255 do
-    dump(d3(col: col, depth: depth, row: row))
-  end
-
+  # FIXME: pattern match with record
   def dump({__MODULE__, col, row})
       when is_integer(col) and col >= 0 and col <= 255 and
            is_integer(row) and row >= 0 and row <= 255 do
@@ -29,6 +17,7 @@ defmodule Boardr.Position do
     |> bor(2 <<< 24)
   end
 
+  # FIXME: pattern match with record
   def dump({__MODULE__, col, row, depth})
       when is_integer(col) and col >= 0 and col <= 255 and
            is_integer(depth) and depth >= 0 and depth <= 255 and
@@ -37,6 +26,19 @@ defmodule Boardr.Position do
     |> bor(row <<< 8)
     |> bor(col <<< 16)
     |> bor(3 <<< 24)
+  end
+
+  def from_list([col, row])
+      when is_integer(col) and col >= 0 and col <= 255 and
+           is_integer(row) and row >= 0 and row <= 255 do
+    d2(col: col, row: row)
+  end
+
+  def from_list([col, row, depth])
+      when is_integer(col) and col >= 0 and col <= 255 and
+           is_integer(depth) and depth >= 0 and depth <= 255 and
+           is_integer(row) and row >= 0 and row <= 255 do
+    d3(col: col, depth: depth, row: row)
   end
 
   def max() do
