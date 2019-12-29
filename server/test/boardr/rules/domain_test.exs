@@ -12,4 +12,8 @@ defmodule Boardr.Rules.DomainTest do
   test "convert a two-dimensional position into a list" do
     assert [0, 1] = Domain.position_to_list(Domain.d2(col: 0, row: 1))
   end
+
+  test "the max board dimension size is 256" do
+    assert 256 = Domain.max_board_dimension_size
+  end
 end

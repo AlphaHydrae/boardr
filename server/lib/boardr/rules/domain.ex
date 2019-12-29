@@ -6,7 +6,7 @@ defmodule Boardr.Rules.Domain do
   @type d2 :: record(:d2, col: non_neg_integer, row: non_neg_integer)
   Record.defrecord(:d2, col: nil, row: nil)
 
-  @type game :: record(:game, players: [player], rules: String.t, settings: map | nil)
+  @type game :: record(:game, players: [player], rules: String.t(), settings: map | nil)
   Record.defrecord(:game, players: [], rules: nil, settings: nil)
 
   @type player :: record(:player, number: pos_integer, settings: map | nil)
@@ -20,13 +20,15 @@ defmodule Boardr.Rules.Domain do
 
   defguard is_player_number(value) when is_integer(value) and value >= 1
 
+  defguard is_position_coordinate(value)
+           when is_integer(value) and value >= 0 and value < @max_board_dimension_size
+
   def max_board_dimension_size() do
     @max_board_dimension_size
   end
 
   def position_from_list([col, row])
-      when is_integer(col) and col >= 0 and col < @max_board_dimension_size and
-             is_integer(row) and row >= 0 and row < @max_board_dimension_size do
+      when is_position_coordinate(col) and is_position_coordinate(row) do
     d2(col: col, row: row)
   end
 
