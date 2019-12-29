@@ -16,6 +16,7 @@
 ## Testing
 
 * https://github.com/thoughtbot/ex_machina
+* https://github.com/pspdfkit-labs/bypass
 
 ### Performance Testing
 

@@ -16,7 +16,7 @@ defmodule Boardr.Auth.User do
   end
 
   @doc false
-  def changeset(user, attrs) do
+  def changeset(%__MODULE__{} = user, attrs) when is_map(attrs) do
     user
     |> cast(attrs, [:name])
     |> validate_required([:name])

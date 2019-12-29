@@ -18,12 +18,12 @@ defmodule Boardr.DataCase do
 
   using do
     quote do
-      alias Boardr.Repo
+      alias Boardr.{Fixtures,Repo}
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import Boardr.DataCase
+      import Boardr.{DataCase,Mocks}
     end
   end
 

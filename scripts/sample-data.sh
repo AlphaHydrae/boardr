@@ -80,6 +80,7 @@ http \
   --download --output "$tmp_response_file" --print bBhH \
   :4000/api/games "Authorization:Bearer $BOARDR_TOKEN" "title=Sample data"
 
+export BOARDR_GAME_URL="$(cat "$tmp_response_file"|jq -r "._links.self.href")"
 players_url="$(cat "$tmp_response_file"|jq -r "._links.\"boardr:players\".href")"
 echo
 

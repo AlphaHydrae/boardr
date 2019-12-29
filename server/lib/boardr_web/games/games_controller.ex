@@ -37,7 +37,7 @@ defmodule BoardrWeb.GamesController do
   end
 
   defp create_game(game_properties, user_id) when is_binary(user_id) do
-    %Game{creator_id: user_id, settings: %{}}
+    %Game{creator_id: user_id, rules: "tic-tac-toe", settings: %{}}
     |> Game.changeset(game_properties)
     |> Repo.insert(returning: [:id])
   end

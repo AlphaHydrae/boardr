@@ -1,12 +1,12 @@
 defmodule Boardr.Rules do
-  require Record
+  alias Boardr.Rules.Domain
 
-  @type action :: record(:action, type: Atom.t, position: Integer.t, player_number: Integer.t, data: Map.t)
-  Record.defrecord(:action, :action, type: nil, position: nil, player_number: nil, data: %{})
+  @callback board(Domain.game, map | nil) :: {:ok, []}
+  @callback play(Domain.action, Domain.game, map | nil) ::
+              {:ok, Domain.action, map | nil, :playing}
+              | {:ok, Domain.action, map | nil, :draw}
+              | {:ok, Domain.action, map | nil, {:win, [pos_integer]}}
+  @callback possible_actions(Domain.game, map | nil) :: {:ok, [Domain.action]}
 
-  @type player :: record(:player, number: Integer.t, data: Map.t)
-  Record.defrecord(:player, number: nil, data: %{})
-
-  @type game :: record(:game, players: [player], settings: Map.t)
-  Record.defrecord(:game, players: [], settings: %{})
+  @type t :: module
 end

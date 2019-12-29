@@ -27,8 +27,9 @@ defmodule BoardrWeb.PlayersController do
   end
 
   defp join_game(game_id, user_id) when is_binary(game_id) and is_binary(user_id) do
+    # TODO: start player number at 1
     player_numbers = Repo.all(from p in Player, order_by: p.number, select: p.number, where: p.game_id == ^game_id)
-    next_available_player_number = Enum.reduce_while player_numbers, 0, fn n, acc -> if n > acc, do: {:halt, acc}, else: {:cont, acc + 1} end
+    next_available_player_number = Enum.reduce_while player_numbers, 1, fn n, acc -> if n > acc, do: {:halt, acc}, else: {:cont, acc + 1} end
 
     %Player{game_id: game_id, number: next_available_player_number, user_id: user_id}
     |> Repo.insert(returning: [:id])

@@ -49,7 +49,12 @@ defmodule Boardr.MixProject do
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:postgrex, "~> 0.15.0"}
+      {:postgrex, "~> 0.15.0"},
+      # Development
+      {:ex_doc, "~> 0.21.2", only: :dev}, # Documentation generator
+      # Test
+      {:faker, "~> 0.13", only: :test}, # Random data generation
+      {:hammox, "~> 0.2.1", only: :test} # Behavior-based mocks
     ]
   end
 

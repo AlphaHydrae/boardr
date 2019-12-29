@@ -11,7 +11,7 @@ defmodule Boardr.Action do
     belongs_to(:game, Boardr.Game)
     belongs_to(:player, Boardr.Player)
 
-    field(:position, :integer)
+    field(:position, {:array, :integer})
     field(:type, :string)
 
     timestamps(inserted_at: :performed_at, updated_at: false)
@@ -24,7 +24,7 @@ defmodule Boardr.Action do
     |> validate_inclusion(:type, ["take"])
     |> validate_number(:position,
       greater_than_or_equal_to: 0,
-      less_than_or_equal_to: Boardr.Position.max()
+      less_than_or_equal_to: Boardr.Rules.Domain.max_board_dimension_size()
     )
     |> validate_required([:game_id, :player_id, :position, :type])
   end

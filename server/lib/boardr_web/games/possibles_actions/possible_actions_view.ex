@@ -1,9 +1,9 @@
 defmodule BoardrWeb.Games.PossibleActionsView do
   use BoardrWeb, :view
 
-  alias Boardr.{Position,Rules}
+  alias Boardr.Rules.Domain
 
-  require Boardr.{Position,Rules}
+  require Boardr.Rules.Domain
 
   def render("index.json", %{game: game, possible_actions: possible_actions}) when is_list(possible_actions) do
     %{
@@ -15,11 +15,11 @@ defmodule BoardrWeb.Games.PossibleActionsView do
     |> put_hal_self_link(:games_possible_actions_url, [:index, game.id])
   end
 
-  def render("show.json", %{game: game, possible_action: Rules.action(type: type, player_number: player_number, position: Position.d2(col: col, row: row))}) do
+  def render("show.json", %{game: game, possible_action: Domain.take(player_number: player_number, position: position)}) do
     player = game.players |> Enum.find(fn player -> player.number === player_number end)
     %{
-      position: [col, row],
-      type: type
+      position: Domain.position_to_list(position),
+      type: "take"
     }
     |> omit_nil()
     |> put_hal_links(%{

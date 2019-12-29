@@ -13,6 +13,7 @@ defmodule Boardr.Game do
     has_many :players, Boardr.Player
     many_to_many :winners, Boardr.Player, join_through: "winners"
 
+    field :rules, :string
     field :settings, EctoJsonb
     field :state, :string
     field :title, :string
@@ -21,7 +22,7 @@ defmodule Boardr.Game do
   end
 
   @doc false
-  def changeset(game, attrs) do
+  def changeset(%__MODULE__{} = game, attrs) when is_map(attrs) do
     game
     |> cast(attrs, [:state, :title])
     |> validate_inclusion(:state, ["waiting_for_players", "playing", "draw", "win"])

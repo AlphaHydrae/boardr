@@ -40,6 +40,9 @@ config :boardr, BoardrWeb.Endpoint,
   render_errors: [view: BoardrWeb.ErrorView, accepts: ~w(json)],
   pubsub: [name: Boardr.PubSub, adapter: Phoenix.PubSub.PG2]
 
+config :boardr, :gaming,
+  rules_factory: Boardr.Rules.DefaultFactory
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",

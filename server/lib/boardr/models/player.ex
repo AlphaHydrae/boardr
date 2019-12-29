@@ -17,8 +17,8 @@ defmodule Boardr.Player do
   end
 
   @doc false
-  def changeset(game, attrs) do
-    game
-      |> cast(attrs, [:number])
+  def changeset(%__MODULE__{} = player, attrs) when is_map(attrs) do
+    player
+    |> cast(attrs, [:number])
   end
 end
