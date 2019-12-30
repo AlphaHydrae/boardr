@@ -5,7 +5,7 @@
 * https://github.com/jonasschmidt/ex_json_schema
 * https://hexdocs.pm/json_patch/JSONPatch.html
 
-# Database
+## Database
 
 * Add indices
 
@@ -28,7 +28,13 @@
 
 * Roles: normal, maniac, interloper
 
-### Machines
+# Error handling
+
+* https://elixirforum.com/t/should-one-use-pipes-or-with/21000/10
+  * https://github.com/expede/exceptional
+  * https://github.com/CrowdHailer/OK
+
+## Machines
 
 * basilisk
 * hydra

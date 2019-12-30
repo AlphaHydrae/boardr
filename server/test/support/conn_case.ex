@@ -18,19 +18,26 @@ defmodule BoardrWeb.ConnCase do
   use ExUnit.CaseTemplate
 
   alias BoardrWeb.HalDocument
+  alias Plug.Conn
 
   import BoardrWeb.HalDocument, only: [put_curie: 4]
+  import Phoenix.ConnTest, only: [post: 3]
+  import Plug.Conn, only: [put_req_header: 3]
+
+  @endpoint BoardrWeb.Endpoint
 
   using do
     quote do
       # Import conveniences for testing with connections.
       use Phoenix.ConnTest
 
+      alias Boardr.Repo
       alias BoardrWeb.HalDocument
       alias BoardrWeb.Router.Helpers, as: Routes
       alias Plug.Conn
 
-      import BoardrWeb.ConnCase, only: [api_document: 0, test_api_url: 0, test_api_url: 1]
+      import BoardrWeb.ConnCase, only: [api_document: 0, post_json: 3, test_api_url: 0, test_api_url: 1]
+      import BoardrWeb.QueryCounter, only: [count_queries: 1, counted_queries: 1]
       import HalDocument, only: [put_link: 3, put_link: 4, put_property: 3]
 
       # The default endpoint for testing.
@@ -48,17 +55,21 @@ defmodule BoardrWeb.ConnCase do
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 
-  def api_document() do
-    api_document(%{}, true)
-  end
+  def api_document(properties \\ %{}, include_default_curie \\ true)
 
   def api_document(properties, false) when is_map(properties) do
-    HalDocument.new(properties)
+    properties
   end
 
   def api_document(properties, true) when is_map(properties) do
-    HalDocument.new(properties)
+    properties
     |> put_curie(:boardr, test_api_url("/rels/{rel}"), :templated)
+  end
+
+  def post_json(%Conn{} = conn, path, value) when is_binary(path) do
+    conn
+    |> put_req_header("content-type", "application/json")
+    |> post(path, Jason.encode!(value))
   end
 
   def test_api_url(path \\ "") do
