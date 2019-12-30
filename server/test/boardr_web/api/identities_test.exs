@@ -29,6 +29,7 @@ defmodule BoardrWeb.IdentitiesTest do
                "updatedAt" => updated_at
              } = body
 
+      # Check links.
       %{self: %{"id" => identity_id}} =
         assert body
                |> has_links?(
@@ -36,7 +37,7 @@ defmodule BoardrWeb.IdentitiesTest do
                  self: test_api_url_regex(["/identities/", ~r/(?<id>[\w-]+)/])
                )
 
-      # Check properties.
+      # Check main properties.
       assert Map.take(body, Map.keys(@valid_properties)) == @valid_properties
       assert provider_id == @valid_properties["email"]
 
@@ -48,9 +49,11 @@ defmodule BoardrWeb.IdentitiesTest do
       assert just_after?(last_authenticated_at, test_start)
       assert last_authenticated_at == last_seen_at
 
+      # Check the body contains exactly the expected keys.
       assert Map.keys(body) ==
                ~w(_embedded _links createdAt email emailVerified lastAuthenticatedAt lastSeenAt provider providerId updatedAt)
 
+      # Check the expected number of database queries were made.
       assert query_counter |> counted_queries == %{insert: 1}
 
       assert Map.delete(Repo.get!(Identity, identity_id), :__meta__) ==
