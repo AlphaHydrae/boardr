@@ -36,13 +36,21 @@ defmodule BoardrWeb.ConnCase do
       alias BoardrWeb.Router.Helpers, as: Routes
       alias Plug.Conn
 
-      import BoardrWeb.ConnCase, only: [api_document: 0, post_json: 3, test_api_url: 0, test_api_url: 1]
+      import BoardrWeb.ConnCase,
+        only: [api_document: 0, post_json: 3, test_api_url: 0, test_api_url: 1, test_api_url_regex: 1]
+
       import BoardrWeb.QueryCounter, only: [count_queries: 1, counted_queries: 1]
       import HalDocument, only: [put_link: 3, put_link: 4, put_property: 3]
 
       # The default endpoint for testing.
       @endpoint BoardrWeb.Endpoint
     end
+  end
+
+  setup_all do
+    %{
+      test_start: DateTime.utc_now()
+    }
   end
 
   setup tags do
@@ -74,5 +82,22 @@ defmodule BoardrWeb.ConnCase do
 
   def test_api_url(path \\ "") do
     "http://localhost:4000/api#{path}"
+  end
+
+  def test_api_url_regex(parts) when is_list(parts) do
+    ~r/#{
+      ([~r/^/, test_api_url()] ++ parts ++ [~r/$/])
+      |> Enum.map(&test_api_url_regex_part/1)
+      |> Enum.join("")
+    }/
+  end
+
+  defp test_api_url_regex_part(part) when is_binary(part) do
+    Regex.escape(part)
+  end
+
+  defp test_api_url_regex_part(%Regex{} = part) do
+    assert Regex.opts(part) == ""
+    Regex.source(part)
   end
 end
