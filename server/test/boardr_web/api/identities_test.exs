@@ -3,6 +3,9 @@ defmodule BoardrWeb.IdentitiesTest do
 
   alias Boardr.Auth.Identity
 
+  import BoardrWeb.Assertions
+  import MapChecker
+
   @api_path "/api/identities"
   @valid_properties %{"email" => "jdoe@example.com", "provider" => "local"}
 
@@ -19,107 +22,69 @@ defmodule BoardrWeb.IdentitiesTest do
         |> post_json(@api_path, @valid_properties)
         |> json_response(201)
 
-      assert %{
-               "_embedded" => _embedded,
-               "createdAt" => created_at,
-               "emailVerified" => false,
-               "lastAuthenticatedAt" => last_authenticated_at,
-               "lastSeenAt" => last_seen_at,
-               "providerId" => provider_id,
-               "updatedAt" => updated_at
-             } = body
-
-      # Check links.
-      %{self: %{"id" => identity_id}} =
-        assert body
-               |> has_links?(
-                 collection: test_api_url("/identities"),
-                 self: test_api_url_regex(["/identities/", ~r/(?<id>[\w-]+)/])
-               )
-
-      # Check main properties.
-      assert Map.take(body, Map.keys(@valid_properties)) == @valid_properties
-      assert provider_id == @valid_properties["email"]
-
-      # Check timestamps.
-      assert just_after?(created_at, test_start)
-      assert created_at == updated_at
-
-      # Check authentication timestamps.
-      assert just_after?(last_authenticated_at, test_start)
-      assert last_authenticated_at == last_seen_at
-
-      # Check the body contains exactly the expected keys.
-      assert Map.keys(body) ==
-               ~w(_embedded _links createdAt email emailVerified lastAuthenticatedAt lastSeenAt provider providerId updatedAt)
+      %{result: %{id: identity_id} = expected_identity} = MapChecker.new(body)
+        |> check_hal_property("_links", fn links ->
+          MapChecker.new(links)
+          |> check_hal_property_missing("boardr:user", nil, :user_id)
+          |> check_hal_property("self", fn self ->
+            MapChecker.new(self)
+            |> check_hal_property("href", test_api_url_regex(["/identities/", ~r/(?<id>[\w-]+)/]), merge: true)
+          end, merge: true)
+          |> ignore_hal_properties(["collection"])
+        end, merge: true)
+        |> check_hal_properties(@valid_properties, %{"email" => :email, "provider" => :provider})
+        |> check_hal_property("createdAt", &(&1 |> just_after(test_start)), :created_at)
+        |> check_hal_property("emailVerified", false, :email_verified)
+        |> check_hal_property_missing("emailVerifiedAt", nil, :email_verified_at)
+        |> check_hal_property("lastAuthenticatedAt", &(&1 |> just_after(test_start)), :last_authenticated_at)
+        |> check_hal_property("lastSeenAt", body["lastAuthenticatedAt"], from: :last_authenticated_at, into: :last_seen_at)
+        |> check_hal_property("providerId", body["email"], from: :email, into: :provider_id)
+        |> check_hal_property("updatedAt", body["createdAt"], from: :created_at, into: :updated_at)
+        |> ignore_hal_properties(["_embedded"])
 
       # Check the expected number of database queries were made.
       assert query_counter |> counted_queries == %{insert: 1}
 
-      assert Map.delete(Repo.get!(Identity, identity_id), :__meta__) ==
-               Map.delete(
-                 %Identity{
-                   created_at: elem(DateTime.from_iso8601(created_at), 1),
-                   email: @valid_properties["email"],
-                   email_verified: false,
-                   email_verified_at: nil,
-                   id: identity_id,
-                   last_authenticated_at: elem(DateTime.from_iso8601(last_authenticated_at), 1),
-                   last_seen_at: elem(DateTime.from_iso8601(last_seen_at), 1),
-                   provider: @valid_properties["provider"],
-                   provider_id: provider_id,
-                   updated_at: elem(DateTime.from_iso8601(updated_at), 1),
-                   user_id: nil
-                 },
-                 :__meta__
-               )
+      assert_in_db Identity, identity_id, expected_identity
     end
   end
 
-  def has_links?(body, expected_links) when is_map(body) and is_list(expected_links) do
-    links = body["_links"]
+  def parse_hal_link(link, href, link_properties \\ %{})
 
-    result =
-      expected_links
-      |> Keyword.keys()
-      |> Enum.reduce(%{}, fn rel, acc ->
-        Map.put(acc, rel, assert(links |> has_link?(rel, Keyword.get(expected_links, rel))))
-      end)
+  def parse_hal_link(link, %Regex{} = href, link_properties)
+      when is_map(link) and is_map(link_properties) do
+    actual_href = link["href"]
+    captures = Regex.named_captures(href, actual_href)
 
-    expected_link_rels = expected_links |> Keyword.keys() |> Enum.map(&Atom.to_string/1)
-    assert links == Map.take(links, expected_link_rels)
-    result
+    if !is_nil(captures) and Map.put(link_properties, "href", actual_href) == link do
+      Map.put(link, "href", captures)
+    else
+      false
+    end
   end
 
-  def has_links?(_body, expected_links) when is_list(expected_links) do
-    false
+  def parse_hal_link(link, href, link_properties)
+      when is_map(link) and is_binary(href) and is_map(link_properties) do
+    if Map.put(link_properties, "href", href) == link do
+      link
+    else
+      false
+    end
   end
 
-  def has_link?(links, rel, href, link_properties \\ %{})
-
-  def has_link?(links, rel, href, link_properties)
-      when is_atom(rel) and is_binary(href) and is_map(link_properties) do
-    rel_string = Atom.to_string(rel)
-    expected_link = Map.put(link_properties, "href", href)
-    assert %{^rel_string => ^expected_link} = links
-    href
+  def just_after(iso8601, %DateTime{} = t2) when is_binary(iso8601) do
+    case DateTime.from_iso8601(iso8601) do
+      {:ok, t1, 0} -> just_after(t1, t2)
+      {:ok, _, _} -> {:nok, [message: "is not UTC", expected_just_after: t2]}
+    end
   end
 
-  def has_link?(links, rel, %Regex{} = href_regex, link_properties)
-      when is_atom(rel) and is_map(link_properties) do
-    rel_string = Atom.to_string(rel)
-    assert %{^rel_string => %{"href" => href} = link} = links
-    assert link == Map.put(link_properties, "href", href)
-    assert Regex.named_captures(href_regex, href)
-  end
-
-  def just_after?(iso8601, %DateTime{} = t2) when is_binary(iso8601) do
-    assert {:ok, t1, 0} = DateTime.from_iso8601(iso8601)
-    just_after?(t1, t2)
-  end
-
-  def just_after?(%DateTime{} = t1, %DateTime{} = t2) do
+  def just_after(%DateTime{} = t1, %DateTime{} = t2) do
     diff = DateTime.diff(t1, t2, :microsecond)
-    diff >= 0 and diff < 500_000
+    cond do
+      diff < 0 -> {:nok, [message: "is before #{inspect(t2)}", expected_just_after: t2]}
+      diff > 500_000 -> {:nok, [message: "is more than 500ms after #{inspect(t2)}", expected_just_after: t2]}
+      true -> {:ok, t1}
+    end
   end
 end
