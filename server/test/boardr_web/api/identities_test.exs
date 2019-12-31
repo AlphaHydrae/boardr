@@ -3,8 +3,8 @@ defmodule BoardrWeb.IdentitiesTest do
 
   alias Boardr.Auth.Identity
 
+  use Asserter
   import BoardrWeb.Assertions
-  import MapChecker
 
   @api_path "/api/identities"
   @valid_properties %{"email" => "jdoe@example.com", "provider" => "local"}
@@ -22,25 +22,28 @@ defmodule BoardrWeb.IdentitiesTest do
         |> post_json(@api_path, @valid_properties)
         |> json_response(201)
 
-      %{result: %{id: identity_id} = expected_identity} = MapChecker.new(body)
-        |> check_hal_property("_links", fn links ->
-          MapChecker.new(links)
-          |> check_hal_property_missing("boardr:user", nil, :user_id)
-          |> check_hal_property("self", fn self ->
-            MapChecker.new(self)
-            |> check_hal_property("href", test_api_url_regex(["/identities/", ~r/(?<id>[\w-]+)/]), merge: true)
-          end, merge: true)
-          |> ignore_hal_properties(["collection"])
+      %{result: %{id: identity_id} = expected_identity} = assert_body(body)
+        |> assert_key("_links", fn links ->
+          assert_map(links)
+          |> assert_key_absent("boardr:user", nil, into: :user_id)
+          |> assert_key("collection", fn collection ->
+            assert_map(collection)
+            |> assert_key("href", test_api_url("/identities"), into: false)
+          end)
+          |> assert_key("self", fn self ->
+            assert_map(self)
+            |> assert_key("href", test_api_url_regex(["/identities/", ~r/(?<id>[\w-]+)/]))
+          end)
         end, merge: true)
-        |> check_hal_properties(@valid_properties, %{"email" => :email, "provider" => :provider})
-        |> check_hal_property("createdAt", &(&1 |> just_after(test_start)), :created_at)
-        |> check_hal_property("emailVerified", false, :email_verified)
-        |> check_hal_property_missing("emailVerifiedAt", nil, :email_verified_at)
-        |> check_hal_property("lastAuthenticatedAt", &(&1 |> just_after(test_start)), :last_authenticated_at)
-        |> check_hal_property("lastSeenAt", body["lastAuthenticatedAt"], from: :last_authenticated_at, into: :last_seen_at)
-        |> check_hal_property("providerId", body["email"], from: :email, into: :provider_id)
-        |> check_hal_property("updatedAt", body["createdAt"], from: :created_at, into: :updated_at)
-        |> ignore_hal_properties(["_embedded"])
+        |> assert_keys(@valid_properties)
+        |> assert_key("createdAt", &(&1 |> just_after(test_start)), value: true)
+        |> assert_key("emailVerified", false)
+        |> assert_key_absent("emailVerifiedAt", nil)
+        |> assert_key("lastAuthenticatedAt", &(&1 |> just_after(test_start)), value: true)
+        |> assert_key("lastSeenAt", body["lastAuthenticatedAt"], from: :last_authenticated_at)
+        |> assert_key("providerId", body["email"], from: :email)
+        |> assert_key("updatedAt", body["createdAt"], from: :created_at)
+        |> ignore_keys(["_embedded"])
 
       # Check the expected number of database queries were made.
       assert query_counter |> counted_queries == %{insert: 1}

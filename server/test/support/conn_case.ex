@@ -20,6 +20,7 @@ defmodule BoardrWeb.ConnCase do
   alias BoardrWeb.HalDocument
   alias Plug.Conn
 
+  import Asserter.Assertions
   import BoardrWeb.HalDocument, only: [put_curie: 4]
   import Phoenix.ConnTest, only: [post: 3]
   import Plug.Conn, only: [put_req_header: 3]
@@ -37,7 +38,14 @@ defmodule BoardrWeb.ConnCase do
       alias Plug.Conn
 
       import BoardrWeb.ConnCase,
-        only: [api_document: 0, post_json: 3, test_api_url: 0, test_api_url: 1, test_api_url_regex: 1]
+        only: [
+          api_document: 0,
+          assert_body: 1,
+          post_json: 3,
+          test_api_url: 0,
+          test_api_url: 1,
+          test_api_url_regex: 1
+        ]
 
       import BoardrWeb.QueryCounter, only: [count_queries: 1, counted_queries: 1]
       import HalDocument, only: [put_link: 3, put_link: 4, put_property: 3]
@@ -74,6 +82,11 @@ defmodule BoardrWeb.ConnCase do
     |> put_curie(:boardr, test_api_url("/rels/{rel}"), :templated)
   end
 
+  def assert_body(value) when is_map(value) do
+    assert_map(value)
+    |> on_assert_key_result(&underscore_asserter_keys/4)
+  end
+
   def post_json(%Conn{} = conn, path, value) when is_binary(path) do
     conn
     |> put_req_header("content-type", "application/json")
@@ -90,6 +103,13 @@ defmodule BoardrWeb.ConnCase do
       |> Enum.map(&test_api_url_regex_part/1)
       |> Enum.join("")
     }/
+  end
+
+  def underscore_asserter_keys(result, key, value, _opts) do
+    cond do
+      is_map(result) ->
+        Map.put(result, key |> Inflex.underscore() |> String.to_atom(), value)
+    end
   end
 
   defp test_api_url_regex_part(part) when is_binary(part) do

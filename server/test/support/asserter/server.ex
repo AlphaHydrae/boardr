@@ -1,4 +1,4 @@
-defmodule AsserterServer do
+defmodule Asserter.Server do
   use GenServer
 
   def start_link(_ \\ nil) do
@@ -13,8 +13,8 @@ defmodule AsserterServer do
     GenServer.call(__MODULE__, {:assert_map_keys, ref, keys})
   end
 
-  def new_map(ref, subject) when is_reference(ref) and is_map(subject) do
-    GenServer.call(__MODULE__, {:map, ref, subject})
+  def register_map(ref, subject) when is_reference(ref) and is_map(subject) do
+    GenServer.call(__MODULE__, {:register_map, ref, subject})
   end
 
   def verify_on_exit!() do
@@ -41,7 +41,7 @@ defmodule AsserterServer do
 
   @impl true
   def handle_call(
-    {:map, ref, subject},
+    {:register_map, ref, subject},
     _from,
     %{maps: maps} = state
   ) when is_reference(ref) and is_map(subject) do

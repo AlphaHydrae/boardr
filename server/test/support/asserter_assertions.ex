@@ -1,2 +1,0 @@
-defmodule AsserterAssertions do
-end

@@ -41,6 +41,7 @@ defmodule Boardr.MixProject do
       {:content_type, "~> 0.1.0"},
       {:ecto_sql, "~> 3.1"},
       {:httpoison, "~> 1.6"},
+      {:inflex, "~> 2.0"},
       {:jason, "~> 1.0"},
       {:joken, "~> 2.0"},
       {:libcluster, "~> 3.1"},
