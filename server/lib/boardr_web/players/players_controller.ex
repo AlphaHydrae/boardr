@@ -1,15 +1,13 @@
 defmodule BoardrWeb.PlayersController do
   use BoardrWeb, :controller
 
-  alias Boardr.Auth.Identity
   alias Boardr.Player
 
   plug Authenticate, [:'api:players:create'] when action in [:create]
   plug Authenticate, [:'api:players:show'] when action in [:show]
 
-  def create(%Conn{assigns: %{auth: %{"sub" => identity_id}}} = conn, %{"game_id" => game_id}) do
-    identity = Repo.get! Identity, identity_id
-    with {:ok, player} <- join_game(game_id, identity.user_id) do
+  def create(%Conn{assigns: %{auth: %{"sub" => user_id}}} = conn, %{"game_id" => game_id}) do
+    with {:ok, player} <- join_game(game_id, user_id) do
       conn
       |> put_status(201)
       |> put_resp_content_type("application/hal+json")

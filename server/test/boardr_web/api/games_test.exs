@@ -34,7 +34,7 @@ defmodule BoardrWeb.GamesTest do
           links
           |> assert_hal_curies()
           |> assert_hal_link("collection", test_api_url("/games"))
-          |> assert_hal_link("boardr:creator", test_api_url_regex(["/users/", ~r/(?<creator_id>[\w-]+)/]))
+          |> assert_hal_link("boardr:creator", test_api_url_regex(["/users/", ~r/(?<creator_id>#{Regex.escape(user.id)})/]))
           |> assert_hal_link("self", test_api_url_regex(["/games/", ~r/(?<id>[\w-]+)/]))
           |> ignore_keys(["boardr:board", "boardr:players"])
         end)

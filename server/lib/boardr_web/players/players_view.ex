@@ -9,6 +9,7 @@ defmodule BoardrWeb.PlayersView do
 
   def render("show.json", %{player: %Player{} = player}) do
     %{
+      createdAt: player.created_at,
       number: player.number
     }
     |> put_hal_curies_link()

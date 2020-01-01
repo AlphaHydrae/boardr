@@ -1,4 +1,8 @@
 defmodule BoardrWeb.QueryCounter do
+  def count_queries(test) when is_atom(test) do
+    count_queries(%{test: test}).query_counter
+  end
+
   def count_queries(%{test: test} = context) when is_atom(test) do
     {:ok, agent} = Agent.start_link(fn -> %{} end)
 
