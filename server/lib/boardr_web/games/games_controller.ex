@@ -19,7 +19,9 @@ defmodule BoardrWeb.GamesController do
   end
 
   def index(%Conn{} = conn, _) do
-    games = Repo.all(from(g in Game, order_by: [desc: g.created_at]))
+    games = from(g in Game, order_by: [desc: g.created_at])
+    |> Repo.all()
+    |> Repo.preload([:winners])
 
     conn
     |> put_resp_content_type("application/hal+json")
@@ -28,6 +30,7 @@ defmodule BoardrWeb.GamesController do
 
   def show(%Conn{} = conn, %{"id" => id}) when is_binary(id) do
     game = Repo.get!(Game, id)
+    |> Repo.preload([:winners])
 
     conn
     |> put_resp_content_type("application/hal+json")

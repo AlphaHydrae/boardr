@@ -174,7 +174,7 @@ defmodule Boardr.Gaming.GameServer do
   end
 
   defp game_result_changeset(%Game{} = game, %Action{performed_at: action_performed_at}, :playing) do
-    Game.changeset(game, %{updated_at: action_performed_at})
+    Game.changeset(game, %{state: "playing", updated_at: action_performed_at})
   end
 
   defp game_result_changeset(%Game{} = game, %Action{performed_at: action_performed_at}, :draw) do

@@ -19,43 +19,66 @@ defmodule BoardrWeb.IntegrationTest do
 
   setup :count_queries
 
-  test "play winning tic-tac-toe game with bob and alice", %{
+  test "play a winning tic-tac-toe game with bob and alice", %{
     conn: %Conn{} = conn
   } do
     conn
     |> register(@bob)
     |> register(@alice)
+    # Create and join the game.
     |> create_game(@bob)
+    |> check_game(state: "waiting_for_players", possible_actions: %{@bob => 0, @alice => 0})
     |> join_game(@bob)
     |> join_game(@alice)
-
-    |> check_possible_actions(@bob, 9)
+    |> check_game(state: "waiting_for_players", possible_actions: %{@bob => 9, @alice => 0})
+    # Play the game.
     |> play(@bob, col: 1, row: 0)
-
-    |> check_possible_actions(@alice, 8)
+    |> check_game(state: "playing", possible_actions: %{@bob => 0, @alice => 8})
     |> play(@alice, col: 1, row: 1)
-
-    |> check_possible_actions(@bob, 7)
-    |> check_possible_actions(@alice, 7)
+    |> check_game(state: "playing", possible_actions: %{@bob => 7, @alice => 0})
     |> play(@bob, col: 2, row: 2)
-
-    |> check_possible_actions(@alice, 6)
+    |> check_game(state: "playing", possible_actions: %{@bob => 0, @alice => 6})
     |> play(@alice, col: 2, row: 1)
-
-    |> check_possible_actions(@bob, 5)
-    |> check_possible_actions(@alice, 5)
+    |> check_game(state: "playing", possible_actions: %{@bob => 5, @alice => 0})
     |> play(@bob, col: 0, row: 2)
-
-    |> check_possible_actions(@alice, 4)
+    |> check_game(state: "playing", possible_actions: %{@bob => 0, @alice => 4})
     |> play(@alice, col: 0, row: 0)
-
-    |> check_possible_actions(@bob, 3)
+    |> check_game(state: "playing", possible_actions: %{@bob => 3, @alice => 0})
     |> play(@bob, col: 1, row: 2)
+    |> check_game(state: "win", possible_actions: %{@bob => 0, @alice => 0}, winners: [@bob])
+  end
 
-    |> check_possible_actions(@bob, 0)
-    |> check_possible_actions(@alice, 0)
-
-    # TODO: check winners
+  test "play a tic-tac-toe game to a draw with bob and alice", %{
+    conn: %Conn{} = conn
+  } do
+    conn
+    |> register(@bob)
+    |> register(@alice)
+    # Create and join the game.
+    |> create_game(@bob)
+    |> check_game(state: "waiting_for_players", possible_actions: %{@bob => 0, @alice => 0})
+    |> join_game(@bob)
+    |> join_game(@alice)
+    |> check_game(state: "waiting_for_players", possible_actions: %{@bob => 9, @alice => 0})
+    # Play the game.
+    |> play(@bob, col: 2, row: 0)
+    |> check_game(state: "playing", possible_actions: %{@bob => 0, @alice => 8})
+    |> play(@alice, col: 1, row: 1)
+    |> check_game(state: "playing", possible_actions: %{@bob => 7, @alice => 0})
+    |> play(@bob, col: 1, row: 0)
+    |> check_game(state: "playing", possible_actions: %{@bob => 0, @alice => 6})
+    |> play(@alice, col: 0, row: 0)
+    |> check_game(state: "playing", possible_actions: %{@bob => 5, @alice => 0})
+    |> play(@bob, col: 2, row: 2)
+    |> check_game(state: "playing", possible_actions: %{@bob => 0, @alice => 4})
+    |> play(@alice, col: 2, row: 1)
+    |> check_game(state: "playing", possible_actions: %{@bob => 3, @alice => 0})
+    |> play(@bob, col: 0, row: 1)
+    |> check_game(state: "playing", possible_actions: %{@bob => 0, @alice => 2})
+    |> play(@alice, col: 1, row: 2)
+    |> check_game(state: "playing", possible_actions: %{@bob => 1, @alice => 0})
+    |> play(@bob, col: 0, row: 2)
+    |> check_game(state: "draw", possible_actions: %{@bob => 0, @alice => 0})
   end
 
   # Scenario functions
@@ -73,7 +96,7 @@ defmodule BoardrWeb.IntegrationTest do
              |> json_response(201)
 
     conn
-    |> assign_to(player, "token", authentication_token)
+    |> assign_to(player, :token, authentication_token)
   end
 
   defp create_game(%Conn{} = conn, %TestPlayer{} = player) do
@@ -81,7 +104,8 @@ defmodule BoardrWeb.IntegrationTest do
              "_links" => %{
                "boardr:actions" => %{"href" => game_actions_url},
                "boardr:players" => %{"href" => game_players_url},
-               "boardr:possible-actions" => %{"href" => game_possible_actions_url}
+               "boardr:possible-actions" => %{"href" => game_possible_actions_url},
+               "self" => %{"href" => game_url}
              }
            } =
              conn
@@ -91,26 +115,94 @@ defmodule BoardrWeb.IntegrationTest do
 
     conn
     |> assign(:game_actions_url, game_actions_url)
+    |> assign(:game_url, game_url)
     |> assign(:game_players_url, game_players_url)
     |> assign(:game_possible_actions_url, game_possible_actions_url)
   end
 
   defp join_game(%Conn{} = conn, %TestPlayer{} = player) do
+    assert %{"_links" => %{"self" => %{"href" => player_url}}} =
+             conn
+             |> authenticate_as(player)
+             |> post_json(conn.assigns[:game_players_url], %{})
+             |> json_response(201)
+
     conn
-    |> authenticate_as(player)
-    |> post_json(conn.assigns[:game_players_url], %{})
-    |> json_response(201)
+    |> assign_to(player, :url, player_url)
+  end
+
+  defp check_game(%Conn{} = conn,
+         state: "draw",
+         possible_actions: expected_possible_actions
+       ) do
+    conn
+    |> check_game_state("draw")
+    |> check_game_possible_actions(expected_possible_actions)
+  end
+
+  defp check_game(%Conn{} = conn,
+         state: "win",
+         possible_actions: expected_possible_actions,
+         winners: [%TestPlayer{} = winner]
+       ) do
+    conn
+    |> check_game_state("win", winner)
+    |> check_game_possible_actions(expected_possible_actions)
+  end
+
+  defp check_game(%Conn{} = conn,
+         state: expected_state,
+         possible_actions: expected_possible_actions
+       ) do
+    conn
+    |> check_game_state(expected_state)
+    |> check_game_possible_actions(expected_possible_actions)
+  end
+
+  defp check_game_possible_actions(
+         %Conn{} = conn,
+         %{
+           @bob => expected_possible_actions_by_bob,
+           @alice => expected_possible_actions_by_alice
+         }
+       )
+       when is_integer(expected_possible_actions_by_bob) and
+              is_integer(expected_possible_actions_by_alice) do
+    assert %{"_embedded" => %{"boardr:possible-actions" => possible_actions}} =
+             conn
+             |> authenticate_as(@bob)
+             |> get(conn.assigns[:game_possible_actions_url])
+             |> json_response(200)
+
+    possible_actions_by_bob = get_player_actions(conn, @bob, possible_actions)
+    possible_actions_by_alice = get_player_actions(conn, @alice, possible_actions)
+
+    assert length(possible_actions_by_bob) == expected_possible_actions_by_bob
+    assert length(possible_actions_by_alice) == expected_possible_actions_by_alice
+
+    assert length(possible_actions) ==
+             expected_possible_actions_by_alice + expected_possible_actions_by_bob
 
     conn
   end
 
-  defp check_possible_actions(%Conn{} = conn, %TestPlayer{} = player, expected) when is_integer(expected) do
-    assert %{"_embedded" => %{"boardr:possible-actions" => possible_actions}} = conn
-    |> authenticate_as(player)
-    |> get(conn.assigns[:game_possible_actions_url])
-    |> json_response(200)
+  defp check_game_state(%Conn{} = conn, expected_state, winner \\ nil)
+       when is_binary(expected_state) do
+    assert game =
+             %{"state" => ^expected_state} =
+             conn
+             |> authenticate_as(@bob)
+             |> get(conn.assigns[:game_url])
+             |> json_response(200)
 
-    assert length(possible_actions) == expected
+    if winner do
+      winner_url = get_player_value(conn, winner, :url)
+
+      assert [%{"_links" => %{"self" => %{"href" => ^winner_url}}}] =
+               get_in(game, ["_embedded", "boardr:winners"])
+    else
+      assert get_in(game, ["_embedded", "boardr:winners"]) == nil
+    end
 
     conn
   end
@@ -130,19 +222,28 @@ defmodule BoardrWeb.IntegrationTest do
   # Utility functions
 
   defp assign_to(%Conn{} = conn, %TestPlayer{} = player, key, value) do
-    assign(conn, get_test_player_key(player, key), value)
+    assign(conn, get_player_key(player, key), value)
   end
 
   defp authenticate_as(%Conn{} = conn, %TestPlayer{} = player) do
     conn
-    |> put_req_header("authorization", "Bearer #{get_test_player_value(conn, player, :token)}")
+    |> put_req_header("authorization", "Bearer #{get_player_value(conn, player, :token)}")
   end
 
-  defp get_test_player_key(%TestPlayer{name: name}, key) do
+  defp get_player_key(%TestPlayer{name: name}, key) do
     String.to_atom("#{name}_#{key}")
   end
 
-  defp get_test_player_value(%Conn{} = conn, %TestPlayer{} = player, key) do
-    conn.assigns[get_test_player_key(player, key)]
+  defp get_player_value(%Conn{} = conn, %TestPlayer{} = player, key) do
+    conn.assigns[get_player_key(player, key)]
+  end
+
+  defp get_player_actions(%Conn{} = conn, %TestPlayer{} = player, actions)
+       when is_list(actions) do
+    player_url = get_player_value(conn, player, :url)
+
+    Enum.filter(actions, fn action ->
+      get_in(action, ["_links", "boardr:player", "href"]) == player_url
+    end)
   end
 end

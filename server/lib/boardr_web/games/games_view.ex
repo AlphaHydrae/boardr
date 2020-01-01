@@ -20,10 +20,11 @@ defmodule BoardrWeb.GamesView do
   end
 
   defp render_game(game) do
-    %{
+    result = %{
       createdAt: game.created_at,
       rules: game.rules,
       settings: game.settings,
+      state: game.state,
       title: game.title,
       updatedAt: game.updated_at
     }
@@ -38,5 +39,13 @@ defmodule BoardrWeb.GamesView do
       collection: %{ href: Routes.games_url(Endpoint, :index) }
     })
     |> put_hal_self_link(:games_url, [:show, game.id])
+
+    if Ecto.assoc_loaded?(game.winners) and not Enum.empty?(game.winners) do
+      result |> Map.put(:_embedded, %{
+        'boardr:winners': render_many(game.winners, BoardrWeb.Games.PlayersView, "show.json", as: :player)
+      })
+    else
+      result
+    end
   end
 end

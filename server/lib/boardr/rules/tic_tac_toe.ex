@@ -7,6 +7,7 @@ defmodule Boardr.Rules.TicTacToe do
 
   @behaviour Boardr.Rules
 
+  # TODO: use a record, drop last player number
   defmodule State do
     defstruct board: nil,
               last_player_number: nil,
