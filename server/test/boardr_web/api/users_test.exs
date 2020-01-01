@@ -50,8 +50,6 @@ defmodule BoardrWeb.UsersTest do
         |> assert_keys(@valid_properties)
         |> assert_key("createdAt", &(&1.subject |> just_after(test_start)))
         |> assert_key_identical("updatedAt", "createdAt")
-        # FIXME: why doesn't this fail?!
-        |> ignore_keys(["_embedded", "_links"])
 
       # JWT token
       claims = verify_jwt_token!(jwt_token)

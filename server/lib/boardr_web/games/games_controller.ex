@@ -1,17 +1,15 @@
 defmodule BoardrWeb.GamesController do
   use BoardrWeb, :controller
 
-  alias Boardr.Auth.Identity
   alias Boardr.Game
 
   plug Authenticate, [:'api:games:create'] when action in [:create]
 
   def create(
-    %Conn{assigns: %{auth: %{"sub" => identity_id}}} = conn,
+    %Conn{assigns: %{auth: %{"sub" => user_id}}} = conn,
     game_properties
-  ) when is_map(game_properties) and is_binary(identity_id) do
-    identity = Repo.get! Identity, identity_id
-    with {:ok, game} <- create_game(game_properties, identity.user_id) do
+  ) when is_map(game_properties) and is_binary(user_id) do
+    with {:ok, game} <- create_game(game_properties, user_id) do
       conn
       |> put_status(201)
       |> put_resp_content_type("application/hal+json")

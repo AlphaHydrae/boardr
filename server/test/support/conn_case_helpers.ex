@@ -1,4 +1,5 @@
 defmodule BoardrWeb.ConnCaseHelpers do
+  alias Boardr.Auth.User
   alias Plug.Conn
 
   import ExUnit.Assertions
@@ -6,6 +7,16 @@ defmodule BoardrWeb.ConnCaseHelpers do
   import Plug.Conn, only: [put_req_header: 3]
 
   @endpoint BoardrWeb.Endpoint
+
+  def generate_token!(%User{id: user_id}) do
+    {:ok, token} =
+      Boardr.Auth.Token.generate(%{
+        scope: "api",
+        sub: user_id
+      })
+
+    token
+  end
 
   def just_after(unix_timestamp, t2, opts \\ [])
 

@@ -22,11 +22,13 @@ defmodule BoardrWeb.GamesView do
   defp render_game(game) do
     %{
       createdAt: game.created_at,
+      rules: game.rules,
       settings: game.settings,
       title: game.title,
       updatedAt: game.updated_at
     }
     |> omit_nil()
+    |> put_hal_curies_link()
     |> put_hal_links(%{
       'boardr:board': %{ href: Routes.games_board_url(Endpoint, :show, game.id) },
       'boardr:creator': %{ href: Routes.users_url(Endpoint, :show, game.creator_id) },

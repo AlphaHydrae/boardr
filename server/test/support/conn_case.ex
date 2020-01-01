@@ -30,6 +30,7 @@ defmodule BoardrWeb.ConnCase do
       import BoardrWeb.Assertions
       import BoardrWeb.ConnCaseHelpers,
         only: [
+          generate_token!: 1,
           just_after: 2,
           just_after: 3,
           post_json: 3,

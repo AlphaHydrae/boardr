@@ -126,6 +126,7 @@ defmodule Asserter.Assertions do
 
     value = subject[key]
     identical_value = subject[identical_key]
+
     unless Map.has_key?(subject, key) and value === identical_value do
       raise Error,
         message: "property #{inspect(key)} does not match property #{inspect(identical_key)}",
@@ -156,6 +157,7 @@ defmodule Asserter.Assertions do
     mark_asserted_keys!(asserter, keys)
 
     actual = Map.take(subject, keys)
+
     unless actual == properties do
       raise Error,
         message:
@@ -192,6 +194,8 @@ defmodule Asserter.Assertions do
         keys
       )
       when is_map(subject) and is_list(keys) do
+    mark_asserted_keys!(asserter, keys)
+
     unless Enum.all?(keys, fn key -> Map.has_key?(subject, key) end) do
       raise Error,
         message: "map does not have some of the specified keys",
@@ -199,8 +203,6 @@ defmodule Asserter.Assertions do
         expected: keys,
         subject: subject
     end
-
-    mark_asserted_keys!(asserter, keys)
 
     asserter
   end
@@ -214,13 +216,18 @@ defmodule Asserter.Assertions do
     %Asserter{asserter | options: Keyword.put(options, :get_identical_key_value, callback)}
   end
 
-  defp mark_asserted_keys!(%Asserter{asserted_keys: asserted_keys, ref: ref, subject: subject}, keys) do
-
+  defp mark_asserted_keys!(
+         %Asserter{asserted_keys: asserted_keys, ref: ref, subject: subject},
+         keys
+       ) do
     already_asserted_keys = Enum.filter(keys, fn key -> key in asserted_keys end)
+
     if length(already_asserted_keys) >= 1 do
       raise Error,
         message:
-          "assertions have already been made on keys #{already_asserted_keys |> Enum.map(&inspect/1) |> Enum.join(", ")}",
+          "assertions have already been made on keys #{
+            already_asserted_keys |> Enum.map(&inspect/1) |> Enum.join(", ")
+          }",
         asserted_keys: already_asserted_keys,
         subject: subject
     end
@@ -243,15 +250,20 @@ defmodule Asserter.Assertions do
     from = Keyword.get(effective_options, :from)
     into = Keyword.get(effective_options, :into)
     merge = Keyword.get(effective_options, :merge, false)
+    # TODO: change callback to conversion from subject key to result key
     callback = Keyword.get(effective_options, :on_assert_key_result)
     value = if from, do: Map.get(result, from, Map.get(subject, from)), else: value
 
     cond do
       merge and is_map(result) and is_map(value) ->
-        %Asserter{asserter | result: Map.merge(result, value)}
+        %Asserter{
+          asserter
+          | asserted_keys: asserted_keys ++ [key],
+            result: Map.merge(result, value)
+        }
 
       into == false ->
-        asserter
+        %Asserter{asserter | asserted_keys: asserted_keys ++ [key]}
 
       into ->
         %Asserter{
