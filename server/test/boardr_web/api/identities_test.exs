@@ -13,6 +13,7 @@ defmodule BoardrWeb.IdentitiesTest do
       conn: %Conn{} = conn,
       test_start: %DateTime{} = test_start
     } do
+      # FIXME: check Location header
       body =
         conn
         |> post_json(@api_path, @valid_properties)

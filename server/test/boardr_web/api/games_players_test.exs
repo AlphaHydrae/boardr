@@ -23,6 +23,7 @@ defmodule BoardrWeb.GamesPlayersTest do
     } do
       count_queries(test)
 
+      # FIXME: check Location header
       body =
         conn
         |> put_req_header("authorization", "Bearer #{generate_token!(user)}")

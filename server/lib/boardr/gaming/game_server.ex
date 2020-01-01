@@ -47,7 +47,7 @@ defmodule Boardr.Gaming.GameServer do
       game.players
       |> Enum.map(fn %Player{number: player_number} -> Domain.player(number: player_number) end)
 
-    rules_game = Domain.game(players: rules_players, rules: game.rules, settings: game.settings)
+    rules_game = Domain.game(players: rules_players, rules: game.rules, settings: game.settings, state: String.to_atom(game.state))
 
     {:reply, get_rules!(game).board(rules_game, rules_state), state}
   end
@@ -67,7 +67,7 @@ defmodule Boardr.Gaming.GameServer do
       game.players
       |> Enum.map(fn %Player{number: player_number} -> Domain.player(number: player_number) end)
 
-    rules_game = Domain.game(players: rules_players, settings: game.settings)
+    rules_game = Domain.game(players: rules_players, settings: game.settings, state: String.to_atom(game.state))
 
     with {:ok, action, new_rules_state, game_result} <-
            get_rules!(game).play(
@@ -101,7 +101,7 @@ defmodule Boardr.Gaming.GameServer do
       game.players
       |> Enum.map(fn %Player{number: player_number} -> Domain.player(number: player_number) end)
 
-    rules_game = Domain.game(players: rules_players, rules: game.rules, settings: game.settings)
+    rules_game = Domain.game(players: rules_players, rules: game.rules, settings: game.settings, state: String.to_atom(game.state))
 
     {:reply, get_rules!(game).possible_actions(rules_game, rules_state), state}
   end
@@ -123,7 +123,7 @@ defmodule Boardr.Gaming.GameServer do
       game.players
       |> Enum.map(fn %Player{number: player_number} -> Domain.player(number: player_number) end)
 
-    rules_game = Domain.game(players: rules_players, rules: game.rules, settings: game.settings)
+    rules_game = Domain.game(players: rules_players, rules: game.rules, settings: game.settings, state: String.to_atom(game.state))
 
     {:ok, {rules_state, number_of_actions}} =
       Repo.transaction(fn ->

@@ -6,8 +6,10 @@ defmodule Boardr.Rules.Domain do
   @type d2 :: record(:d2, col: non_neg_integer, row: non_neg_integer)
   Record.defrecord(:d2, col: nil, row: nil)
 
-  @type game :: record(:game, players: [player], rules: String.t(), settings: map | nil)
-  Record.defrecord(:game, players: [], rules: nil, settings: nil)
+  @type game_state :: :waiting_for_players | :playing | :win | :draw
+
+  @type game :: record(:game, players: [player], rules: String.t(), settings: map | nil, state: game_state)
+  Record.defrecord(:game, players: [], rules: nil, settings: nil, state: :waiting_for_player)
 
   @type player :: record(:player, number: pos_integer, settings: map | nil)
   Record.defrecord(:player, number: nil, settings: nil)

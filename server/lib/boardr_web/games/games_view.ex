@@ -30,9 +30,11 @@ defmodule BoardrWeb.GamesView do
     |> omit_nil()
     |> put_hal_curies_link()
     |> put_hal_links(%{
+      'boardr:actions': %{ href: Routes.games_actions_url(Endpoint, :index, game.id) },
       'boardr:board': %{ href: Routes.games_board_url(Endpoint, :show, game.id) },
       'boardr:creator': %{ href: Routes.users_url(Endpoint, :show, game.creator_id) },
       'boardr:players': %{ href: Routes.games_players_url(Endpoint, :create, game.id) },
+      'boardr:possible-actions': %{ href: Routes.games_possible_actions_url(Endpoint, :index, game.id) },
       collection: %{ href: Routes.games_url(Endpoint, :index) }
     })
     |> put_hal_self_link(:games_url, [:show, game.id])

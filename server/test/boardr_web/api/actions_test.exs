@@ -27,6 +27,7 @@ defmodule BoardrWeb.ActionsTest do
       first_player: %Player{user: user} = first_player,
       test_start: %DateTime{} = test_start
     } do
+      # FIXME: check Location header
       body =
         conn
         |> put_req_header("authorization", "Bearer #{generate_token!(user)}")

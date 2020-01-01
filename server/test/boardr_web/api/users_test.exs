@@ -20,6 +20,7 @@ defmodule BoardrWeb.UsersTest do
       identity: identity,
       test_start: %DateTime{} = test_start
     } do
+      # FIXME: check Location header
       body =
         conn
         |> put_req_header("authorization", "Bearer #{generate_registration_token!(identity)}")

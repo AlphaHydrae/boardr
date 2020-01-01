@@ -41,6 +41,16 @@ defmodule Boardr.Rules.TicTacToe do
   end
 
   @impl true
+  def play(_action, Domain.game(state: :draw), _state) do
+    {:error, :game_finished}
+  end
+
+  @impl true
+  def play(_action, Domain.game(state: :win), _state) do
+    {:error, :game_finished}
+  end
+
+  @impl true
   def play(
         Domain.take(player_number: player_number),
         Domain.game(players: [Domain.player(number: first_player_number), _]),
@@ -88,6 +98,16 @@ defmodule Boardr.Rules.TicTacToe do
   @impl true
   def play(_, _, _) do
     {:error, :invalid_action}
+  end
+
+  @impl true
+  def possible_actions(Domain.game(state: :draw), _state) do
+    {:ok, []}
+  end
+
+  @impl true
+  def possible_actions(Domain.game(state: :win), _state) do
+    {:ok, []}
   end
 
   @impl true

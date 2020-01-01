@@ -20,6 +20,7 @@ defmodule BoardrWeb.GamesTest do
       test_start: %DateTime{} = test_start,
       user: user
     } do
+      # FIXME: check Location header
       body =
         conn
         |> put_req_header("authorization", "Bearer #{generate_token!(user)}")
@@ -36,8 +37,10 @@ defmodule BoardrWeb.GamesTest do
           |> assert_hal_link("collection", test_api_url("/games"))
           |> assert_hal_link("boardr:creator", test_api_url_regex(["/users/", ~r/(?<creator_id>#{Regex.escape(user.id)})/]))
           |> assert_hal_link("self", test_api_url_regex(["/games/", ~r/(?<id>[\w-]+)/]))
+          |> assert_hal_link("boardr:actions", fn %{id: game_id} -> test_api_url("/games/#{game_id}/actions") end)
           |> assert_hal_link("boardr:board", fn %{id: game_id} -> test_api_url("/games/#{game_id}/board") end)
           |> assert_hal_link("boardr:players", fn %{id: game_id} -> test_api_url("/games/#{game_id}/players") end)
+          |> assert_hal_link("boardr:possible-actions", fn %{id: game_id} -> test_api_url("/games/#{game_id}/possible-actions") end)
         end)
 
         # Properties
