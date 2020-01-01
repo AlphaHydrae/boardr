@@ -18,7 +18,6 @@ defmodule BoardrWeb.UsersTest do
     test "create a user account", %{
       conn: %Conn{} = conn,
       identity: identity,
-      query_counter: query_counter,
       test_start: %DateTime{} = test_start
     } do
       body =
@@ -67,11 +66,7 @@ defmodule BoardrWeb.UsersTest do
       |> assert_key("sub", user_id)
 
       # Database changes
-      assert_db_queries(query_counter,
-        insert: 1,
-        update: 1
-      )
-
+      assert_db_queries(insert: 1, update: 1)
       assert_in_db(User, user_id, expected_user)
     end
   end

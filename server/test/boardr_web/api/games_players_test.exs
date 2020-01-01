@@ -21,7 +21,7 @@ defmodule BoardrWeb.GamesPlayersTest do
       test_start: %DateTime{} = test_start,
       user: user
     } do
-      query_counter = count_queries(test)
+      count_queries(test)
 
       body =
         conn
@@ -55,10 +55,7 @@ defmodule BoardrWeb.GamesPlayersTest do
         |> assert_key("number", 1)
 
       # Database changes
-      assert_db_queries(query_counter,
-        insert: 1
-      )
-
+      assert_db_queries(insert: 1)
       assert_in_db(Player, player_id, expected_player)
     end
 
@@ -75,7 +72,7 @@ defmodule BoardrWeb.GamesPlayersTest do
       # Create the user who will be the second player.
       other_user = Fixtures.user()
 
-      query_counter = count_queries(test)
+      count_queries(test)
 
       body =
         conn
@@ -109,10 +106,7 @@ defmodule BoardrWeb.GamesPlayersTest do
         |> assert_key("number", 2)
 
       # Database changes
-      assert_db_queries(query_counter,
-        insert: 1
-      )
-
+      assert_db_queries(insert: 1)
       assert_in_db(Player, player_id, expected_player)
     end
   end

@@ -40,7 +40,7 @@ defmodule BoardrWeb.ConnCase do
           verify_jwt_token!: 1
         ]
 
-      import BoardrWeb.QueryCounter, only: [count_queries: 1, counted_queries: 1]
+      import QueryCounter, only: [count_queries: 1, counted_queries: 0]
 
       # The default endpoint for testing.
       @endpoint BoardrWeb.Endpoint

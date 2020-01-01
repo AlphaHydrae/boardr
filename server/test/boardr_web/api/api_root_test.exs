@@ -5,7 +5,7 @@ defmodule BoardrWeb.ApiRootTest do
 
   setup :count_queries
 
-  test "GET /api", %{conn: %Conn{} = conn, query_counter: query_counter} do
+  test "GET /api", %{conn: %Conn{} = conn} do
     body =
       conn
       |> get(@api_path)
@@ -27,6 +27,6 @@ defmodule BoardrWeb.ApiRootTest do
     |> assert_key("version", Application.spec(:boardr, :vsn) |> to_string)
 
     # Database changes
-    assert_db_queries(query_counter, select: 0)
+    assert_db_queries(select: 0)
   end
 end

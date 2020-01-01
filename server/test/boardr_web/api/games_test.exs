@@ -17,7 +17,6 @@ defmodule BoardrWeb.GamesTest do
   describe "POST /api/games" do
     test "create a game", %{
       conn: %Conn{} = conn,
-      query_counter: query_counter,
       test_start: %DateTime{} = test_start,
       user: user
     } do
@@ -49,10 +48,7 @@ defmodule BoardrWeb.GamesTest do
         |> assert_key_identical("updatedAt", "createdAt")
 
       # Database changes
-      assert_db_queries(query_counter,
-        insert: 1
-      )
-
+      assert_db_queries(insert: 1)
       assert_in_db(Game, game_id, expected_game)
     end
   end

@@ -11,7 +11,6 @@ defmodule BoardrWeb.IdentitiesTest do
   describe "POST /api/identities" do
     test "create a local identity", %{
       conn: %Conn{} = conn,
-      query_counter: query_counter,
       test_start: %DateTime{} = test_start
     } do
       body =
@@ -65,7 +64,7 @@ defmodule BoardrWeb.IdentitiesTest do
       |> assert_key("sub", identity_id)
 
       # Database changes
-      assert_db_queries(query_counter, insert: 1)
+      assert_db_queries(insert: 1)
       assert_in_db(Identity, identity_id, expected_identity)
     end
   end

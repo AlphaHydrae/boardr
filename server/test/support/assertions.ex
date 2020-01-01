@@ -5,7 +5,7 @@ defmodule BoardrWeb.Assertions do
 
   import Asserter.Assertions
   import BoardrWeb.ConnCaseHelpers, only: [test_api_url: 1]
-  import BoardrWeb.QueryCounter, only: [counted_queries: 1]
+  import QueryCounter, only: [counted_queries: 0]
 
   def assert_api_map(value) when is_map(value) do
     assert_map(value)
@@ -25,12 +25,12 @@ defmodule BoardrWeb.Assertions do
     end)
   end
 
-  def assert_db_queries(query_counter, expected) when is_pid(query_counter) and is_list(expected) do
-    assert_db_queries(query_counter, Enum.into(expected, %{}))
+  def assert_db_queries(expected) when is_list(expected) do
+    assert_db_queries(Enum.into(expected, %{}))
   end
 
-  def assert_db_queries(query_counter, expected) when is_pid(query_counter) and is_map(expected) do
-    queries = query_counter |> counted_queries
+  def assert_db_queries(expected) when is_map(expected) do
+    queries = counted_queries() || %{}
     {transactions, remaining_queries} = Map.split(queries, [:begin, :commit, :rollback])
 
     # FIXME: check begin, commit & rollback if specified
