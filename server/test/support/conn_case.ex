@@ -40,11 +40,15 @@ defmodule BoardrWeb.ConnCase do
       import BoardrWeb.ConnCase,
         only: [
           api_document: 0,
-          assert_body: 1,
+          assert_api_map: 1,
+          assert_hal_link: 2,
+          assert_hal_link: 3,
+          assert_hal_link: 4,
           post_json: 3,
           test_api_url: 0,
           test_api_url: 1,
-          test_api_url_regex: 1
+          test_api_url_regex: 1,
+          verify_jwt_token!: 1
         ]
 
       import BoardrWeb.QueryCounter, only: [count_queries: 1, counted_queries: 1]
@@ -82,9 +86,27 @@ defmodule BoardrWeb.ConnCase do
     |> put_curie(:boardr, test_api_url("/rels/{rel}"), :templated)
   end
 
-  def assert_body(value) when is_map(value) do
+  def assert_api_map(value) when is_map(value) do
     assert_map(value)
-    |> on_assert_key_result(&underscore_asserter_keys/4)
+    # Transform result keys into underscored atoms.
+    |> on_assert_key_result(fn result, key, value, _opts ->
+      cond do
+        is_map(result) ->
+          Map.put(result, convert_asserter_result_key(key), value)
+      end
+    end)
+    # Retrieve values of transformed identical keys.
+    |> on_get_identical_key_value(fn %Asserter{result: result, subject: subject}, key, identical_key, _opts ->
+      Map.get(result, convert_asserter_result_key(identical_key), Map.get(subject, key))
+    end)
+  end
+
+  def assert_hal_link(%Asserter{subject: subject} = asserter, href, link_properties \\ %{}, opts \\ []) when is_map(subject) and is_map(link_properties) and is_list(opts) do
+    chain = asserter
+    |> assert_map()
+    |> assert_key("href", href, opts)
+
+    Enum.reduce(link_properties, chain, fn {key, value}, acc -> acc |> assert_key(key, value, opts) end)
   end
 
   def post_json(%Conn{} = conn, path, value) when is_binary(path) do
@@ -105,11 +127,15 @@ defmodule BoardrWeb.ConnCase do
     }/
   end
 
-  def underscore_asserter_keys(result, key, value, _opts) do
-    cond do
-      is_map(result) ->
-        Map.put(result, key |> Inflex.underscore() |> String.to_atom(), value)
-    end
+  def verify_jwt_token!(token) when is_binary(token) do
+    jwt_private_key = Application.get_env(:boardr, BoardrWeb.Endpoint)[:jwt_private_key]
+    signer = Joken.Signer.create("RS512", %{"pem" => jwt_private_key})
+    {:ok, claims} = Joken.verify(token, signer)
+    claims
+  end
+
+  defp convert_asserter_result_key(key) when is_binary(key) do
+    key |> Inflex.underscore() |> String.to_atom()
   end
 
   defp test_api_url_regex_part(part) when is_binary(part) do

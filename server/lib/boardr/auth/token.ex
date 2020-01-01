@@ -2,7 +2,7 @@ defmodule Boardr.Auth.Token do
   alias Boardr.Auth.Token.JWT
 
   def generate(claims) do
-    case JWT.encode_and_sign(claims, create_signer()) do
+    case JWT.generate_and_sign(claims, create_signer()) do
       {:ok, jwt, _} -> {:ok, jwt}
       {:error, reason} -> {:error, reason}
       true -> {:error, :unexpected}
@@ -24,6 +24,7 @@ defmodule Boardr.Auth.Token do
   defmodule JWT do
     use Joken.Config
 
+    @impl Joken.Config
     def token_config() do
       issuer = Application.get_env(:boardr, BoardrWeb.Endpoint)[:jwt_issuer]
 

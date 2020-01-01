@@ -59,7 +59,7 @@ defmodule Asserter.Assertions do
         subject: subject
     end
 
-    result_value = if Regex.names(value_regex) >= 1, do: captures, else: value
+    result_value = if value_regex |> Regex.names() |> length() >= 1, do: captures, else: value
     update_result(asserter, key, result_value, opts)
   end
 
@@ -85,7 +85,6 @@ defmodule Asserter.Assertions do
   def assert_key_absent(
         %Asserter{subject: subject} = asserter,
         key,
-        value,
         opts \\ []
       ) when is_map(subject) and is_list(opts) do
     if Map.has_key?(subject, key) do
@@ -95,7 +94,42 @@ defmodule Asserter.Assertions do
         subject: subject
     end
 
-    update_result(asserter, key, value, opts)
+    update_result(asserter, key, Keyword.get(opts, :value), opts)
+  end
+
+  def assert_key_identical(
+    %Asserter{options: options, ref: ref, subject: subject} = asserter,
+    key,
+    identical_key,
+    opts \\ []
+  ) when is_map(subject) and is_list(opts) do
+    :ok = Asserter.Server.assert_map_key(ref, key)
+
+    unless Map.has_key?(subject, identical_key) do
+      raise Error,
+        message: "property #{inspect(identical_key)} is absent",
+        expected_key: identical_key,
+        subject: subject
+    end
+
+    value = subject[key]
+    identical_value = subject[identical_key]
+    unless Map.has_key?(subject, key) and value === identical_value do
+      raise Error,
+        message: "property #{inspect(key)} does not match",
+        actual: value,
+        expected: identical_value,
+        subject: subject
+    end
+
+    effective_options = Keyword.merge(options, opts)
+    effective_value = if effective_value_callback = Keyword.get(effective_options, :get_identical_key_value) do
+      effective_value_callback.(asserter, key, identical_key, effective_options)
+    else
+      value
+    end
+
+    update_result(asserter, key, effective_value, opts)
   end
 
   def assert_keys(
@@ -160,13 +194,17 @@ defmodule Asserter.Assertions do
     %Asserter{asserter | options: Keyword.put(options, :on_assert_key_result, callback)}
   end
 
-  defp update_result(%Asserter{options: options, result: result} = asserter, key, value, opts) do
+  def on_get_identical_key_value(%Asserter{options: options} = asserter, callback) do
+    %Asserter{asserter | options: Keyword.put(options, :get_identical_key_value, callback)}
+  end
+
+  defp update_result(%Asserter{options: options, result: result, subject: subject} = asserter, key, value, opts) do
     effective_options = Keyword.merge(options, opts)
     from = Keyword.get(effective_options, :from)
     into = Keyword.get(effective_options, :into)
     merge = Keyword.get(effective_options, :merge, false)
     callback = Keyword.get(effective_options, :on_assert_key_result)
-    value = if from, do: Map.get(result, from), else: value
+    value = if from, do: Map.get(result, from, Map.get(subject, from)), else: value
 
     cond do
       merge and is_map(result) and is_map(value) ->
