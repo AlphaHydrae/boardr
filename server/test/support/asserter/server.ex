@@ -5,65 +5,100 @@ defmodule Asserter.Server do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
-  def assert_map_key(ref, key) when is_reference(ref) do
-    assert_map_keys(ref, [key])
+  def assert_map_key(pid, ref, key) when is_pid(pid) and is_reference(ref) do
+    assert_map_keys(pid, ref, [key])
   end
 
-  def assert_map_keys(ref, keys) when is_reference(ref) and is_list(keys) do
-    GenServer.call(__MODULE__, {:assert_map_keys, ref, keys})
+  def assert_map_keys(pid, ref, keys) when is_pid(pid) and is_reference(ref) and is_list(keys) do
+    GenServer.call(__MODULE__, {:assert_map_keys, pid, ref, keys})
   end
 
-  def register_map(ref, subject) when is_reference(ref) and is_map(subject) do
-    GenServer.call(__MODULE__, {:register_map, ref, subject})
+  def register_map(pid, ref, subject)
+      when is_pid(pid) and is_reference(ref) and is_map(subject) do
+    GenServer.call(__MODULE__, {:register_map, pid, ref, subject})
   end
 
-  def verify_on_exit!() do
-    GenServer.call(__MODULE__, :verify_on_exit)
+  def verify(pid) when is_pid(pid) do
+    GenServer.call(__MODULE__, {:verify, pid})
+  end
+
+  def verify_on_exit(pid) when is_pid(pid) do
+    GenServer.call(__MODULE__, {:verify_on_exit, pid})
   end
 
   # Server callbacks
 
   @impl true
   def init(:ok) do
-    {:ok, %{maps: %{}}}
+    {:ok, %{pids: %{maps: %{}}}}
   end
 
   @impl true
   def handle_call(
-        {:assert_map_keys, ref, keys},
+        {:assert_map_keys, pid, ref, keys},
         _from,
-        %{maps: maps} = state
+        %{pids: pids} = state
       )
-      when is_reference(ref) and is_list(keys) do
-    current_map = Map.get(maps, ref)
-    asserted_keys = MapSet.union(current_map.asserted_keys, MapSet.new(keys))
+      when is_pid(pid) and is_reference(ref) and is_list(keys) do
+    current_pid_state = Map.get(pids, pid)
+    current_pid_maps = current_pid_state.maps
+    current_map_state = Map.get(current_pid_maps, ref)
+    asserted_keys = MapSet.union(current_map_state.asserted_keys, MapSet.new(keys))
 
     {:reply, :ok,
      Map.put(
        state,
-       :maps,
-       Map.put(maps, ref, Map.put(current_map, :asserted_keys, asserted_keys))
+       :pids,
+       Map.put(
+         pids,
+         pid,
+         Map.put(
+           current_pid_state,
+           :maps,
+           Map.put(current_pid_maps, ref, Map.put(current_map_state, :asserted_keys, asserted_keys))
+         )
+       )
      )}
   end
 
   @impl true
   def handle_call(
-        {:register_map, ref, subject},
+        {:register_map, pid, ref, subject},
         _from,
-        %{maps: maps} = state
+        %{pids: pids} = state
       )
-      when is_reference(ref) and is_map(subject) do
+      when is_pid(pid) and is_reference(ref) and is_map(subject) do
+    current_pid_state = Map.get(pids, pid, %{})
+    current_pid_maps = Map.get(current_pid_state, :maps, %{})
     new_map = %{asserted_keys: MapSet.new(), subject: subject}
-    {:reply, :ok, Map.put(state, :maps, Map.put(maps, ref, new_map))}
+    {
+      :reply,
+      :ok,
+      Map.put(
+        state,
+        :pids,
+        Map.put(
+          pids,
+          pid,
+          Map.put(
+            current_pid_state,
+            :maps,
+            Map.put(current_pid_maps, ref, new_map)
+          )
+        )
+      )
+    }
   end
 
   @impl true
   def handle_call(
-        :verify_on_exit,
+        {:verify, pid},
         _from,
-        %{maps: maps} = state
-      ) do
-    # FIXME: only for current test process
+        %{pids: pids} = state
+      )
+      when is_pid(pid) do
+    maps = pids |> Map.get(pid) |> Map.get(:maps)
+
     problems =
       Enum.reduce(maps, [], fn {_, %{asserted_keys: asserted_keys, subject: subject}}, acc ->
         keys = subject |> Map.keys() |> Enum.sort()

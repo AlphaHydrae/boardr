@@ -10,7 +10,7 @@ defmodule Asserter.Assertions do
         opts
       )
       when is_map(subject) and is_function(callback, 1) and is_list(opts) do
-    :ok = Asserter.Server.assert_map_key(ref, key)
+    :ok = Asserter.Server.assert_map_key(self(), ref, key)
 
     unless Map.has_key?(subject, key) do
       raise Error,
@@ -50,7 +50,7 @@ defmodule Asserter.Assertions do
         opts
       )
       when is_map(subject) and is_list(opts) do
-    :ok = Asserter.Server.assert_map_key(ref, key)
+    :ok = Asserter.Server.assert_map_key(self(), ref, key)
 
     value = subject[key]
     captures = Regex.named_captures(value_regex, value)
@@ -79,7 +79,7 @@ defmodule Asserter.Assertions do
         opts
       )
       when is_map(subject) and is_list(opts) do
-    :ok = Asserter.Server.assert_map_key(ref, key)
+    :ok = Asserter.Server.assert_map_key(self(), ref, key)
 
     unless Map.has_key?(subject, key) and subject[key] === value do
       raise Error,
@@ -115,7 +115,7 @@ defmodule Asserter.Assertions do
         opts \\ []
       )
       when is_map(subject) and is_list(opts) do
-    :ok = Asserter.Server.assert_map_key(ref, key)
+    :ok = Asserter.Server.assert_map_key(self(), ref, key)
 
     unless Map.has_key?(subject, identical_key) do
       raise Error,
@@ -154,7 +154,7 @@ defmodule Asserter.Assertions do
       )
       when is_map(subject) and is_map(properties) and is_map(opts) do
     keys = Map.keys(properties)
-    :ok = Asserter.Server.assert_map_keys(ref, keys)
+    :ok = Asserter.Server.assert_map_keys(self(), ref, keys)
 
     actual = Map.take(subject, keys)
 
@@ -213,7 +213,7 @@ defmodule Asserter.Assertions do
         subject: subject
     end
 
-    :ok = Asserter.Server.assert_map_keys(ref, keys)
+    :ok = Asserter.Server.assert_map_keys(self(), ref, keys)
     asserter
   end
 

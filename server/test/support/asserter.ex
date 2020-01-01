@@ -23,7 +23,7 @@ defmodule Asserter do
     {asserted_keys, result} =
       cond do
         is_map(subject) ->
-          :ok = Asserter.Server.register_map(ref, subject)
+          :ok = Asserter.Server.register_map(self(), ref, subject)
           {[], %{}}
 
         true ->
@@ -40,8 +40,9 @@ defmodule Asserter do
   end
 
   defp verify_on_exit!() do
+    pid = self()
     ExUnit.Callbacks.on_exit(Asserter.Server, fn ->
-      {:ok, problems} = Asserter.Server.verify_on_exit!()
+      {:ok, problems} = Asserter.Server.verify(pid)
 
       if length(problems) >= 1 do
         raise Enum.join(problems, "\n\n")
