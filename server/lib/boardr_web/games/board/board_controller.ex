@@ -1,4 +1,4 @@
-defmodule BoardrWeb.BoardController do
+defmodule BoardrWeb.Games.BoardController do
   use BoardrWeb, :controller
 
   alias Boardr.{Board,Game}

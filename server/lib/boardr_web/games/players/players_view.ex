@@ -1,4 +1,4 @@
-defmodule BoardrWeb.PlayersView do
+defmodule BoardrWeb.Games.PlayersView do
   use BoardrWeb, :view
 
   alias Boardr.Player

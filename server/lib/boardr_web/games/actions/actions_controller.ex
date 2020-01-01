@@ -1,4 +1,4 @@
-defmodule BoardrWeb.ActionsController do
+defmodule BoardrWeb.Games.ActionsController do
   use BoardrWeb, :controller
 
   alias Boardr.{Action,Player,Repo}

@@ -1,4 +1,4 @@
-defmodule BoardrWeb.ActionsView do
+defmodule BoardrWeb.Games.ActionsView do
   use BoardrWeb, :view
 
   alias Boardr.Action
