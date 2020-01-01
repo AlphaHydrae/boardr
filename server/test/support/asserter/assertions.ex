@@ -21,8 +21,10 @@ defmodule Asserter.Assertions do
     use_raw_value = Keyword.get(opts, :value, false)
     value = subject[key]
 
+    effective_options = Keyword.merge(options, opts)
+
     callback_arg =
-      if use_raw_value, do: value, else: Asserter.new(value, Keyword.merge(options, opts))
+      if use_raw_value, do: value, else: Asserter.new(value, Keyword.put(effective_options, :parent, asserter))
 
     case callback.(callback_arg) do
       %Asserter{result: result} ->

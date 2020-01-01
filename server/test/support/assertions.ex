@@ -91,12 +91,34 @@ defmodule BoardrWeb.Assertions do
     )
   end
 
+  def assert_hal_link(asserter, rel, href, link_properties \\ %{}, opts \\ [])
+
+  def assert_hal_link(
+        %Asserter{result: parent_result, subject: subject} = asserter,
+        rel,
+        href_callback,
+        link_properties,
+        opts
+      )
+      when is_map(subject) and is_binary(rel) and is_function(href_callback, 1) and is_map(link_properties) and is_list(opts) do
+    asserter
+    |> assert_key(rel, fn link ->
+      chain =
+        assert_map(link)
+        |> assert_key("href", href_callback.(parent_result), opts)
+
+      Enum.reduce(link_properties, chain, fn {key, value}, acc ->
+        acc |> assert_key(key, value, opts)
+      end)
+    end)
+  end
+
   def assert_hal_link(
         %Asserter{subject: subject} = asserter,
         rel,
         href,
-        link_properties \\ %{},
-        opts \\ []
+        link_properties,
+        opts
       )
       when is_map(subject) and is_binary(rel) and is_map(link_properties) and is_list(opts) do
     asserter

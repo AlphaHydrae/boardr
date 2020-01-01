@@ -7,6 +7,7 @@ defmodule Asserter do
 
   defstruct asserted_keys: nil,
             options: [],
+            parent: nil,
             ref: nil,
             result: nil,
             subject: nil
@@ -30,9 +31,12 @@ defmodule Asserter do
           {nil, subject}
       end
 
+    {parent, remaining_options} = Keyword.pop(options, :parent)
+
     %Asserter{
       asserted_keys: asserted_keys,
-      options: options,
+      options: remaining_options,
+      parent: parent,
       ref: ref,
       result: result,
       subject: subject
