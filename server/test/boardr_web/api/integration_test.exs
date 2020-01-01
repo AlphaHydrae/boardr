@@ -17,9 +17,12 @@ defmodule BoardrWeb.IntegrationTest do
     name: "alice"
   }
 
+  @all_board_positions 0..2
+                       |> Enum.flat_map(fn col -> 0..2 |> Enum.map(fn row -> {col, row} end) end)
+
   setup :count_queries
 
-  test "play a winning tic-tac-toe game with bob and alice", %{
+  test "play a winning tic-tac-toe game", %{
     conn: %Conn{} = conn
   } do
     conn
@@ -48,7 +51,7 @@ defmodule BoardrWeb.IntegrationTest do
     |> check_game(state: "win", possible_actions: %{@bob => 0, @alice => 0}, winners: [@bob])
   end
 
-  test "play a tic-tac-toe game to a draw with bob and alice", %{
+  test "play a tic-tac-toe game to a draw", %{
     conn: %Conn{} = conn
   } do
     conn
@@ -79,6 +82,26 @@ defmodule BoardrWeb.IntegrationTest do
     |> check_game(state: "playing", possible_actions: %{@bob => 1, @alice => 0})
     |> play(@bob, col: 0, row: 2)
     |> check_game(state: "draw", possible_actions: %{@bob => 0, @alice => 0})
+  end
+
+  @tag :slow
+  test "randomly play 10 tic-tac-toe games to their conclusion", %{
+    conn: %Conn{} = conn
+  } do
+    conn = conn
+    |> register(@bob)
+    |> register(@alice)
+
+    for n <- 1..10 do
+      # Create and join the game.
+      conn
+      |> create_game(if rem(n, 2) == 0, do: @bob, else: @alice)
+      |> check_game(state: "waiting_for_players", possible_actions: %{@bob => 0, @alice => 0})
+      |> join_game(@bob)
+      |> join_game(@alice)
+      # Play the game.
+      |> play_until_finished()
+    end
   end
 
   # Scenario functions
@@ -159,6 +182,61 @@ defmodule BoardrWeb.IntegrationTest do
     |> check_game_possible_actions(expected_possible_actions)
   end
 
+  defp play(%Conn{} = conn, %TestPlayer{} = player, position) do
+    conn
+    |> authenticate_as(player)
+    |> post_json(conn.assigns[:game_actions_url], %{
+      "type" => "take",
+      "position" => [Keyword.get(position, :col), Keyword.get(position, :row)]
+    })
+    |> json_response(201)
+
+    conn
+  end
+
+  def play_until_finished(%Conn{} = conn, remaining_positions \\ @all_board_positions) do
+    current_player = if rem(length(remaining_positions), 2) == 1, do: @bob, else: @alice
+    random_position = {col, row} = Enum.random(remaining_positions)
+
+    body =
+      %{"state" => state} =
+      conn
+      |> play(current_player, col: col, row: row)
+      |> get_game_state()
+
+    case state do
+      "playing" ->
+        assert get_in(body, ["_embedded", "boardr:winners"]) == nil
+        assert length(remaining_positions) - 1 >= 1
+        play_until_finished(conn, List.delete(remaining_positions, random_position))
+
+      "draw" ->
+        assert get_in(body, ["_embedded", "boardr:winners"]) == nil
+        assert length(remaining_positions) - 1 == 0
+
+      "win" ->
+        assert %{
+                 "_embedded" => %{
+                   "boardr:winners" => [%{"_links" => %{"self" => %{"href" => winner_url}}}]
+                 }
+               } = body
+
+        assert get_player_value(conn, current_player, :url) == winner_url
+        assert length(remaining_positions) - 1 <= 4
+    end
+  end
+
+  # Utility functions
+
+  defp assign_to(%Conn{} = conn, %TestPlayer{} = player, key, value) do
+    assign(conn, get_player_key(player, key), value)
+  end
+
+  defp authenticate_as(%Conn{} = conn, %TestPlayer{} = player) do
+    conn
+    |> put_req_header("authorization", "Bearer #{get_player_value(conn, player, :token)}")
+  end
+
   defp check_game_possible_actions(
          %Conn{} = conn,
          %{
@@ -188,12 +266,7 @@ defmodule BoardrWeb.IntegrationTest do
 
   defp check_game_state(%Conn{} = conn, expected_state, winner \\ nil)
        when is_binary(expected_state) do
-    assert game =
-             %{"state" => ^expected_state} =
-             conn
-             |> authenticate_as(@bob)
-             |> get(conn.assigns[:game_url])
-             |> json_response(200)
+    assert game = %{"state" => ^expected_state} = get_game_state(conn)
 
     if winner do
       winner_url = get_player_value(conn, winner, :url)
@@ -207,27 +280,11 @@ defmodule BoardrWeb.IntegrationTest do
     conn
   end
 
-  defp play(%Conn{} = conn, %TestPlayer{} = player, position) do
+  defp get_game_state(%Conn{} = conn) do
     conn
-    |> authenticate_as(player)
-    |> post_json(conn.assigns[:game_actions_url], %{
-      "type" => "take",
-      "position" => [Keyword.get(position, :col), Keyword.get(position, :row)]
-    })
-    |> json_response(201)
-
-    conn
-  end
-
-  # Utility functions
-
-  defp assign_to(%Conn{} = conn, %TestPlayer{} = player, key, value) do
-    assign(conn, get_player_key(player, key), value)
-  end
-
-  defp authenticate_as(%Conn{} = conn, %TestPlayer{} = player) do
-    conn
-    |> put_req_header("authorization", "Bearer #{get_player_value(conn, player, :token)}")
+    |> authenticate_as(@bob)
+    |> get(conn.assigns[:game_url])
+    |> json_response(200)
   end
 
   defp get_player_key(%TestPlayer{name: name}, key) do

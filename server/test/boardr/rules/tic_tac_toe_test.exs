@@ -110,6 +110,7 @@ defmodule Boardr.Rules.TicTacToeTest do
     assert {:error, :wrong_turn} = take(1, 0, 1, game, state)
   end
 
+  @tag :slow
   test "all possible games should end in a win or a draw", %{game: game} do
     take_recursively(@all_board_positions, game)
   end
@@ -148,7 +149,7 @@ defmodule Boardr.Rules.TicTacToeTest do
         # there are no more than 4 positions not taken on the board (it takes at
         # least 3 moves by the first player and 2 by the second player to win).
         {:win, player_numbers} ->
-          assert [player_number] = player_numbers
+          assert player_numbers == [player_number]
           assert length(remaining_positions) <= 4
 
         # In case of a draw, check that all board positions were taken.

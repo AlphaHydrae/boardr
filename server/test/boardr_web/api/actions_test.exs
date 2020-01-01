@@ -68,10 +68,11 @@ defmodule BoardrWeb.ActionsTest do
       assert_db_queries(insert: 1, max_selects: 6, max_transactions: 2, update: 1)
       assert_in_db(Action, action_id, expected_action)
 
-      # Make sure the game's last modification date was updated.
+      # Make sure the game's state and last modification date were updated.
       updated_game = Repo.get!(Game, game.id)
       assert {:ok, _} = just_after(updated_game.updated_at, expected_action.performed_at)
-      assert Map.delete(game, :updated_at) == Map.delete(updated_game, :updated_at)
+      assert updated_game.state == "playing"
+      assert Map.drop(game, [:state, :updated_at]) == Map.drop(updated_game, [:state, :updated_at])
     end
   end
 end
