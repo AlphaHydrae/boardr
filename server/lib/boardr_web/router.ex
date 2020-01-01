@@ -10,7 +10,7 @@ defmodule BoardrWeb.Router do
   scope "/api", BoardrWeb do
     pipe_through :api
 
-    get "/", ApiController, :index
+    get "/", ApiRootController, :index
 
     scope "/auth" do
       post "/google", AuthController, :google

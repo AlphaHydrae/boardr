@@ -2,4 +2,5 @@
 --ignore-dir=client/node_modules
 --ignore-dir=server/_build
 --ignore-dir=server/cover
+--ignore-dir=server/doc
 --ignore-dir=server/deps

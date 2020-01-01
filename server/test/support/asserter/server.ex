@@ -30,40 +30,56 @@ defmodule Asserter.Server do
 
   @impl true
   def handle_call(
-    {:assert_map_keys, ref, keys},
-    _from,
-    %{maps: maps} = state
-  ) when is_reference(ref) and is_list(keys) do
+        {:assert_map_keys, ref, keys},
+        _from,
+        %{maps: maps} = state
+      )
+      when is_reference(ref) and is_list(keys) do
     current_map = Map.get(maps, ref)
     asserted_keys = MapSet.union(current_map.asserted_keys, MapSet.new(keys))
-    {:reply, :ok, Map.put(state, :maps, Map.put(maps, ref, Map.put(current_map, :asserted_keys, asserted_keys)))}
+
+    {:reply, :ok,
+     Map.put(
+       state,
+       :maps,
+       Map.put(maps, ref, Map.put(current_map, :asserted_keys, asserted_keys))
+     )}
   end
 
   @impl true
   def handle_call(
-    {:register_map, ref, subject},
-    _from,
-    %{maps: maps} = state
-  ) when is_reference(ref) and is_map(subject) do
+        {:register_map, ref, subject},
+        _from,
+        %{maps: maps} = state
+      )
+      when is_reference(ref) and is_map(subject) do
     new_map = %{asserted_keys: MapSet.new(), subject: subject}
     {:reply, :ok, Map.put(state, :maps, Map.put(maps, ref, new_map))}
   end
 
   @impl true
   def handle_call(
-    :verify_on_exit,
-    _from,
-    %{maps: maps} = state
-  ) do
-    problems = Enum.reduce(maps, [], fn {_, %{asserted_keys: asserted_keys, subject: subject}}, acc ->
-      keys = subject |> Map.keys() |> Enum.sort()
-      asserted_keys = asserted_keys |> MapSet.to_list |> Enum.sort
-      if keys != asserted_keys do
-        [ "You did not make assertions on keys #{Enum.join(keys -- asserted_keys, ", ")} in map #{inspect(subject)}" | acc ]
-      else
-        acc
-      end
-    end)
+        :verify_on_exit,
+        _from,
+        %{maps: maps} = state
+      ) do
+    # FIXME: only for current test process
+    problems =
+      Enum.reduce(maps, [], fn {_, %{asserted_keys: asserted_keys, subject: subject}}, acc ->
+        keys = subject |> Map.keys() |> Enum.sort()
+        asserted_keys = asserted_keys |> MapSet.to_list() |> Enum.sort()
+
+        if keys != asserted_keys do
+          [
+            "You did not make assertions on keys #{
+              (keys -- asserted_keys) |> Enum.map(&inspect/1) |> Enum.join(", ")
+            } in map #{inspect(subject)}"
+            | acc
+          ]
+        else
+          acc
+        end
+      end)
 
     {:reply, {:ok, problems}, state}
   end

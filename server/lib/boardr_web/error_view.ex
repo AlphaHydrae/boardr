@@ -29,7 +29,7 @@ defmodule BoardrWeb.ErrorView do
     |> omit_nil()
     |> Map.merge(%{
       status: Plug.Conn.Status.code(status),
-      type: "#{Routes.api_url(BoardrWeb.Endpoint, :index)}/problems/#{String.replace(Atom.to_string(type), "_", "-")}"
+      type: "#{Routes.api_root_url(BoardrWeb.Endpoint, :index)}/problems/#{String.replace(Atom.to_string(type), "_", "-")}"
     })
     |> Map.delete(:extra_properties)
     |> Map.merge(extra_properties)

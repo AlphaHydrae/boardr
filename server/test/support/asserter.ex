@@ -5,7 +5,8 @@ defmodule Asserter do
     end
   end
 
-  defstruct options: [],
+  defstruct asserted_keys: nil,
+            options: [],
             ref: nil,
             result: nil,
             subject: nil
@@ -19,17 +20,23 @@ defmodule Asserter do
 
     ref = make_ref()
 
-    result =
+    {asserted_keys, result} =
       cond do
         is_map(subject) ->
           :ok = Asserter.Server.register_map(ref, subject)
-          %{}
+          {[], %{}}
 
         true ->
-          subject
+          {nil, subject}
       end
 
-    %Asserter{options: options, ref: ref, result: result, subject: subject}
+    %Asserter{
+      asserted_keys: asserted_keys,
+      options: options,
+      ref: ref,
+      result: result,
+      subject: subject
+    }
   end
 
   defp verify_on_exit!() do

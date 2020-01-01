@@ -1,4 +1,4 @@
-defmodule BoardrWeb.ApiController do
+defmodule BoardrWeb.ApiRootController do
   use BoardrWeb, :controller
 
   def index(%Conn{} = conn, _params) do

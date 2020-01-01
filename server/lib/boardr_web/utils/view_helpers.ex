@@ -6,7 +6,7 @@ defmodule BoardrWeb.ViewHelpers do
 
   def api_document(properties \\ %{}) when is_map(properties) do
     properties
-    |> put_curie(:boardr, "#{Routes.api_url(Endpoint, :index)}/rels/{rel}", :templated)
+    |> put_curie(:boardr, "#{Routes.api_root_url(Endpoint, :index)}/rels/{rel}", :templated)
   end
 
   def put_boardr_link(doc, rel, href, link_properties \\ %{})
@@ -19,7 +19,7 @@ defmodule BoardrWeb.ViewHelpers do
       curies: [
         %{
           name: "boardr",
-          href: "#{Routes.api_url(Endpoint, :index)}/rels/{rel}",
+          href: "#{Routes.api_root_url(Endpoint, :index)}/rels/{rel}",
           templated: true
         }
       ]

@@ -3,9 +3,6 @@ defmodule BoardrWeb.IdentitiesTest do
 
   alias Boardr.Auth.Identity
 
-  use Asserter
-  import BoardrWeb.Assertions
-
   @api_path "/api/identities"
   @valid_properties %{"email" => "jdoe@example.com", "provider" => "local"}
 
@@ -22,24 +19,33 @@ defmodule BoardrWeb.IdentitiesTest do
         |> post_json(@api_path, @valid_properties)
         |> json_response(201)
 
-      %{result: %{id: identity_id, token: jwt_token} = expected_identity} = assert_api_map(body)
+      %{result: %{id: identity_id, token: jwt_token} = expected_identity} =
+        assert_api_map(body)
 
         # Embedded HAL documents
-        |> assert_key("_embedded", fn embedded ->
-          assert_map(embedded)
-          |> assert_key("boardr:token", fn token ->
-            assert_map(token)
-            |> assert_key("value", ~r/^[^.]+\.[^.]+\.[^.]+$/, into: :token)
-          end)
-        end, merge: true)
+        |> assert_key(
+          "_embedded",
+          fn embedded ->
+            assert_map(embedded)
+            |> assert_key("boardr:token", fn token ->
+              assert_map(token)
+              |> assert_key("value", ~r/^[^.]+\.[^.]+\.[^.]+$/, into: :token)
+            end)
+          end,
+          merge: true
+        )
 
         # HAL links
-        |> assert_key("_links", fn links ->
-          assert_map(links)
-          |> assert_key_absent("boardr:user", into: :user_id)
-          |> assert_key("collection", &(&1 |> assert_hal_link(test_api_url("/identities"), %{}, into: false)))
-          |> assert_key("self", &(&1 |> assert_hal_link(test_api_url_regex(["/identities/", ~r/(?<id>[\w-]+)/]))))
-        end, merge: true)
+        |> assert_key(
+          "_links",
+          fn links ->
+            assert_map(links)
+            |> assert_key_absent("boardr:user", into: :user_id)
+            |> assert_hal_link("collection", test_api_url("/identities"), %{}, into: false)
+            |> assert_hal_link("self", test_api_url_regex(["/identities/", ~r/(?<id>[\w-]+)/]))
+          end,
+          merge: true
+        )
 
         # Properties
         |> assert_keys(@valid_properties)
@@ -65,35 +71,10 @@ defmodule BoardrWeb.IdentitiesTest do
       |> assert_key("nbf", &(&1 |> just_after(truncated_test_start)), value: true)
       |> assert_key("scope", "register")
       |> assert_key("sub", identity_id)
-      |> ignore_keys(["exp"])
 
       # Database changes
       assert query_counter |> counted_queries == %{insert: 1}
-      assert_in_db Identity, identity_id, expected_identity
-    end
-  end
-
-  def just_after(unix_timestamp, %DateTime{} = t2) when is_integer(unix_timestamp) do
-    case DateTime.from_unix(unix_timestamp, :second) do
-      {:ok, t1} -> just_after(t1, t2)
-      _ -> {:nok, [message: "is not a Unix timestamp", expected_just_after: t2]}
-    end
-  end
-
-  def just_after(iso8601, %DateTime{} = t2) when is_binary(iso8601) do
-    case DateTime.from_iso8601(iso8601) do
-      {:ok, t1, 0} -> just_after(t1, t2)
-      {:ok, _, _} -> {:nok, [message: "is not UTC", expected_just_after: t2]}
-      _ -> {:nok, [message: "is not a valid ISO-8601 date", expected_just_after: t2]}
-    end
-  end
-
-  def just_after(%DateTime{} = t1, %DateTime{} = t2) do
-    diff = DateTime.diff(t1, t2, :microsecond)
-    cond do
-      diff < 0 -> {:nok, [message: "is before #{inspect(t2)}", expected_just_after: t2]}
-      diff > 500_000 -> {:nok, [message: "is more than 500ms after #{inspect(t2)}", expected_just_after: t2]}
-      true -> {:ok, t1}
+      assert_in_db(Identity, identity_id, expected_identity)
     end
   end
 end

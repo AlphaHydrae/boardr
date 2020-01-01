@@ -1,4 +1,4 @@
-defmodule BoardrWeb.ApiView do
+defmodule BoardrWeb.ApiRootView do
   use BoardrWeb, :view
 
   def render("index.json", _assigns) do
@@ -9,6 +9,6 @@ defmodule BoardrWeb.ApiView do
     |> put_boardr_link(:identities, Routes.identities_url(BoardrWeb.Endpoint, :index))
     # TODO: implement users index
     |> put_boardr_link(:users, Routes.users_url(BoardrWeb.Endpoint, :create))
-    |> put_link(:self, Routes.api_url(BoardrWeb.Endpoint, :index))
+    |> put_link(:self, Routes.api_root_url(BoardrWeb.Endpoint, :index))
   end
 end
