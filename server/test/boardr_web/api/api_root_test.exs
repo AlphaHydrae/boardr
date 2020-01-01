@@ -11,6 +11,7 @@ defmodule BoardrWeb.ApiRootTest do
       |> get(@api_path)
       |> json_response(200)
 
+    # Response
     assert_map(body)
 
     # HAL links

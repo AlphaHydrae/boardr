@@ -56,6 +56,8 @@ defmodule Boardr.Fixtures do
       user_id: user_id
     }
     |> Repo.insert!(returning: [:id])
+    # TODO: take those from properties if already there
+    |> Repo.preload([:game, :user])
   end
 
   def user(properties \\ []) when is_list(properties) do

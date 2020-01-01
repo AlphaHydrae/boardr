@@ -29,6 +29,7 @@ defmodule BoardrWeb.GamesPlayersTest do
         |> post_json(api_path(game), %{})
         |> json_response(201)
 
+      # Response
       %{result: %{id: player_id} = expected_player} =
         assert_api_map(body)
 
@@ -80,6 +81,7 @@ defmodule BoardrWeb.GamesPlayersTest do
         |> post_json(api_path(game), %{})
         |> json_response(201)
 
+      # Response
       %{result: %{id: player_id} = expected_player} =
         assert_api_map(body)
 

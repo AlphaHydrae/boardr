@@ -10,7 +10,7 @@ defmodule Boardr.Application do
     topologies = [
       main: [
         strategy: Cluster.Strategy.Epmd,
-        config: []
+        config: [hosts: []]
       ]
     ]
 

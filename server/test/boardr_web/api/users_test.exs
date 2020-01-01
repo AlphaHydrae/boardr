@@ -26,6 +26,7 @@ defmodule BoardrWeb.UsersTest do
         |> post_json(@api_path, @valid_properties)
         |> json_response(201)
 
+      # Response
       %{result: %{id: user_id, token: jwt_token} = expected_user} =
         assert_api_map(body)
 

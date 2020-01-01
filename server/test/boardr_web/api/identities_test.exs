@@ -18,6 +18,7 @@ defmodule BoardrWeb.IdentitiesTest do
         |> post_json(@api_path, @valid_properties)
         |> json_response(201)
 
+      # Response
       %{result: %{id: identity_id, token: jwt_token} = expected_identity} =
         assert_api_map(body)
 

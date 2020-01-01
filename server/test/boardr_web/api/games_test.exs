@@ -26,6 +26,7 @@ defmodule BoardrWeb.GamesTest do
         |> post_json(@api_path, @valid_properties)
         |> json_response(201)
 
+      # Response
       %{result: %{id: game_id} = expected_game} = assert_api_map(body)
 
         # HAL links

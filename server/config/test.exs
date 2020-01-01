@@ -50,4 +50,13 @@ config :boardr, Boardr.Repo,
 config :boardr, BoardrWeb.Endpoint, server: false
 
 # Print only warnings and errors during test.
-config :logger, level: :warn
+unless System.get_env("DEBUG") do
+  config :logger, level: :warn
+else
+  # Unless the $DEBUG variable is set (to any value).
+  config :logger, :console, level: :debug
+end
+
+# Do not wait for swarm nodes during test.
+config :swarm,
+  sync_nodes_timeout: 0
