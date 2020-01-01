@@ -19,8 +19,8 @@ defmodule BoardrWeb.UsersView do
   def render("show.json", %{user: %User{} = user}) do
     %{
       createdAt: user.created_at,
-      id: user.id,
-      name: user.name
+      name: user.name,
+      updatedAt: user.updated_at
     }
     |> put_hal_curies_link()
     |> put_hal_self_link(:users_url, [:show, user.id])

@@ -4,13 +4,13 @@ defmodule Asserter.Assertions do
   def assert_key(asserter, key, callback, opts \\ [])
 
   def assert_key(
-        %Asserter{options: options, ref: ref, subject: subject} = asserter,
+        %Asserter{options: options, subject: subject} = asserter,
         key,
         callback,
         opts
       )
       when is_map(subject) and is_function(callback, 1) and is_list(opts) do
-    :ok = Asserter.Server.assert_map_key(self(), ref, key)
+    mark_asserted_keys!(asserter, [key])
 
     unless Map.has_key?(subject, key) do
       raise Error,
@@ -44,13 +44,13 @@ defmodule Asserter.Assertions do
   end
 
   def assert_key(
-        %Asserter{ref: ref, subject: subject} = asserter,
+        %Asserter{subject: subject} = asserter,
         key,
         %Regex{} = value_regex,
         opts
       )
       when is_map(subject) and is_list(opts) do
-    :ok = Asserter.Server.assert_map_key(self(), ref, key)
+    mark_asserted_keys!(asserter, [key])
 
     value = subject[key]
     captures = Regex.named_captures(value_regex, value)
@@ -73,13 +73,13 @@ defmodule Asserter.Assertions do
   end
 
   def assert_key(
-        %Asserter{ref: ref, subject: subject} = asserter,
+        %Asserter{subject: subject} = asserter,
         key,
         value,
         opts
       )
       when is_map(subject) and is_list(opts) do
-    :ok = Asserter.Server.assert_map_key(self(), ref, key)
+    mark_asserted_keys!(asserter, [key])
 
     unless Map.has_key?(subject, key) and subject[key] === value do
       raise Error,
@@ -109,13 +109,13 @@ defmodule Asserter.Assertions do
   end
 
   def assert_key_identical(
-        %Asserter{options: options, ref: ref, subject: subject} = asserter,
+        %Asserter{options: options, subject: subject} = asserter,
         key,
         identical_key,
         opts \\ []
       )
       when is_map(subject) and is_list(opts) do
-    :ok = Asserter.Server.assert_map_key(self(), ref, key)
+    mark_asserted_keys!(asserter, [key])
 
     unless Map.has_key?(subject, identical_key) do
       raise Error,
@@ -126,10 +126,9 @@ defmodule Asserter.Assertions do
 
     value = subject[key]
     identical_value = subject[identical_key]
-
     unless Map.has_key?(subject, key) and value === identical_value do
       raise Error,
-        message: "property #{inspect(key)} does not match",
+        message: "property #{inspect(key)} does not match property #{inspect(identical_key)}",
         actual: value,
         expected: identical_value,
         subject: subject
@@ -148,16 +147,15 @@ defmodule Asserter.Assertions do
   end
 
   def assert_keys(
-        %Asserter{ref: ref, subject: subject} = asserter,
+        %Asserter{subject: subject} = asserter,
         properties,
         opts \\ %{}
       )
       when is_map(subject) and is_map(properties) and is_map(opts) do
     keys = Map.keys(properties)
-    :ok = Asserter.Server.assert_map_keys(self(), ref, keys)
+    mark_asserted_keys!(asserter, keys)
 
     actual = Map.take(subject, keys)
-
     unless actual == properties do
       raise Error,
         message:
@@ -190,7 +188,7 @@ defmodule Asserter.Assertions do
   end
 
   def ignore_keys(
-        %Asserter{asserted_keys: asserted_keys, ref: ref, subject: subject} = asserter,
+        %Asserter{subject: subject} = asserter,
         keys
       )
       when is_map(subject) and is_list(keys) do
@@ -202,18 +200,8 @@ defmodule Asserter.Assertions do
         subject: subject
     end
 
-    already_asserted_keys = Enum.filter(keys, fn key -> key in asserted_keys end)
+    mark_asserted_keys!(asserter, keys)
 
-    if length(already_asserted_keys) >= 1 do
-      raise Error,
-        message:
-          "cannot ignore keys #{already_asserted_keys |> Enum.map(&inspect/1) |> Enum.join(", ")} on which assertions have already been made",
-        asserted_keys: already_asserted_keys,
-        ignore_keys: keys,
-        subject: subject
-    end
-
-    :ok = Asserter.Server.assert_map_keys(self(), ref, keys)
     asserter
   end
 
@@ -224,6 +212,20 @@ defmodule Asserter.Assertions do
 
   def on_get_identical_key_value(%Asserter{options: options} = asserter, callback) do
     %Asserter{asserter | options: Keyword.put(options, :get_identical_key_value, callback)}
+  end
+
+  defp mark_asserted_keys!(%Asserter{asserted_keys: asserted_keys, ref: ref, subject: subject}, keys) do
+
+    already_asserted_keys = Enum.filter(keys, fn key -> key in asserted_keys end)
+    if length(already_asserted_keys) >= 1 do
+      raise Error,
+        message:
+          "assertions have already been made on keys #{already_asserted_keys |> Enum.map(&inspect/1) |> Enum.join(", ")}",
+        asserted_keys: already_asserted_keys,
+        subject: subject
+    end
+
+    :ok = Asserter.Server.assert_map_keys(self(), ref, keys)
   end
 
   defp update_result(

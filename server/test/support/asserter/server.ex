@@ -5,10 +5,6 @@ defmodule Asserter.Server do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
-  def assert_map_key(pid, ref, key) when is_pid(pid) and is_reference(ref) do
-    assert_map_keys(pid, ref, [key])
-  end
-
   def assert_map_keys(pid, ref, keys) when is_pid(pid) and is_reference(ref) and is_list(keys) do
     GenServer.call(__MODULE__, {:assert_map_keys, pid, ref, keys})
   end

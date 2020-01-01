@@ -1,25 +1,33 @@
-defmodule BoardrWeb.IdentitiesTest do
+defmodule BoardrWeb.UsersTest do
   use BoardrWeb.ConnCase, async: true
 
-  alias Boardr.Auth.Identity
+  alias Boardr.Auth.{Identity, User}
 
-  @api_path "/api/identities"
-  @valid_properties %{"email" => "jdoe@example.com", "provider" => "local"}
+  @api_path "/api/users"
+  @valid_properties %{"name" => "jdoe"}
+
+  setup do
+    %{
+      identity: Fixtures.identity()
+    }
+  end
 
   setup :count_queries
 
-  describe "POST /api/identities" do
-    test "create a local identity", %{
+  describe "POST /api/users" do
+    test "create a user account", %{
       conn: %Conn{} = conn,
+      identity: identity,
       query_counter: query_counter,
       test_start: %DateTime{} = test_start
     } do
       body =
         conn
+        |> put_req_header("authorization", "Bearer #{generate_registration_token!(identity)}")
         |> post_json(@api_path, @valid_properties)
         |> json_response(201)
 
-      %{result: %{id: identity_id, token: jwt_token} = expected_identity} =
+      %{result: %{id: user_id, token: jwt_token} = expected_user} =
         assert_api_map(body)
 
         # Embedded HAL documents
@@ -34,20 +42,16 @@ defmodule BoardrWeb.IdentitiesTest do
         # HAL links
         |> assert_hal_links(fn links ->
           links
-          |> assert_key_absent("boardr:user", into: :user_id)
-          |> assert_hal_link("collection", test_api_url("/identities"), %{}, into: false)
-          |> assert_hal_link("self", test_api_url_regex(["/identities/", ~r/(?<id>[\w-]+)/]))
+          |> assert_hal_curies()
+          |> assert_hal_link("self", test_api_url_regex(["/users/", ~r/(?<id>[\w-]+)/]))
         end)
 
         # Properties
         |> assert_keys(@valid_properties)
-        |> assert_key("createdAt", &(&1 |> just_after(test_start)), value: true)
-        |> assert_key("emailVerified", false)
-        |> assert_key_absent("emailVerifiedAt")
-        |> assert_key("lastAuthenticatedAt", &(&1 |> just_after(test_start)), value: true)
-        |> assert_key_identical("lastSeenAt", "lastAuthenticatedAt")
-        |> assert_key_identical("providerId", "email")
+        |> assert_key("createdAt", &(&1.subject |> just_after(test_start)))
         |> assert_key_identical("updatedAt", "createdAt")
+        # FIXME: why doesn't this fail?!
+        |> ignore_keys(["_embedded", "_links"])
 
       # JWT token
       claims = verify_jwt_token!(jwt_token)
@@ -61,12 +65,26 @@ defmodule BoardrWeb.IdentitiesTest do
       |> assert_key("iat", &(&1 |> just_after(truncated_test_start)), value: true)
       |> assert_key("iss", "boardr.alphahydrae.io")
       |> assert_key("nbf", &(&1 |> just_after(truncated_test_start)), value: true)
-      |> assert_key("scope", "register")
-      |> assert_key("sub", identity_id)
+      |> assert_key("scope", "api")
+      |> assert_key("sub", user_id)
 
       # Database changes
-      assert_db_queries(query_counter, insert: 1)
-      assert_in_db(Identity, identity_id, expected_identity)
+      assert_db_queries(query_counter,
+        insert: 1,
+        update: 1
+      )
+
+      assert_in_db(User, user_id, expected_user)
     end
+  end
+
+  def generate_registration_token!(%Identity{id: identity_id}) do
+    {:ok, token} =
+      Boardr.Auth.Token.generate(%{
+        scope: "register",
+        sub: identity_id
+      })
+
+    token
   end
 end

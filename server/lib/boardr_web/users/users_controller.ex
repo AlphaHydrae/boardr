@@ -28,10 +28,10 @@ defmodule BoardrWeb.UsersController do
     |> render(%{user: user})
   end
 
-  defp create_user_claims(%Identity{id: id, user: %User{}}) do
+  defp create_user_claims(%Identity{user: %User{id: user_id}}) do
     %{
       scope: "api",
-      sub: id
+      sub: user_id
     }
   end
 end

@@ -23,7 +23,7 @@ defmodule BoardrWeb.ConnCase do
       # Import conveniences for testing with connections.
       use Phoenix.ConnTest
 
-      alias Boardr.Repo
+      alias Boardr.{Fixtures,Repo}
       alias BoardrWeb.Router.Helpers, as: Routes
       alias Plug.Conn
 

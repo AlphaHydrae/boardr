@@ -15,11 +15,12 @@ defmodule BoardrWeb.QueryCounter do
   end
 
   def counted_queries(agent) when is_pid(agent) do
-    Agent.get(agent, fn state -> state end)
+    pid = self()
+    Agent.get(agent, fn state -> Map.get(state, pid, %{}) end)
   end
 
   def counted_queries(%{query_counter: agent}) when is_pid(agent) do
-    Agent.get(agent, fn state -> state end)
+    counted_queries(agent)
   end
 
   def handle_event([:boardr, :repo, :query], _measurements, metadata, %{
@@ -39,6 +40,10 @@ defmodule BoardrWeb.QueryCounter do
         true -> :other
       end
 
-    :ok = Agent.update(agent, fn state -> Map.update(state, query_type, 1, fn n -> n + 1 end) end)
+    pid = self()
+    :ok = Agent.update(agent, fn state ->
+      pid_state = Map.get(state, pid, %{})
+      Map.put(state, pid, Map.update(pid_state, query_type, 1, fn n -> n + 1 end))
+    end)
   end
 end
