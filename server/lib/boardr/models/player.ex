@@ -12,6 +12,7 @@ defmodule Boardr.Player do
     belongs_to :user, Boardr.Auth.User
 
     field :number, :integer
+    field :settings, EctoJsonb
 
     timestamps inserted_at: :created_at, updated_at: false
   end

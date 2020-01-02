@@ -8,6 +8,7 @@ services:
     depends_on:
       - db
     environment:
+      BOARDR_BASE_URL: http://app:4000
       BOARDR_DATABASE_URL: ecto://boardr:changeme@db/boardr
       BOARDR_JWT_PRIVATE_KEY:
       BOARDR_PORT: 4000

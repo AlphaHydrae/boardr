@@ -1,7 +1,7 @@
 defmodule BoardrWeb.GamesPlayersTest do
   use BoardrWeb.ConnCase, async: true
 
-  alias Boardr.Player
+  alias Boardr.{Game,Player}
 
   require EEx
   EEx.function_from_string(:def, :api_path, "/api/games/<%= game.id %>/players", [:game])
@@ -55,6 +55,7 @@ defmodule BoardrWeb.GamesPlayersTest do
         # Properties
         |> assert_key("createdAt", &(&1.subject |> just_after(test_start)))
         |> assert_key("number", 1)
+        |> assert_key_absent("settings")
 
       # Database changes
       assert_db_queries(insert: 1)
@@ -107,10 +108,17 @@ defmodule BoardrWeb.GamesPlayersTest do
         # Properties
         |> assert_key("createdAt", &(&1.subject |> just_after(test_start)))
         |> assert_key("number", 2)
+        |> assert_key_absent("settings")
 
       # Database changes
-      assert_db_queries(insert: 1)
+      assert_db_queries(insert: 1, update: 1)
       assert_in_db(Player, player_id, expected_player)
+
+      # Make sure the game's state and last modification date were updated.
+      updated_game = Repo.get!(Game, game.id)
+      assert {:ok, _} = just_after(updated_game.updated_at, expected_player.created_at)
+      assert updated_game.state == "playing"
+      assert Map.drop(game, [:state, :updated_at]) == Map.drop(updated_game, [:state, :updated_at])
     end
   end
 end

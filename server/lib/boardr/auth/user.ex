@@ -10,6 +10,7 @@ defmodule Boardr.Auth.User do
   schema "users" do
     has_many :identities, Boardr.Auth.Identity
 
+    # FIXME: limit length
     field :name, :string
 
     timestamps inserted_at: :created_at

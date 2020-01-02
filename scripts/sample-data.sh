@@ -84,13 +84,6 @@ export BOARDR_GAME_URL="$(cat "$tmp_response_file"|jq -r "._links.self.href")"
 players_url="$(cat "$tmp_response_file"|jq -r "._links.\"boardr:players\".href")"
 echo
 
-# Make John Doe join the game.
-http \
-  --download --output "$tmp_response_file" --print bBhH \
-  POST "$players_url" "Authorization:Bearer $BOARDR_TOKEN"
-
-echo
-
 # Make Jane Doe join the game.
 http \
   --download --output "$tmp_response_file" --print bBhH \

@@ -18,7 +18,7 @@ defmodule Boardr.Auth.Token do
   end
 
   defp jwt_private_key() do
-    Application.get_env(:boardr, BoardrWeb.Endpoint)[:jwt_private_key]
+    BoardrWeb.Endpoint.config(:jwt_private_key)
   end
 
   defmodule JWT do

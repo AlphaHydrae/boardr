@@ -94,18 +94,21 @@ defmodule BoardrWeb.Assertions do
   def assert_hal_link(asserter, rel, href, link_properties \\ %{}, opts \\ [])
 
   def assert_hal_link(
-        %Asserter{result: parent_result, subject: subject} = asserter,
+        %Asserter{subject: subject} = asserter,
         rel,
         href_callback,
         link_properties,
         opts
       )
       when is_map(subject) and is_binary(rel) and is_function(href_callback, 1) and is_map(link_properties) and is_list(opts) do
+
+    parent_results = get_parent_asserter_results(asserter)
+
     asserter
     |> assert_key(rel, fn link ->
       chain =
         assert_map(link)
-        |> assert_key("href", href_callback.(parent_result), opts)
+        |> assert_key("href", href_callback.(parent_results), opts)
 
       Enum.reduce(link_properties, chain, fn {key, value}, acc ->
         acc |> assert_key(key, value, opts)
@@ -153,5 +156,13 @@ defmodule BoardrWeb.Assertions do
 
   defp convert_asserter_result_key(key) when is_binary(key) do
     key |> Inflex.underscore() |> String.to_atom()
+  end
+
+  defp get_parent_asserter_results(%Asserter{parent: nil, result: result}) do
+    result
+  end
+
+  defp get_parent_asserter_results(%Asserter{parent: parent, result: result}) do
+    Map.merge(get_parent_asserter_results(parent), result)
   end
 end

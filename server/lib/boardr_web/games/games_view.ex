@@ -1,8 +1,8 @@
 defmodule BoardrWeb.GamesView do
   use BoardrWeb, :view
 
-  def render("create.json", %{game: game}) do
-    render_game game
+  def render("create.json", %{game: game, player: player}) do
+    render_game game, player: player
   end
 
   def render("index.json", %{games: games}) do
@@ -16,10 +16,10 @@ defmodule BoardrWeb.GamesView do
   end
 
   def render("show.json", %{game: game}) do
-    render_game game
+    render_game game, %{}
   end
 
-  defp render_game(game) do
+  defp render_game(game, params) do
     result = %{
       createdAt: game.created_at,
       rules: game.rules,
@@ -40,10 +40,18 @@ defmodule BoardrWeb.GamesView do
     })
     |> put_hal_self_link(:games_url, [:show, game.id])
 
-    if Ecto.assoc_loaded?(game.winners) and not Enum.empty?(game.winners) do
+    result = if Ecto.assoc_loaded?(game.winners) and not Enum.empty?(game.winners) do
       result |> Map.put(:_embedded, %{
         'boardr:winners': render_many(game.winners, BoardrWeb.Games.PlayersView, "show.json", as: :player)
       })
+    else
+      result
+    end
+
+    player = params[:player]
+    if player do
+      embedded = result[:_embedded] || %{}
+      Map.put(result, :_embedded, Map.put(embedded, :'boardr:player', render_one(player, BoardrWeb.Games.PlayersView, "show.json", as: :player)))
     else
       result
     end

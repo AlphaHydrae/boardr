@@ -31,9 +31,8 @@ defmodule BoardrWeb.IntegrationTest do
     # Create and join the game.
     |> create_game(@bob)
     |> check_game(state: "waiting_for_players", possible_actions: %{@bob => 0, @alice => 0})
-    |> join_game(@bob)
     |> join_game(@alice)
-    |> check_game(state: "waiting_for_players", possible_actions: %{@bob => 9, @alice => 0})
+    |> check_game(state: "playing", possible_actions: %{@bob => 9, @alice => 0})
     # Play the game.
     |> play(@bob, col: 1, row: 0)
     |> check_game(state: "playing", possible_actions: %{@bob => 0, @alice => 8})
@@ -60,9 +59,8 @@ defmodule BoardrWeb.IntegrationTest do
     # Create and join the game.
     |> create_game(@bob)
     |> check_game(state: "waiting_for_players", possible_actions: %{@bob => 0, @alice => 0})
-    |> join_game(@bob)
     |> join_game(@alice)
-    |> check_game(state: "waiting_for_players", possible_actions: %{@bob => 9, @alice => 0})
+    |> check_game(state: "playing", possible_actions: %{@bob => 9, @alice => 0})
     # Play the game.
     |> play(@bob, col: 2, row: 0)
     |> check_game(state: "playing", possible_actions: %{@bob => 0, @alice => 8})
@@ -92,12 +90,11 @@ defmodule BoardrWeb.IntegrationTest do
     |> register(@bob)
     |> register(@alice)
 
-    for n <- 1..10 do
+    for _ <- 1..10 do
       # Create and join the game.
       conn
-      |> create_game(if rem(n, 2) == 0, do: @bob, else: @alice)
+      |> create_game(@bob)
       |> check_game(state: "waiting_for_players", possible_actions: %{@bob => 0, @alice => 0})
-      |> join_game(@bob)
       |> join_game(@alice)
       # Play the game.
       |> play_until_finished()
@@ -124,6 +121,9 @@ defmodule BoardrWeb.IntegrationTest do
 
   defp create_game(%Conn{} = conn, %TestPlayer{} = player) do
     assert %{
+             "_embedded" => %{
+               "boardr:player" => %{"_links" => %{"self" => %{"href" => player_url}}},
+             },
              "_links" => %{
                "boardr:actions" => %{"href" => game_actions_url},
                "boardr:players" => %{"href" => game_players_url},
@@ -137,6 +137,7 @@ defmodule BoardrWeb.IntegrationTest do
              |> json_response(201)
 
     conn
+    |> assign_to(player, :url, player_url)
     |> assign(:game_actions_url, game_actions_url)
     |> assign(:game_url, game_url)
     |> assign(:game_players_url, game_players_url)

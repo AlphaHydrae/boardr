@@ -21,10 +21,13 @@ defmodule Asserter.Assertions do
     use_raw_value = Keyword.get(opts, :value, false)
     value = subject[key]
 
-    effective_options = Keyword.merge(options, opts)
+    effective_options = options
+    |> Keyword.merge(opts)
+    |> Keyword.drop([:into, :value])
+    |> Keyword.put(:parent, asserter)
 
     callback_arg =
-      if use_raw_value, do: value, else: Asserter.new(value, Keyword.put(effective_options, :parent, asserter))
+      if use_raw_value, do: value, else: Asserter.new(value, effective_options)
 
     case callback.(callback_arg) do
       %Asserter{result: result} ->
@@ -257,13 +260,6 @@ defmodule Asserter.Assertions do
     value = if from, do: Map.get(result, from, Map.get(subject, from)), else: value
 
     cond do
-      merge and is_map(result) and is_map(value) ->
-        %Asserter{
-          asserter
-          | asserted_keys: asserted_keys ++ [key],
-            result: Map.merge(result, value)
-        }
-
       into == false ->
         %Asserter{asserter | asserted_keys: asserted_keys ++ [key]}
 
@@ -277,6 +273,14 @@ defmodule Asserter.Assertions do
                 into,
                 value
               )
+        }
+
+      # FIXME: when value is a datetime, it is a map
+      merge and is_map(result) and is_map(value) ->
+        %Asserter{
+          asserter
+          | asserted_keys: asserted_keys ++ [key],
+            result: Map.merge(result, value)
         }
 
       callback ->
