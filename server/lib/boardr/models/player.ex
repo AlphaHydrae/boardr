@@ -21,5 +21,6 @@ defmodule Boardr.Player do
   def changeset(%__MODULE__{} = player, attrs) when is_map(attrs) do
     player
     |> cast(attrs, [:number])
+    |> unique_constraint(:number, name: :players_game_id_and_user_id_unique)
   end
 end

@@ -1,14 +1,21 @@
 from locust import HttpLocust, seq_task, task, TaskSequence, TaskSet, between
+import logging
 import random
 import uuid
+
+logger = logging.getLogger('scenario')
 
 class PlayGame(TaskSet):
   @task(1)
   def play(self):
+    logger.warning("player url: %s", self.locust.data["player_url"])
     possible_actions_url = self.locust.data["game_possible_actions_url"]
-    possible_actions_body = self.client.get(possible_actions_url, name = "/api/games/:gameId/possible-actions").json()
+    possible_actions_body = self.client.get(possible_actions_url, name = "/api/games/:gameId/possible-actions", params = {
+      "player": self.locust.data["player_url"]
+    }).json()
 
     possible_actions = possible_actions_body["_embedded"]["boardr:possible-actions"]
+    logger.warning("test: %s", possible_actions)
     if not possible_actions:
       return self.interrupt()
 
@@ -32,6 +39,11 @@ class CreateAndPlayGame(TaskSequence):
     self.locust.data["game_actions_url"] = game_body["_links"]["boardr:actions"]["href"]
     self.locust.data["game_url"] = game_body["_links"]["self"]["href"]
     self.locust.data["game_possible_actions_url"] = game_body["_links"]["boardr:possible-actions"]["href"]
+    self.locust.data["player_url"] = game_body["_embedded"]["boardr:player"]["_links"]["self"]["href"]
+
+  @seq_task(2)
+  def play_game(self):
+    self.schedule_task(PlayGame)
 
 class JoinAndPlayRandomGame(TaskSequence):
   @seq_task(1)
@@ -46,14 +58,29 @@ class JoinAndPlayRandomGame(TaskSequence):
       self.interrupt()
 
     random_game = random.choice(available_games)
+
     random_game_players_url = random_game["_links"]["boardr:players"]["href"]
-    self.client.post(random_game_players_url, None, {}, headers = {
+    with self.client.post(random_game_players_url, None, {}, catch_response = True, headers = {
       "Authorization": "Bearer " + self.locust.data["token"]
-    }, name = "/api/games/:gameId/players")
+    }, name = "/api/games/:gameId/players") as player_res:
+      # TODO: check unicity constraint error
+      if player_res.status_code == 422:
+        player_res.success()
+        return self.interrupt()
+      elif player_res.status_code != 201:
+        player_res.failure("Could not create player")
+        return self.interrupt()
 
     self.locust.data["game_actions_url"] = random_game["_links"]["boardr:actions"]["href"]
     self.locust.data["game_url"] = random_game["_links"]["self"]["href"]
     self.locust.data["game_possible_actions_url"] = random_game["_links"]["boardr:possible-actions"]["href"]
+
+    player_body = player_res.json()
+    self.locust.data["player_url"] = player_body["_links"]["self"]["href"]
+
+  @seq_task(2)
+  def play_game(self):
+    self.schedule_task(PlayGame)
 
 class NormalPlayerBehavior(TaskSet):
   tasks = {

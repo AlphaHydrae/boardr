@@ -28,9 +28,9 @@ defmodule BoardrWeb.Games.PlayersController do
     player_numbers = Repo.all(from p in Player, order_by: p.number, select: p.number, where: p.game_id == ^game_id)
     next_available_player_number = Enum.reduce_while player_numbers, 1, fn n, acc -> if n > acc, do: {:halt, acc}, else: {:cont, acc + 1} end
 
-    player = %Player{game_id: game_id, number: next_available_player_number, user_id: user_id}
+    player = Player.changeset(%Player{game_id: game_id, user_id: user_id}, %{number: next_available_player_number})
 
-    Multi.new()
+    result = Multi.new()
     |> Multi.insert(:player, player, returning: [:id])
     |> Multi.run(:game, fn repo, %{player: inserted_player} ->
       if inserted_player.number == 2 do
@@ -41,5 +41,10 @@ defmodule BoardrWeb.Games.PlayersController do
       end
     end)
     |> Repo.transaction()
+
+    case result do
+      {:ok, data} -> {:ok, data}
+      {:error, :player, error, _} -> {:error, error}
+    end
   end
 end

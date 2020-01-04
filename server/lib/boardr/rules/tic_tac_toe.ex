@@ -102,78 +102,76 @@ defmodule Boardr.Rules.TicTacToe do
   end
 
   @impl true
-  def possible_actions(Domain.game(state: :draw), _state) do
+  def possible_actions(_filters, Domain.game(state: :draw), _state) do
     {:ok, []}
   end
 
   @impl true
-  def possible_actions(Domain.game(state: :win), _state) do
+  def possible_actions(_filters, Domain.game(state: :win), _state) do
     {:ok, []}
   end
 
   @impl true
   def possible_actions(
-        Domain.game(players: [Domain.player(number: first_player_number) | _]),
+        filters,
+        Domain.game(players: [Domain.player(number: first_player_number) | _]) = game,
         nil
-      ) do
-    board = initial_board()
-
-    {
-      :ok,
-      Range.new(0, tuple_size(board) - 1)
-      |> Enum.reduce([], fn i, acc ->
-        value = elem(board, i)
-
-        cond do
-          is_nil(value) ->
-            [
-              Domain.take(
-                player_number: first_player_number,
-                position: Domain.d2(col: rem(i, 3), row: div(i, 3))
-              )
-              | acc
-            ]
-
-          true ->
-            acc
-        end
-      end)
-    }
+      )
+      when is_map(filters) do
+    generate_possible_actions(
+      first_player_number,
+      filters,
+      game,
+      initial_board()
+    )
   end
 
   @impl true
-  def possible_actions(Domain.game(players: players), %State{
-        board: board,
-        last_player_number: last_player_number
-      }) do
-    player_number = next_player_number(last_player_number, players)
-
-    {
-      :ok,
-      Range.new(0, tuple_size(board) - 1)
-      |> Enum.reduce([], fn i, acc ->
-        value = elem(board, i)
-
-        cond do
-          is_nil(value) ->
-            [
-              Domain.take(
-                player_number: player_number,
-                position: Domain.d2(col: rem(i, 3), row: div(i, 3))
-              )
-              | acc
-            ]
-
-          true ->
-            acc
-        end
-      end)
-    }
+  def possible_actions(
+        filters,
+        Domain.game(players: players) = game,
+        %State{board: board, last_player_number: last_player_number}
+      )
+      when is_map(filters) do
+    generate_possible_actions(
+      next_player_number(last_player_number, players),
+      filters,
+      game,
+      board
+    )
   end
 
-  defp update_board(board, Domain.d2(col: col, row: row), player_number)
-       when is_tuple(board) and is_player_number(player_number) do
-    put_elem(board, row * 3 + col, player_number)
+  defp generate_possible_actions(player_number, filters, Domain.game(players: players), board)
+       when is_integer(player_number) and is_map(filters) and is_tuple(board) do
+    {
+      :ok,
+      filters
+      |> Map.get(:players, players)
+      |> Enum.filter(fn player -> Domain.player(player, :number) == player_number end)
+      |> Enum.reduce([], fn player, acc ->
+        player_actions =
+          Range.new(0, tuple_size(board) - 1)
+          |> Enum.reduce([], fn i, acc ->
+            value = elem(board, i)
+
+            cond do
+              is_nil(value) ->
+                [
+                  Domain.take(
+                    player_number: Domain.player(player, :number),
+                    position: Domain.d2(col: rem(i, 3), row: div(i, 3))
+                  )
+                  | acc
+                ]
+
+              true ->
+                acc
+            end
+          end)
+
+        player_actions ++ acc
+      end)
+    }
   end
 
   defp initial_board() do
@@ -250,6 +248,11 @@ defmodule Boardr.Rules.TicTacToe do
       true ->
         {:ok, action, new_state, :playing}
     end
+  end
+
+  defp update_board(board, Domain.d2(col: col, row: row), player_number)
+       when is_tuple(board) and is_player_number(player_number) do
+    put_elem(board, row * 3 + col, player_number)
   end
 
   defp win?(player_number, Domain.d2() = position, board)

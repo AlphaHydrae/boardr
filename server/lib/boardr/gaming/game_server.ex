@@ -24,8 +24,8 @@ defmodule Boardr.Gaming.GameServer do
     call_swarm(game_id, {:play, player_id, action_properties})
   end
 
-  def possible_actions(game_id) do
-    call_swarm(game_id, :possible_actions)
+  def possible_actions(game_id, filters \\ %{}) do
+    call_swarm(game_id, {:possible_actions, filters})
   end
 
   # Server (callbacks)
@@ -92,10 +92,10 @@ defmodule Boardr.Gaming.GameServer do
 
   @impl true
   def handle_call(
-    :possible_actions,
+    {:possible_actions, filters},
     _from,
     %State{game: game, rules_state: rules_state} = state
-  ) do
+  ) when is_map(filters) do
     # TODO: cache this
     rules_players =
       game.players
@@ -103,7 +103,16 @@ defmodule Boardr.Gaming.GameServer do
 
     rules_game = Domain.game(players: rules_players, rules: game.rules, settings: game.settings, state: String.to_atom(game.state))
 
-    {:reply, get_rules!(game).possible_actions(rules_game, rules_state), state}
+    rules_filters = %{}
+
+    rules_filters = if player_ids = Map.get(filters, :player_ids) do
+      player_numbers = game.players |> Enum.filter(fn player -> player.id in player_ids end) |> Enum.map(&(&1.number))
+      Map.put(rules_filters, :players, rules_players |> Enum.filter(fn player -> Domain.player(player, :number) in player_numbers end))
+    else
+      rules_filters
+    end
+
+    {:reply, get_rules!(game).possible_actions(rules_filters, rules_game, rules_state), state}
   end
 
   @impl true
