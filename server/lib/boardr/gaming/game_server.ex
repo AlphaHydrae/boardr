@@ -11,6 +11,8 @@ defmodule Boardr.Gaming.GameServer do
   require Boardr.Rules.Domain
   require Logger
 
+  @default_timeout 5_000
+
   def start_link(game_id) when is_binary(game_id) do
     GenServer.start_link(__MODULE__, game_id)
   end
@@ -49,7 +51,12 @@ defmodule Boardr.Gaming.GameServer do
 
     rules_game = Domain.game(players: rules_players, rules: game.rules, settings: game.settings, state: String.to_atom(game.state))
 
-    {:reply, get_rules!(game).board(rules_game, rules_state), state}
+    {
+      :reply,
+      get_rules!(game).board(rules_game, rules_state),
+      state,
+      @default_timeout
+    }
   end
 
   @impl true
@@ -82,11 +89,12 @@ defmodule Boardr.Gaming.GameServer do
       {
         :reply,
         {:ok, persisted_action},
-        %State{state | game: persisted_game, rules_state: new_rules_state}
+        %State{state | game: persisted_game, rules_state: new_rules_state},
+        @default_timeout
       }
     else
       error ->
-        {:reply, error, state}
+        {:reply, error, state, @default_timeout}
     end
   end
 
@@ -112,7 +120,12 @@ defmodule Boardr.Gaming.GameServer do
       rules_filters
     end
 
-    {:reply, get_rules!(game).possible_actions(rules_filters, rules_game, rules_state), state}
+    {
+      :reply,
+      get_rules!(game).possible_actions(rules_filters, rules_game, rules_state),
+      state,
+      @default_timeout
+    }
   end
 
   @impl true
@@ -162,7 +175,13 @@ defmodule Boardr.Gaming.GameServer do
 
     Logger.info("Initialized game server for game #{game_id} with #{number_of_actions} actions")
 
-    {:noreply, %State{game: game, rules_state: rules_state}}
+    {:noreply, %State{game: game, rules_state: rules_state}, @default_timeout}
+  end
+
+  @impl true
+  def handle_info(:timeout, %State{game: %Game{id: game_id}} = state) do
+    Logger.info("Shutting down inactive game server for game #{game_id}")
+    {:stop, {:shutdown, :timeout}, state}
   end
 
   # Gaming (functions)
@@ -209,7 +228,7 @@ defmodule Boardr.Gaming.GameServer do
     {:ok, pid} =
       Swarm.whereis_or_register_name("game:#{game_id}", DynamicSupervisor, :start_child, [
         Boardr.DynamicSupervisor,
-        {__MODULE__, game_id}
+        Supervisor.child_spec({__MODULE__, game_id}, restart: :transient)
       ])
 
     GenServer.call(pid, request)

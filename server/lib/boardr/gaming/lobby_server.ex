@@ -12,6 +12,8 @@ defmodule Boardr.Gaming.LobbyServer do
 
   Record.defrecordp(:state_record, :lobby_server_state, [:game])
 
+  @default_timeout 5_000
+
   def start_link(game_id) when is_binary(game_id) do
     GenServer.start_link(__MODULE__, game_id)
   end
@@ -52,7 +54,12 @@ defmodule Boardr.Gaming.LobbyServer do
     end)
     |> Repo.transaction()
 
-    {:reply, {:ok, created_player}, state_record(state, game: %Game{updated_game | players: players ++ [player]})}
+    {
+      :reply,
+      {:ok, created_player},
+      state_record(state, game: %Game{updated_game | players: players ++ [player]}),
+      @default_timeout
+    }
   end
 
   @impl true
@@ -61,7 +68,7 @@ defmodule Boardr.Gaming.LobbyServer do
     _from,
     state_record() = state
   ) when is_binary(user_id) do
-    {:reply, {:error, :game_already_started}, state}
+    {:reply, {:error, :game_already_started}, state, @default_timeout}
   end
 
   @impl true
@@ -72,7 +79,13 @@ defmodule Boardr.Gaming.LobbyServer do
 
     Logger.info("Initialized lobby server for game #{game_id} with #{length(game.players)} players")
 
-    {:noreply, state_record(game: game)}
+    {:noreply, state_record(game: game), @default_timeout}
+  end
+
+  @impl true
+  def handle_info(:timeout, state_record(game: %Game{id: game_id}) = state) do
+    Logger.info("Shutting down inactive lobby server for game #{game_id}")
+    {:stop, {:shutdown, :timeout}, state}
   end
 
   # Gaming (functions)
@@ -81,7 +94,7 @@ defmodule Boardr.Gaming.LobbyServer do
     {:ok, pid} =
       Swarm.whereis_or_register_name("lobby:#{game_id}", DynamicSupervisor, :start_child, [
         Boardr.DynamicSupervisor,
-        {__MODULE__, game_id}
+        Supervisor.child_spec({__MODULE__, game_id}, restart: :transient)
       ])
 
     GenServer.call(pid, request)
