@@ -47,7 +47,6 @@ defmodule Boardr.MixProject do
       {:jason, "~> 1.0"},
       {:joken, "~> 2.0"},
       {:libcluster, "~> 3.1"},
-      {:memoize, "~> 1.3"},
       {:swarm, "~> 3.0"},
       {:phoenix, "~> 1.4.11"},
       {:phoenix_pubsub, "~> 1.1"},
