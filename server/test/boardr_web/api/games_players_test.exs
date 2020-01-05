@@ -1,5 +1,5 @@
 defmodule BoardrWeb.GamesPlayersTest do
-  use BoardrWeb.ConnCase, async: true
+  use BoardrWeb.ConnCase
 
   alias Boardr.{Game,Player}
 
@@ -58,7 +58,7 @@ defmodule BoardrWeb.GamesPlayersTest do
         |> assert_key_absent("settings")
 
       # Database changes
-      assert_db_queries(insert: 1)
+      assert_db_queries(insert: 1, max_selects: 2)
       assert_in_db(Player, player_id, expected_player)
     end
 
@@ -111,7 +111,7 @@ defmodule BoardrWeb.GamesPlayersTest do
         |> assert_key_absent("settings")
 
       # Database changes
-      assert_db_queries(insert: 1, update: 1)
+      assert_db_queries(insert: 1, max_selects: 2, update: 1)
       assert_in_db(Player, player_id, expected_player)
 
       # Make sure the game's state and last modification date were updated.
@@ -119,6 +119,42 @@ defmodule BoardrWeb.GamesPlayersTest do
       assert {:ok, _} = just_after(updated_game.updated_at, expected_player.created_at)
       assert updated_game.state == "playing"
       assert Map.drop(game, [:state, :updated_at]) == Map.drop(updated_game, [:state, :updated_at])
+    end
+
+    test "a tic-tac-toe game that has already started cannot be joined", %{
+      conn: %Conn{} = conn,
+      game: game,
+      test: test,
+      user: user
+    } do
+      # Create the first and second players.
+      Fixtures.player(game: game, user: user)
+      Fixtures.player(game: game, number: 2, user: Fixtures.user())
+
+      game = game
+      |> Game.changeset(%{state: "playing"})
+      |> Repo.update!()
+
+      # Create the user who will attempt to join the game.
+      other_user = Fixtures.user()
+
+      count_queries(test)
+
+      body =
+        conn
+        |> put_req_header("authorization", "Bearer #{generate_token!(other_user)}")
+        |> post_json(api_path(game), %{})
+        |> json_response(409)
+
+      # Response
+      assert_api_map(body)
+      |> assert_key("gameError", "game_already_started")
+      |> assert_key("status", 409)
+      |> assert_key("title", "The request cannot be completed due to a conflict with the current state of the resource.")
+      |> assert_key("type", test_api_url("/problems/game-error"))
+
+      # Database changes
+      assert_db_queries(max_selects: 1)
     end
   end
 end

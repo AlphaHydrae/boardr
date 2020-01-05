@@ -2,12 +2,14 @@ defmodule BoardrWeb.Games.PlayersController do
   use BoardrWeb, :controller
 
   alias Boardr.{Game,Player}
+  alias Boardr.Gaming.LobbyServer
 
   plug Authenticate, [:'api:players:create'] when action in [:create]
   plug Authenticate, [:'api:players:show'] when action in [:show]
 
   def create(%Conn{assigns: %{auth: %{"sub" => user_id}}} = conn, %{"game_id" => game_id}) do
-    with {:ok, %{player: player}} <- join_game(game_id, user_id) do
+    game_state = Repo.one!(from(g in Game, select: g.state, where: g.id == ^game_id))
+    with {:ok, %Player{} = player} <- join_game(game_id, game_state, user_id) do
       conn
       |> put_status(201)
       |> put_resp_content_type("application/hal+json")
@@ -24,27 +26,11 @@ defmodule BoardrWeb.Games.PlayersController do
     |> render(%{player: player})
   end
 
-  defp join_game(game_id, user_id) when is_binary(game_id) and is_binary(user_id) do
-    player_numbers = Repo.all(from p in Player, order_by: p.number, select: p.number, where: p.game_id == ^game_id)
-    next_available_player_number = Enum.reduce_while player_numbers, 1, fn n, acc -> if n > acc, do: {:halt, acc}, else: {:cont, acc + 1} end
+  defp join_game(game_id, "waiting_for_players", user_id) when is_binary(game_id) and is_binary(user_id) do
+    LobbyServer.join(game_id, user_id)
+  end
 
-    player = Player.changeset(%Player{game_id: game_id, user_id: user_id}, %{number: next_available_player_number})
-
-    result = Multi.new()
-    |> Multi.insert(:player, player, returning: [:id])
-    |> Multi.run(:game, fn repo, %{player: inserted_player} ->
-      if inserted_player.number == 2 do
-        Game.changeset(%Game{id: game_id}, %{state: "playing"})
-        |> repo.update()
-      else
-        {:ok, nil}
-      end
-    end)
-    |> Repo.transaction()
-
-    case result do
-      {:ok, data} -> {:ok, data}
-      {:error, :player, error, _} -> {:error, error}
-    end
+  defp join_game(game_id, game_state, user_id) when is_binary(game_id) and is_binary(game_state) and is_binary(user_id) do
+    {:error, :game_already_started}
   end
 end

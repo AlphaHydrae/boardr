@@ -24,6 +24,18 @@ defmodule BoardrWeb.FallbackController do
     call conn, {:validation_error, changeset}
   end
 
+  def call(%Conn{} = conn, {:error, :game_already_started}) do
+    conn
+    |> render_problem(%HttpProblemDetails{
+      extra_properties: %{
+        gameError: :game_already_started
+      },
+      status: :conflict,
+      title: "The request cannot be completed due to a conflict with the current state of the resource.",
+      type: :'game-error'
+    })
+  end
+
   # TODO: remove this
   def call(%Conn{} = conn, {:validation_error, %Changeset{} = changeset}) do
     conn

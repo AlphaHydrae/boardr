@@ -66,7 +66,7 @@ class JoinAndPlayRandomGame(TaskSequence):
       "Authorization": "Bearer " + self.locust.data["token"]
     }, name = "/api/games/:gameId/players") as player_res:
       # TODO: check unicity constraint error
-      if player_res.status_code == 422:
+      if player_res.status_code in [ 409, 422 ]:
         player_res.success()
         return self.interrupt()
       elif player_res.status_code != 201:

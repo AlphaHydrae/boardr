@@ -97,7 +97,7 @@ defmodule Boardr.Rules.TicTacToe do
   end
 
   @impl true
-  def play(_, _, _) do
+  def play(_action, _game, _state) do
     {:error, :invalid_action}
   end
 
