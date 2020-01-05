@@ -24,8 +24,8 @@ defmodule Boardr.Gaming.GameServerTest do
   end
 
   test "receive no possible actions from the game server when the rules produce none", %{server: server} do
-    expect(Mock, :possible_actions, fn _, _ -> {:ok, []} end)
-    assert {:ok, actions} = GenServer.call(server, :possible_actions)
+    expect(Mock, :possible_actions, fn _, _, _ -> {:ok, []} end)
+    assert {:ok, actions} = GenServer.call(server, {:possible_actions, %{}})
     assert length(actions) == 0
   end
 end

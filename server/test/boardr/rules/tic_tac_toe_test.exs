@@ -23,7 +23,7 @@ defmodule Boardr.Rules.TicTacToeTest do
 
   test "all positions are indicated as takable by the first player in a fresh game",
        %{game: game} do
-    assert {:ok, actions} = TicTacToe.possible_actions(game, nil)
+    assert {:ok, actions} = TicTacToe.possible_actions(%{}, game, nil)
     assert length(actions) == 9
 
     first_player_number = game |> Domain.game(:players) |> List.first() |> Domain.player(:number)
