@@ -6,8 +6,7 @@ defmodule BoardrWeb.Games.PossibleActionsController do
 
   def index(%Conn{} = conn, %{"game_id" => game_id}) do
 
-    game = Repo.get!(Game, game_id)
-    |> Repo.preload([:players])
+    game = Repo.one!(from(g in Game, left_join: p in assoc(g, :players), preload: [players: p], where: g.id == ^game_id))
 
     filters = if player = conn.query_params["player"] do
       # TODO: find out if Phoenix router can do this?
