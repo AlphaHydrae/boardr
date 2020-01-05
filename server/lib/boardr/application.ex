@@ -7,6 +7,8 @@ defmodule Boardr.Application do
 
   def start(_type, _args) do
 
+    :ok = :telemetry.attach(:boardr, [:boardr, :repo, :query], &Boardr.Telemetry.handle_event/4, %{})
+
     topologies = [
       main: [
         strategy: Cluster.Strategy.Epmd,
