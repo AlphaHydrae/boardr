@@ -22,6 +22,7 @@ defmodule BoardrWeb.Games.PossibleActionsController do
         end
       end)
       |> Enum.join()
+      |> (&("\\A#{&1}\\z")).()
       |> Regex.compile!()
 
       player_urls = if is_list(player), do: player, else: [player]
@@ -46,8 +47,19 @@ defmodule BoardrWeb.Games.PossibleActionsController do
     conn
     |> put_resp_content_type("application/hal+json")
     |> render(%{
+      embed: to_list(conn.query_params["embed"]),
       game: game,
       possible_actions: possible_actions
     })
+  end
+
+  defp to_list(value, default \\ [])
+
+  defp to_list(value, default) when is_list(value) and is_list(default) do
+    value
+  end
+
+  defp to_list(value, default) when is_list(default) do
+    if value, do: [value], else: default
   end
 end

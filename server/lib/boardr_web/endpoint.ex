@@ -12,7 +12,7 @@ defmodule BoardrWeb.Endpoint do
            ),
          {:ok, port} <-
            Config.get_required_env(
-             "BOARD_PORT",
+             "BOARDR_PORT",
              :port_missing,
              System.get_env("PORT", "4000")
            ),

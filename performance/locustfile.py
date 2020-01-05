@@ -3,21 +3,23 @@ import logging
 import random
 import uuid
 
-logger = logging.getLogger('scenario')
+# logger = logging.getLogger('scenario')
 
 class PlayGame(TaskSet):
   @task(1)
   def play(self):
-    logger.warning("player url: %s", self.locust.data["player_url"])
     possible_actions_url = self.locust.data["game_possible_actions_url"]
     possible_actions_body = self.client.get(possible_actions_url, name = "/api/games/:gameId/possible-actions", params = {
+      "embed": "boardr:game",
       "player": self.locust.data["player_url"]
     }).json()
 
+    game_state = possible_actions_body["_embedded"]["boardr:game"]["state"]
     possible_actions = possible_actions_body["_embedded"]["boardr:possible-actions"]
-    logger.warning("test: %s", possible_actions)
-    if not possible_actions:
+    if game_state not in [ "playing", "waiting_for_players" ]:
       return self.interrupt()
+    elif not possible_actions:
+      return
 
     action = random.choice(possible_actions)
     action_request_body = { key: action[key] for key in ["type", "position"] }
@@ -111,6 +113,9 @@ class NormalPlayerBehavior(TaskSet):
     self.locust.data["token"] = user_body["_embedded"]["boardr:token"]["value"]
 
 class WebsiteUser(HttpLocust):
-  data = {}
   task_set = NormalPlayerBehavior
   wait_time = between(3, 8)
+
+  def __init__(self, *args):
+    super().__init__(*args)
+    self.data = {}

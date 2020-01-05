@@ -75,7 +75,7 @@ defmodule BoardrWeb.ConnCaseHelpers do
 
   def test_api_url_regex(parts) when is_list(parts) do
     ~r/#{
-      ([~r/^/, test_api_url()] ++ parts ++ [~r/$/])
+      ([~r/\A/, test_api_url()] ++ parts ++ [~r/\z/])
       |> Enum.map(&test_api_url_regex_part/1)
       |> Enum.join("")
     }/
