@@ -9,11 +9,15 @@ class PlayGame(TaskSet):
   @task(1)
   def play(self):
     possible_actions_url = self.locust.data["game_possible_actions_url"]
-    possible_actions_body = self.client.get(possible_actions_url, name = "/api/games/:gameId/possible-actions", params = {
+    possible_actions_res = self.client.get(possible_actions_url, name = "/api/games/:gameId/possible-actions", params = {
       "embed": "boardr:game",
       "player": self.locust.data["player_url"]
-    }).json()
+    })
 
+    if possible_actions_res.status_code != 200:
+      return
+
+    possible_actions_body = possible_actions_res.json()
     game_state = possible_actions_body["_embedded"]["boardr:game"]["state"]
     possible_actions = possible_actions_body["_embedded"]["boardr:possible-actions"]
     if game_state not in [ "playing", "waiting_for_players" ]:
