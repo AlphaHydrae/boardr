@@ -49,6 +49,7 @@ defmodule BoardrWeb do
       alias BoardrWeb.Router.Helpers, as: Routes
 
       import BoardrWeb.HalDocument, only: [put_link: 3, put_link: 4]
+      import BoardrWeb.MapUtils, only: [maybe_put: 4]
       import BoardrWeb.ViewHelpers
       import Phoenix.Controller, only: [view_module: 1]
     end
