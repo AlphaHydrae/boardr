@@ -38,10 +38,9 @@ defmodule BoardrWeb.Games.PossibleActionsController do
       %{}
     end
 
-    {:ok, possible_actions} = if game.state == "waiting_for_players" do
-      {:ok, []}
-    else
-      GameServer.possible_actions(game.id, filters)
+    {:ok, possible_actions} = case game.state do
+      "playing" -> GameServer.possible_actions(game.id, filters)
+      _ -> {:ok, []}
     end
 
     conn

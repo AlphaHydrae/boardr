@@ -14,5 +14,5 @@ stuff "cd client\012"
 screen -t clt-run 6
 stuff "cd client\012npm start\012"
 screen -t perf 7
-stuff "cd performance\012docker-compose up --build locust"
+stuff "cd performance\012./start.sh"
 select shell

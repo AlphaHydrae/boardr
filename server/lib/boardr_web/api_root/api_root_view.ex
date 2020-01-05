@@ -1,7 +1,12 @@
 defmodule BoardrWeb.ApiRootView do
   use BoardrWeb, :view
+  use Memoize
 
   def render("index.json", _assigns) do
+    api_root()
+  end
+
+  defmemop api_root() do
     api_document(%{
       version: List.to_string(Application.spec(:boardr, :vsn))
     })
