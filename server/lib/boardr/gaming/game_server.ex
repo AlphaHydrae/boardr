@@ -41,19 +41,11 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
     :board,
     _from,
-    %State{game: game, rules_state: rules_state} = state
+    %State{rules_game: rules_game, rules_state: rules_state} = state
   ) do
-
-    # TODO: cache this
-    rules_players =
-      game.players
-      |> Enum.map(fn %Player{number: player_number} -> Domain.player(number: player_number) end)
-
-    rules_game = Domain.game(players: rules_players, rules: game.rules, settings: game.settings, state: String.to_atom(game.state))
-
     {
       :reply,
-      get_rules!(game).board(rules_game, rules_state),
+      get_rules!(rules_game).board(rules_game, rules_state),
       state,
       @default_timeout
     }
@@ -63,21 +55,14 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
         {:play, player_id, action_properties},
         _from,
-        %State{game: game, rules_state: rules_state} = state
+        %State{game: game, rules_game: rules_game, rules_state: rules_state} = state
       )
       when is_binary(player_id) and is_map(action_properties) do
     # TODO: check player not nil
     player = game.players |> Enum.find(fn player -> player.id === player_id end)
 
-    # TODO: cache this
-    rules_players =
-      game.players
-      |> Enum.map(fn %Player{number: player_number} -> Domain.player(number: player_number) end)
-
-    rules_game = Domain.game(players: rules_players, settings: game.settings, state: String.to_atom(game.state))
-
     with {:ok, action, new_rules_state, game_result} <-
-           get_rules!(game).play(
+           get_rules!(rules_game).play(
              Domain.take(
                player_number: player.number,
                position: Domain.position_from_list(action_properties["position"])
@@ -102,14 +87,8 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
     {:possible_actions, filters},
     _from,
-    %State{game: game, rules_state: rules_state} = state
+    %State{game: game, rules_game: Domain.game(players: rules_players) = rules_game, rules_state: rules_state} = state
   ) when is_map(filters) do
-    # TODO: cache this
-    rules_players =
-      game.players
-      |> Enum.map(fn %Player{number: player_number} -> Domain.player(number: player_number) end)
-
-    rules_game = Domain.game(players: rules_players, rules: game.rules, settings: game.settings, state: String.to_atom(game.state))
 
     rules_filters = %{}
 
@@ -122,7 +101,7 @@ defmodule Boardr.Gaming.GameServer do
 
     {
       :reply,
-      get_rules!(game).possible_actions(rules_filters, rules_game, rules_state),
+      get_rules!(rules_game).possible_actions(rules_filters, rules_game, rules_state),
       state,
       @default_timeout
     }
@@ -158,7 +137,7 @@ defmodule Boardr.Gaming.GameServer do
         |> Repo.stream(max_rows: 100)
         |> Enum.reduce({nil, 0}, fn {action, player}, {current_rules_state, n} ->
           result =
-            get_rules!(game).play(
+            get_rules!(rules_game).play(
               Domain.take(
                 player_number: player.number,
                 position: Domain.position_from_list(action.position)
@@ -175,7 +154,7 @@ defmodule Boardr.Gaming.GameServer do
 
     Logger.info("Initialized game server for game #{game_id} with #{number_of_actions} actions")
 
-    {:noreply, %State{game: game, rules_state: rules_state}, @default_timeout}
+    {:noreply, %State{game: game, rules_game: rules_game, rules_state: rules_state}, @default_timeout}
   end
 
   @impl true
@@ -234,7 +213,11 @@ defmodule Boardr.Gaming.GameServer do
     GenServer.call(pid, request)
   end
 
-  defp get_rules!(%Game{rules: rules_name}) do
+  defp get_rules!(Domain.game(rules: rules_name)) do
+    get_rules!(rules_name)
+  end
+
+  defp get_rules!(rules_name) when is_binary(rules_name) do
     factory = :boardr
     |> Application.fetch_env!(:gaming)
     |> Keyword.fetch!(:rules_factory)
