@@ -1,7 +1,7 @@
 use Mix.Config
 
-config :boardr, BoardrWeb.Endpoint,
-  jwt_private_key: """
+config :boardr, Boardr.Auth.Token,
+  private_key: """
   -----BEGIN OPENSSH PRIVATE KEY-----
   b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABFwAAAAdzc2gtcn
   NhAAAAAwEAAQAAAQEAwWbjD2NvdNItYJOxqLJ6v5Gafoac831pZcGlDodcXTyCO6Bg/8C/
@@ -29,16 +29,6 @@ config :boardr, BoardrWeb.Endpoint,
   FlSZqlChULoV24WvlIydqFPTEDuIs1jhKGh4zxi1tLuLodZ0krluQ4ypbP1nc5eu/ksRKC
   V0ageUGW/j1VrORZAAAAE3Vua25vd0BBdmFsb24ubG9jYWwBAgMEBQYH
   -----END OPENSSH PRIVATE KEY-----
-  """,
-  jwt_public_key: """
-  -----BEGIN RSA PUBLIC KEY-----
-  MIIBCgKCAQEAwWbjD2NvdNItYJOxqLJ6v5Gafoac831pZcGlDodcXTyCO6Bg/8C/
-  vFRFG+qlC/X0bC00xS14bAjjCEqYymNud+DBZXWulC7fmALJ2g96VESaKOcM/qlk
-  5sqNIl/sc0SV2kDBLsJIHAd8tv0xiFauvrtQxss+X3b68fBhDnhMB8cVre16NJvI
-  yNQXZXhvktTZCIvlyDUCRqFZ6MjtzsGebPfIRH9n4X7BvmY0tnBQf14fJv4+DAtM
-  P86i5WvoUVf9XrT7sGAf9yohitQKC27dFvrPl+yNv2Eb2gy+8oIXIVQbBEy0Tl7i
-  orUnaQBDk7ee+x1yRMo2kHGmwQevieV3WwIDAQAB
-  -----END RSA PUBLIC KEY-----
   """
 
 # Configure your database
@@ -47,7 +37,8 @@ config :boardr, Boardr.Repo,
   pool: Ecto.Adapters.SQL.Sandbox
 
 # We don't run a server during test.
-config :boardr, BoardrWeb.Endpoint, server: false
+config :boardr, BoardrWeb.Endpoint,
+  server: false
 
 # Print only warnings and errors during test.
 unless System.get_env("DEBUG") do

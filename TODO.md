@@ -17,6 +17,7 @@
 
 * https://github.com/thoughtbot/ex_machina
 * https://github.com/pspdfkit-labs/bypass
+* https://elixir-lang.org/blog/2017/10/31/stream-data-property-based-testing-and-data-generation-for-elixir/
 
 ### Performance Testing
 
