@@ -205,11 +205,18 @@ defmodule Boardr.Gaming.GameServer do
 
   defp call_swarm(game_id, request) when is_binary(game_id) do
     {:ok, pid} =
-      Swarm.whereis_or_register_name("game:#{game_id}", DynamicSupervisor, :start_child, [
-        Boardr.DynamicSupervisor,
-        Supervisor.child_spec({__MODULE__, game_id}, restart: :transient)
-      ])
+      Swarm.whereis_or_register_name(
+        "game:#{game_id}",
+        DynamicSupervisor,
+        :start_child,
+        [
+          Boardr.DynamicSupervisor,
+          Supervisor.child_spec({__MODULE__, game_id}, restart: :transient)
+        ],
+        10_000
+      )
 
+    # FIXME: restart server if shutting down due to timeout
     GenServer.call(pid, request)
   end
 
