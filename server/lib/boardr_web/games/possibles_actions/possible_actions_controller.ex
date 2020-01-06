@@ -3,33 +3,23 @@ defmodule BoardrWeb.Games.PossibleActionsController do
 
   alias Boardr.{Game, Repo}
   alias Boardr.Gaming.GameServer
+  alias BoardrWeb.Games.PlayersController
 
   def index(%Conn{} = conn, %{"game_id" => game_id}) do
 
     game = Repo.one!(from(g in Game, left_join: p in assoc(g, :players), preload: [players: p], where: g.id == ^game_id))
 
     filters = if player = conn.query_params["player"] do
-      # TODO: find out if Phoenix router can do this?
-      player_url_regex = Routes.games_players_url(Endpoint, :show, game_id, "00000000-0000-0000-0000-000000000000")
-      |> String.split("00000000-0000-0000-0000-000000000000")
-      |> Enum.with_index()
-      |> Enum.map(fn {part, i} ->
-        if part == "" do
-          "(?<m#{i}>[\\w-]+)"
-        else
-          Regex.escape(part)
-        end
-      end)
-      |> Enum.join()
-      |> (&("\\A#{&1}\\z")).()
-      |> Regex.compile!()
-
       player_urls = if is_list(player), do: player, else: [player]
       player_ids = player_urls
-      |> Enum.map(fn player_url -> Regex.named_captures(player_url_regex, player_url) end)
-      |> Enum.filter(&(&1))
-      |> Enum.map(fn captures -> captures["m1"] end)
+      |> Enum.reduce([], fn player_url, acc ->
+        case extract_path_params(player_url, PlayersController) do
+          %{"game_id" => ^game_id, "id" => player_id} -> [ player_id | acc ]
+          _ -> acc
+        end
+      end)
 
+      # TODO: validate players exist
       %{
         player_ids: player_ids
       }
@@ -51,6 +41,18 @@ defmodule BoardrWeb.Games.PossibleActionsController do
     })
   end
 
+  # TODO: extract to utility module
+  defp extract_path_params(url, plug) do
+    # TODO: check host, path, port & scheme match
+    %URI{host: host, path: path} = URI.parse(url)
+    # FIXME: host & path can be nil
+    case Phoenix.Router.route_info(Router, "GET", path, host) do
+      %{path_params: path_params, plug: ^plug, plug_opts: :show} -> path_params
+      _ -> nil
+    end
+  end
+
+  # TODO: extract to utility module
   defp to_list(value, default \\ [])
 
   defp to_list(value, default) when is_list(value) and is_list(default) do
