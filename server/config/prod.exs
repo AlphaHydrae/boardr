@@ -1,6 +1,6 @@
 use Mix.Config
 
-config :boardr, BoardrWeb.Endpoint,
+config :boardr, BoardrApi.Endpoint,
   server: true
 
 config :logger, :console,

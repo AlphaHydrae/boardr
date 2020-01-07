@@ -1,4 +1,7 @@
 /_build
+/config/env.exs
 /cover
 /deps
+/doc
 /Dockerfile
+/tmp

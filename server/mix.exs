@@ -6,7 +6,8 @@ defmodule Boardr.Umbrella.MixProject do
       apps_path: "apps",
       version: "0.1.0",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      releases: releases()
     ]
   end
 
@@ -17,5 +18,24 @@ defmodule Boardr.Umbrella.MixProject do
   # Run "mix help deps" for examples and options.
   defp deps do
     []
+  end
+
+  defp releases() do
+    [
+      boardr: [
+        include_executables_for: [:unix],
+        applications: [
+          boardr: :permanent,
+          runtime_tools: :permanent
+        ]
+      ],
+      boardr_api: [
+        include_executables_for: [:unix],
+        applications: [
+          boardr_api: :permanent,
+          runtime_tools: :permanent
+        ]
+      ]
+    ]
   end
 end

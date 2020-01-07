@@ -1,2 +1,0 @@
-#!/usr/bin/with-contenv sh
-sudo -g boardr -u boardr /usr/src/app/bin/boardr start

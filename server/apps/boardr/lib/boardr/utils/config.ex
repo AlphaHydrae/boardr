@@ -1,12 +1,22 @@
 defmodule Boardr.Config do
   def get_required_env(name, error, default \\ nil)
       when is_binary(name) and is_atom(error) and (is_nil(default) or is_binary(default)) do
-    value = System.get_env(name)
+    if value = System.get_env(name) do
+      {:ok, value}
+    else
+      path = System.get_env("#{name}_FILE")
+      cond do
+        not is_nil(path) -> get_required_env_from_file(path, error)
+        not is_nil(default) -> {:ok, default}
+        true -> {:error, error}
+      end
+    end
+  end
 
-    cond do
-      not is_nil(value) -> {:ok, value}
-      not is_nil(default) -> {:ok, default}
-      true -> {:error, error}
+  def get_required_env_from_file(path, error) when is_binary(path) and is_atom(error) do
+    case File.read(path) do
+      {:ok, contents} -> {:ok, contents}
+      {:error, read_error} -> {:error, {error, read_error, path}}
     end
   end
 

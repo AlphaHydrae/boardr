@@ -28,7 +28,8 @@ defmodule Boardr.Auth.Token do
 
     @impl Joken.Config
     def token_config() do
-      issuer = Application.get_env(:boardr, BoardrWeb.Endpoint)[:jwt_issuer]
+      # FIXME: move this to Boardr.Auth.Token config
+      issuer = Application.get_env(:boardr, BoardrApi.Endpoint)[:jwt_issuer]
 
       default_claims(
         default_exp: 3600 * 24 * 7,
