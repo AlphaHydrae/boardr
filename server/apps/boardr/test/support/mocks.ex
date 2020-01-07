@@ -5,6 +5,10 @@ defmodule Boardr.Mocks do
   defmock(Boardr.Mocks.Rules.Factory, for: Boardr.Rules.Factory)
 
   def mock_rules_factory!(context) do
+    ExUnit.Callbacks.on_exit(fn ->
+      Application.put_env(:boardr, Boardr, rules_factory: Boardr.Rules.DefaultFactory)
+    end)
+
     set_mox_global(context)
     verify_on_exit!(context)
 
