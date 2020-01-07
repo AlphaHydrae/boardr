@@ -1,0 +1,124 @@
+---
+- hosts: all
+  become: true
+  vars:
+    dns_nameservers:
+      - 8.8.8.8
+      - 8.8.4.4
+    docker_version: 5:19.03.5~3-0~ubuntu-bionic
+
+  handlers:
+
+    - name: Restart Docker daemon
+      service:
+        name: docker
+        state: restarted
+      tags: [ docker ]
+
+  tasks:
+
+    - name: Install tools
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg-agent
+          - python3-pip
+          - software-properties-common
+        state: present
+        update_cache: true
+      tags: [ docker, install ]
+
+    - name: Add Docker apt key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+      tags: [ docker, install ]
+
+    - name: Add Docker apt repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        state: present
+      tags: [ docker, install ]
+
+    - name: Install Docker
+      apt:
+        name: docker-ce={{ docker_version }}
+        update_cache: yes
+        state: present
+      tags: [ docker, install ]
+
+    - name: Configure Docker daemon
+      template:
+        src: docker-daemon.json
+        dest: /etc/docker/daemon.json
+      notify: Restart Docker daemon
+      tags: [ docker, config ]
+
+    - name: Install docker-py
+      pip:
+        name: docker-py
+      tags: [ docker, install ]
+
+    - name: Install microk8s
+      snap:
+        name: microk8s
+        classic: true
+        state: present
+      tags: [ microk8s, install ]
+
+    - name: Add the root user to the microk8s group
+      user:
+        name: root
+        append: true
+        groups: microk8s
+      tags: [ microk8s, config ]
+
+    - name: Alias microk8s.kubectl to kubectl
+      lineinfile:
+        create: true
+        path: /root/.bash_profile
+        regexp: '^alias kubectl='
+        line: 'alias kubectl="microk8s.kubectl"'
+        owner: root
+        group: root
+        mode: 0600
+        state: present
+      tags: [ microk8s, config ]
+
+    - name: Enable the microk8s DNS addon
+      command: /snap/bin/microk8s.enable dns
+      changed_when: "'created' in enable_microk8s_dns_result.stdout"
+      register: enable_microk8s_dns_result
+      tags: [ microk8s, config ]
+
+    - name: Enable the microk8s Docker registry addon
+      command: /snap/bin/microk8s.enable registry
+      changed_when: "'created' in enable_microk8s_registry_result.stdout"
+      register: enable_microk8s_registry_result
+      tags: [ microk8s, config ]
+
+    - name: Wait for the Docker registry to start
+      wait_for:
+        host: 127.0.0.1
+        port: 32000
+      tags: [ microk8s, config ]
+
+    - name: Build application Docker image
+      docker_image:
+        name: 127.0.0.1:32000/boardr-api
+        build:
+          path: /vagrant/server
+          pull: no
+        force_source: yes
+        force_tag: yes
+        source: build
+        state: present
+        tag: 1.0.0
+        push: yes
+      tags: [ demo, build ]
+
+    # - name: Deploy application
+    #   command: microk8s.kubectl apply -f /vagrant/k8s.yml
+    #   tags: [ demo ]

@@ -1,6 +1,7 @@
 /client/.env*
 /client/node_modules
 /inventory.yml
+/*.log
 /performance/tmp
 /server/_build
 /server/config/env.exs
@@ -9,3 +10,4 @@
 /server/doc
 /server/erl_crash.dump
 /server/tmp
+/.vagrant
