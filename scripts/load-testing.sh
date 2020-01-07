@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ROOT="$( dirname "$DIR" )"
 
 cd "$ROOT"
-pushd performance 1>/dev/null
+pushd load-testing 1>/dev/null
 
 # Generate the RSA private key required to run the Boardr API.
 if ! test -f tmp/id_rsa; then

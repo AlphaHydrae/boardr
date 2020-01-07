@@ -1,8 +1,8 @@
 /client/.env*
 /client/node_modules
 /inventory.yml
+/load-testing/tmp
 /*.log
-/performance/tmp
 /server/_build
 /server/config/env.exs
 /server/cover

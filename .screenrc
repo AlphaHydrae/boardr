@@ -13,6 +13,6 @@ screen -t clt-shell 5
 stuff "cd client\012"
 screen -t clt-run 6
 stuff "cd client\012npm start\012"
-screen -t perf 7
-stuff "./scripts/performance.sh"
+screen -t load 7
+stuff "./scripts/load-testing.sh"
 select shell
