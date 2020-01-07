@@ -1,0 +1,42 @@
+# Boardr load testing service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boardr-load-testing
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8089
+  selector: &boardr-load-testing-labels
+    app.kubernetes.io/component: load-testing
+    app.kubernetes.io/part-of: boardr
+    app.kubernetes.io/instance: boardr-vagrant
+
+# Boardr load testing deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boardr-load-testing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      <<: *boardr-load-testing-labels
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: locust
+        app.kubernetes.io/version: "0.1.0"
+        <<: *boardr-load-testing-labels
+    spec:
+      containers:
+        - name: locust
+          image: "localhost:32000/boardr-load-testing:0.1.0"
+          imagePullPolicy: Always
+          env:
+            - name: TARGET_URL
+              value: "http://boardr-api:4000"

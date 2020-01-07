@@ -1,0 +1,65 @@
+# Boardr API service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boardr-api
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4000
+  selector:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: boardr
+    app.kubernetes.io/instance: boardr-vagrant
+
+# Boardr API deployment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boardr-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels: &boardr-api-labels
+      app.kubernetes.io/component: api
+      app.kubernetes.io/part-of: boardr
+      app.kubernetes.io/instance: boardr-vagrant
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: phoenix
+        app.kubernetes.io/version: "0.1.0"
+        <<: *boardr-api-labels
+    spec:
+      containers:
+        - name: phoenix
+          image: "localhost:32000/boardr-api:0.1.0"
+          imagePullPolicy: Always
+          env:
+            - name: BOARDR_BASE_URL
+              value: http://boardr-api:4000
+            - name: BOARDR_DATABASE_URL
+              value: ecto://boardr:changeme@boardr-db/boardr
+            - name: BOARDR_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: BOARDR_PORT
+              value: "4000"
+            - name: BOARDR_PRIVATE_KEY_FILE
+              value: /etc/boardr/private-key
+          volumeMounts:
+            - name: boardr-api-private-key
+              mountPath: /etc/boardr
+              readOnly: true
+      volumes:
+        - name: boardr-api-private-key
+          secret:
+            secretName: boardr-api-private-key
+            items:
+              - key: key
+                path: private-key
