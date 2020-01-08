@@ -1,0 +1,7 @@
+startup_message off
+screen
+split
+focus
+screen
+resize 10
+focus

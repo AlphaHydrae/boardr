@@ -1,0 +1,4 @@
+---
+dependencies:
+  - role: dns
+  - role: snap

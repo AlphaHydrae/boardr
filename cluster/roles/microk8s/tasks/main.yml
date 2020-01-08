@@ -1,0 +1,28 @@
+---
+
+- name: Install microk8s
+  snap:
+    channel: "{{ microk8s_snap_channel }}"
+    name: microk8s
+    classic: true
+    state: present
+  tags: [ install, microk8s ]
+
+- name: Add the root user to the microk8s group
+  user:
+    name: root
+    append: true
+    groups: microk8s
+  tags: [ config, microk8s ]
+
+- name: Alias microk8s.kubectl to kubectl
+  lineinfile:
+    create: true
+    path: /root/.bash_profile
+    regexp: '^alias kubectl='
+    line: 'alias kubectl="microk8s.kubectl"'
+    owner: root
+    group: root
+    mode: 0600
+    state: present
+  tags: [ config, microk8s ]

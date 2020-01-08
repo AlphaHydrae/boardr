@@ -1,5 +1,6 @@
 /client/.env*
 /client/node_modules
+/cluster/inventory.yml
 /inventory.yml
 /load-testing/tmp
 /*.log

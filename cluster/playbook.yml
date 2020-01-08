@@ -1,0 +1,20 @@
+---
+
+# Perform basic configuration on all machines.
+- hosts: all
+  become: true
+  roles:
+    - role: server
+    - role: htop
+
+# Enable microk8s addons on the master.
+- hosts: k8s_master
+  become: true
+  roles:
+    - role: microk8s-master
+
+# Form a microk8s cluster by joining the master from each node.
+- hosts: k8s_nodes
+  become: true
+  roles:
+    - role: microk8s-node

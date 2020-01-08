@@ -1,0 +1,13 @@
+---
+
+- name: Set hostname
+  hostname:
+    name: "{{ server_hostname }}"
+  tags: [ config, server ]
+
+- name: Add hostname to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    regexp: "^127\\.0\\.0\\.1\\s+{{ server_hostname | regex_escape }}$"
+    line: "127.0.0.1 {{ server_hostname }}"
+  tags: [ config, server ]

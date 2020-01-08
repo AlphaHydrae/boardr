@@ -1,0 +1,25 @@
+---
+
+- name: Install resolvconf
+  apt:
+    name: resolvconf
+    state: present
+    update_cache: true
+
+- name: Enable & start resolvconf
+  service:
+    name: resolvconf
+    enabled: true
+    state: started
+
+- name: Configure resolvconf head file
+  template:
+    src: head
+    dest: /etc/resolvconf/resolv.conf.d/head
+  register: dns_resolvconf_head_template
+
+- name: Enable & start resolvconf
+  service:
+    name: resolvconf
+    state: restarted
+  when: dns_resolvconf_head_template is changed
