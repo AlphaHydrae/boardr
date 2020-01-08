@@ -64,4 +64,7 @@ ENV BOARDR_PORT=4000
 
 CMD [ "/init" ]
 
+HEALTHCHECK --interval=10s --timeout=30s --start-period=5s --retries=3 \
+            CMD wget -qO- http://localhost:${BOARDR_PORT}/api
+
 EXPOSE 22 4000 4369 9000
