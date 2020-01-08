@@ -41,7 +41,7 @@ spec:
           imagePullPolicy: Always
           env:
             - name: BOARDR_BASE_URL
-              value: http://boardr-api:4000
+              value: http://boardr.vagrant
             - name: BOARDR_DATABASE_URL
               value: ecto://boardr:changeme@boardr-db/boardr
             - name: BOARDR_IP

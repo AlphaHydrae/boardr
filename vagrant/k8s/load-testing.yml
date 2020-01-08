@@ -10,7 +10,7 @@ spec:
     - name: http
       port: 80
       targetPort: 8089
-  selector: &boardr-load-testing-labels
+  selector:
     app.kubernetes.io/component: load-testing
     app.kubernetes.io/part-of: boardr
     app.kubernetes.io/instance: boardr-vagrant
@@ -24,8 +24,10 @@ metadata:
 spec:
   replicas: 1
   selector:
-    matchLabels:
-      <<: *boardr-load-testing-labels
+    matchLabels: &boardr-load-testing-labels
+      app.kubernetes.io/component: load-testing
+      app.kubernetes.io/part-of: boardr
+      app.kubernetes.io/instance: boardr-vagrant
   template:
     metadata:
       labels:
@@ -39,4 +41,8 @@ spec:
           imagePullPolicy: Always
           env:
             - name: TARGET_URL
-              value: "http://boardr-api:4000"
+              value: "http://boardr.vagrant"
+      hostAliases:
+        - ip: 192.168.50.4
+          hostnames:
+            - boardr.vagrant

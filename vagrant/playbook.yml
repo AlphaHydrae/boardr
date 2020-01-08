@@ -17,18 +17,56 @@
 
   tasks:
 
+    - name: Add entries to /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        regexp: '^192.168.50.4 {{ item }}'
+        line: '192.168.50.4 {{ item }}'
+        owner: root
+        group: root
+        mode: 0644
+        state: present
+      with_items:
+        - boardr.vagrant
+        - locust.boardr.vagrant
+        - traefik.boardr.vagrant
+      tags: [ config ]
+
     - name: Install tools
       apt:
         name:
+          # Unless specified, those are the requirements to install Docker.
           - apt-transport-https
           - ca-certificates
           - curl
           - gnupg-agent
-          - python3-pip
+          - python3-pip # To install docker-py.
+          - resolvconf # For DNS nameserver configuration.
           - software-properties-common
         state: present
         update_cache: true
-      tags: [ docker, install ]
+      tags: [ install ]
+
+    - name: Enable & start resolvconf
+      service:
+        name: resolvconf
+        enabled: true
+        state: started
+      tags: [ dns, install ]
+
+    - name: Configure resolvconf head file
+      template:
+        src: resolvconf-head
+        dest: /etc/resolvconf/resolv.conf.d/head
+      register: dns_resolvconf_head_template
+      tags: [ dns, config ]
+
+    - name: Enable & start resolvconf
+      service:
+        name: resolvconf
+        state: restarted
+      when: dns_resolvconf_head_template is changed
+      tags: [ dns, config ]
 
     - name: Add Docker apt key
       apt_key:
@@ -105,11 +143,18 @@
         port: 32000
       tags: [ microk8s, config ]
 
+    - name: Checkout clean version of repository
+      git:
+        repo: 'file:///vagrant'
+        dest: /srv/checkout
+        version: master
+      tags: [ build ]
+
     - name: Build API Docker image
       docker_image:
         name: 127.0.0.1:32000/boardr-api
         build:
-          path: /vagrant/server
+          path: /srv/checkout/server
           pull: no
         force_source: yes
         force_tag: yes
@@ -123,7 +168,7 @@
       docker_image:
         name: 127.0.0.1:32000/boardr-load-testing
         build:
-          path: /vagrant/load-testing
+          path: /srv/checkout/load-testing
           pull: no
         force_source: yes
         force_tag: yes
