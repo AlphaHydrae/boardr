@@ -16,6 +16,11 @@
   when: "'dns: enabled' not in microk8s_status.stdout_lines"
   tags: [ config, microk8s ]
 
+- name: Enable microk8s registry addon
+  command: /snap/bin/microk8s.enable registry
+  when: "'registry: enabled' not in microk8s_status.stdout_lines"
+  tags: [ config, microk8s ]
+
 - name: Enable microk8s storage addon
   command: /snap/bin/microk8s.enable storage
   when: "'storage: enabled' not in microk8s_status.stdout_lines"

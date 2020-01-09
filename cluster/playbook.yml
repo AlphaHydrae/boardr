@@ -11,10 +11,16 @@
 - hosts: k8s_master
   become: true
   roles:
+    - role: docker
     - role: microk8s-master
 
 # Form a microk8s cluster by joining the master from each node.
 - hosts: k8s_nodes
+  become: true
+  roles:
+    - role: microk8s-node
+
+- hosts: artillery
   become: true
   roles:
     - role: microk8s-node

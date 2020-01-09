@@ -1,0 +1,30 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: simpleingressroute
+  namespace: default
+spec:
+  entryPoints:
+    - web
+  routes:
+    # Boardr API
+    - match: Host(`boardr.cluster`)
+      kind: Rule
+      services:
+        - name: boardr-api
+          port: 80
+    # Boardr load testing
+    - match: Host(`locust.boardr.cluster`)
+      kind: Rule
+      services:
+        - name: boardr-load-testing
+          port: 80
+    # Boardr reverse proxy
+    - match: Host(`traefik.boardr.cluster`)
+      kind: Rule
+      services:
+        - name: traefik
+          port: 80
+        - name: traefik
+          port: 8080
