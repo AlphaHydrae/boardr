@@ -21,7 +21,7 @@ COPY mix.exs mix.lock /usr/src/app/
 COPY apps/boardr/mix.exs /usr/src/app/apps/boardr/
 COPY apps/boardr_api/mix.exs /usr/src/app/apps/boardr_api/
 
-RUN mix deps.get
+RUN mix deps.get --only $MIX_ENV
 
 COPY config/config.exs config/prod.exs /usr/src/app/config/
 
