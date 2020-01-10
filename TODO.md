@@ -28,11 +28,3 @@
 * https://elixirforum.com/t/should-one-use-pipes-or-with/21000/10
   * https://github.com/expede/exceptional
   * https://github.com/CrowdHailer/OK
-
-## Machines
-
-* basilisk
-* hydra
-* leviathan
-* manticore
-* ouroboros
