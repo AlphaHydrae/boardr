@@ -4,6 +4,8 @@
 
 * [x] Make separate web & worker releases work with swarm
 * [ ] Test separate web & worker releases on cluster
+* [ ] Set up /etc/hosts on master with node names
+* [ ] Fix swarm process exit with retry
 
 ## Important
 
@@ -23,11 +25,12 @@
 
 ## Nice-to-have
 
-* [ ] Teaser trailer
 * [ ] Landing page
 * [ ] Frontend style
 * [ ] More tests
+* [ ] HAL browser
 * [ ] Kubernetes dashboard
 * [ ] Travis CI
 * [ ] Coveralls
 * [-] Read Erlang book
+* [ ] Teaser trailer

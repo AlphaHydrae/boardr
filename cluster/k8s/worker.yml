@@ -15,13 +15,13 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: boardr
-        app.kubernetes.io/version: "0.1.0"
+        app.kubernetes.io/version: "1.0.0"
         <<: *boardr-worker-labels
         boardr.alphahydrae.io/cluster: main
     spec:
       containers:
         - name: boardr
-          image: "localhost:32000/boardr-worker:0.1.0"
+          image: "localhost:32000/boardr-worker:1.0.0"
           imagePullPolicy: Always
           env:
             - name: BOARDR_DATABASE_URL
@@ -49,6 +49,8 @@ spec:
             - name: boardr-worker-private-key
               mountPath: /etc/boardr
               readOnly: true
+      nodeSelector:
+        type: worker
       volumes:
         - name: boardr-worker-private-key
           secret:

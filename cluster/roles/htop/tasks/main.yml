@@ -2,27 +2,27 @@
 
 - name: Create .config directory
   file:
-    path: /root/.config
-    owner: root
-    group: root
+    path: /home/ubuntu/.config
+    owner: ubuntu
+    group: ubuntu
     mode: 0700
     state: directory
   tags: [ config, htop ]
 
 - name: Create htop configuration directory
   file:
-    path: /root/.config/htop
-    owner: root
-    group: root
+    path: /home/ubuntu/.config/htop
+    owner: ubuntu
+    group: ubuntu
     mode: 0700
     state: directory
   tags: [ config, htop ]
 
 - name: Configure htop
   template:
-    src: htop
-    dest: /root/.config/htop/htoprc
-    owner: root
-    group: root
+    src: htoprc
+    dest: /home/ubuntu/.config/htop/htoprc
+    owner: ubuntu
+    group: ubuntu
     mode: 0644
   tags: [ config, htop ]

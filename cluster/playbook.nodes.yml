@@ -1,0 +1,8 @@
+---
+# Install microk8s on all nodes and form a cluster by joining the master.
+- hosts: k8s_nodes
+  become: true
+  roles:
+    - role: server
+    - role: htop
+    - role: microk8s-node

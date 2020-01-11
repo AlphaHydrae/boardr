@@ -1,0 +1,91 @@
+---
+
+- name: Create SSH directory
+  file:
+    path: /home/ubuntu/.ssh
+    owner: ubuntu
+    group: ubuntu
+    mode: 0700
+    state: directory
+  tags: [ build, config ]
+
+- name: Add known hosts to build server
+  known_hosts:
+    path: /home/ubuntu/.ssh/known_hosts
+    name: "{{ item.name }}"
+    key: "{{ item.key }}"
+  become_user: ubuntu
+  with_items: "{{ build_known_hosts }}"
+  tags: [ build, config ]
+
+- name: Generate SSH key pair
+  command: ssh-keygen -C boardr -f /home/ubuntu/.ssh/id_ed25519 -N '' -t ed25519
+  args:
+    creates: /home/ubuntu/.ssh/id_ed25519
+  become_user: ubuntu
+  tags: [ build, config ]
+
+- name: Clone boardr repository
+  git:
+    repo: "{{ build_repo }}"
+    bare: true
+    dest: /home/ubuntu/boardr.git
+    force: true
+    version: master
+  become_user: ubuntu
+  tags: [ build, install ]
+
+- block:
+
+    - name: Create checkout directory
+      file:
+        path: /home/ubuntu/boardr
+        owner: ubuntu
+        group: ubuntu
+        mode: 0700
+        state: directory
+      tags: [ build ]
+
+    - name: Checkout boardr repository
+      command: git checkout -f master
+      environment:
+        GIT_DIR: /home/ubuntu/boardr.git
+        GIT_WORK_TREE: /home/ubuntu/boardr
+      become_user: ubuntu
+
+    - name: Build API Docker image
+      docker_image:
+        name: 127.0.0.1:32000/boardr-api
+        build:
+          path: /home/ubuntu/boardr/server
+          pull: no
+        force_source: yes
+        force_tag: yes
+        source: build
+        state: present
+        tag: 1.0.0
+        push: yes
+
+    - name: Build worker Docker image
+      docker_image:
+        name: 127.0.0.1:32000/boardr-worker
+        build:
+          path: /home/ubuntu/boardr/server
+          dockerfile: Dockerfile.worker
+          pull: no
+        force_source: yes
+        force_tag: yes
+        source: build
+        state: present
+        tag: 1.0.0
+        push: yes
+
+  always:
+
+    - name: Clean up checkout
+      file:
+        path: /home/ubuntu/boardr
+        state: absent
+      become_user: ubuntu
+
+  tags: [ build ]

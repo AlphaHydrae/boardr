@@ -1,0 +1,8 @@
+---
+# Install microk8s and enable addons on the master.
+- hosts: k8s_master
+  become: true
+  roles:
+    - role: server
+    - role: htop
+    - role: microk8s-master

@@ -1,7 +1,37 @@
 startup_message off
-screen
+
 split
-focus
-screen
-resize 10
-focus
+split
+split
+focus down
+split -v
+focus down
+split -v
+focus down
+split -v
+
+focus top
+screen -t ouroboros ssh -t ubuntu@10.0.1.200 htop
+
+focus down
+screen -t cerberus ssh -t ubuntu@10.0.1.201 htop
+
+focus right
+screen -t tiamat ssh -t ubuntu@10.0.1.202 htop
+
+focus down
+focus left
+screen -t hydra ssh -t ubuntu@10.0.1.203 htop
+
+focus right
+screen -t basilisk ssh -t ubuntu@10.0.1.204 htop
+
+focus down
+focus left
+screen -t leviathan ssh -t ubuntu@10.0.1.205 htop
+
+focus right
+screen -t manticore ssh -t ubuntu@10.0.1.206 htop
+
+focus top
+focus left

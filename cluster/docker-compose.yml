@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+
+  locust:
+    build: ../load-testing
+    environment:
+      TARGET_URL: "http://boardr.cluster"
+    image: boardr/locust
+    ports:
+      - "8089:8089"

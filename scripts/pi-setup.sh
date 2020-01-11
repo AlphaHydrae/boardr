@@ -43,7 +43,7 @@ echo "Rebooting ..."
 sudo reboot
 
 # sudo systemctl enable ssh && sudo systemctl start ssh
-# ifconfig
+# ip addr
 
 # ssh pi@10.0.1.2
 # (umask 077 && mkdir -p .ssh) && (umask 066 && vi .ssh/authorized_keys)

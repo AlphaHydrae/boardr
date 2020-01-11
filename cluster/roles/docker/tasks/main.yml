@@ -7,6 +7,7 @@
       - ca-certificates
       - curl
       - gnupg-agent
+      - python3-pip
       - software-properties-common
     state: present
     update_cache: true
@@ -30,3 +31,15 @@
     update_cache: yes
     state: present
   tags: [ docker, install ]
+
+- name: Install docker-py
+  pip:
+    name: docker-py
+  tags: [ docker, install ]
+
+- name: Configure Docker daemon
+  template:
+    src: daemon.json
+    dest: /etc/docker/daemon.json
+  notify: Restart Docker daemon
+  tags: [ docker, config ]

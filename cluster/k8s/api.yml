@@ -32,13 +32,13 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: phoenix
-        app.kubernetes.io/version: "0.1.0"
+        app.kubernetes.io/version: "1.0.0"
         <<: *boardr-api-labels
         boardr.alphahydrae.io/cluster: main
     spec:
       containers:
         - name: phoenix
-          image: "localhost:32000/boardr-api:0.1.0"
+          image: "localhost:32000/boardr-api:1.0.0"
           imagePullPolicy: Always
           env:
             - name: BOARDR_BASE_URL

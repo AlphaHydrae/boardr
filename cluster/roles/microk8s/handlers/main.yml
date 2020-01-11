@@ -1,0 +1,7 @@
+---
+
+- name: Restart kubelet
+  service:
+    name: snap.microk8s.daemon-kubelet
+    state: restarted
+  tags: [ microk8s ]

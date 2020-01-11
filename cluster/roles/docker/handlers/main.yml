@@ -1,0 +1,6 @@
+---
+- name: Restart Docker daemon
+  service:
+    name: docker
+    state: restarted
+  tags: [ docker ]
