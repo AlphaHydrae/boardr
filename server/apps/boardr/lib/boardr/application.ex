@@ -9,6 +9,7 @@ defmodule Boardr.Application do
 
   @epmd_cluster_vars ~w(BOARDR_EPMD_HOSTS)
   @k8s_cluster_vars ~w(BOARDR_K8S_NAMESPACE BOARDR_K8S_NODE_BASENAME BOARDR_K8S_POLLING_INTERVAL BOARDR_K8S_SELECTOR)
+  @log_levels ~w(debug info warn error)
 
   def start(_type, _args) do
     compiled_env =
@@ -32,6 +33,11 @@ defmodule Boardr.Application do
 
     :ok =
       :telemetry.attach(:boardr, [:boardr, :repo, :query], &Boardr.Telemetry.handle_event/4, %{})
+
+    {:ok, log_level} = get_log_level()
+    if Logger.level() != log_level do
+      Logger.configure(level: log_level)
+    end
 
     {:ok, main_topology} = cluster_topology()
 
@@ -102,5 +108,29 @@ defmodule Boardr.Application do
         ]
       ]
     }
+  end
+
+  defp get_log_level() do
+    log_level_string = "BOARDR_LOG_LEVEL" |> System.get_env()
+    case log_level_string do
+      nil ->
+        {
+          :ok,
+          Application.fetch_env!(:logger, :console) |> Keyword.fetch!(:level)
+        }
+      _ ->
+        normalized_log_level_string = String.downcase(log_level_string)
+        if normalized_log_level_string in @log_levels do
+          {
+            :ok,
+            String.to_atom(normalized_log_level_string)
+          }
+        else
+          {
+            :error,
+            {:unsupported_log_level, log_level_string}
+          }
+        end
+    end
   end
 end
