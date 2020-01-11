@@ -2,8 +2,6 @@
 # ========================================
 FROM elixir:1.9.4-alpine as builder
 
-ARG ARCH=amd64
-
 WORKDIR /usr/src/app
 
 ENV MIX_ENV=prod
