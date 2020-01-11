@@ -8,18 +8,21 @@ spec:
   entryPoints:
     - web
   routes:
+
     # Boardr API
     - match: Host(`boardr.vagrant`)
       kind: Rule
       services:
         - name: boardr-api
           port: 80
+
     # Boardr load testing
     - match: Host(`locust.boardr.vagrant`)
       kind: Rule
       services:
         - name: boardr-load-testing
           port: 80
+
     # Boardr reverse proxy
     - match: Host(`traefik.boardr.vagrant`)
       kind: Rule
@@ -28,3 +31,12 @@ spec:
           port: 80
         - name: traefik
           port: 8080
+
+    # Kubernetes dashboard
+    - match: Host(`k8s.boardr.vagrant`)
+      kind: Rule
+      services:
+        - name: kubernetes-dashboard
+          namespace: kube-system
+          port: 443
+          scheme: https

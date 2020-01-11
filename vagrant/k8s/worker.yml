@@ -1,31 +1,14 @@
-# Boardr API service
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: boardr-api
-spec:
-  type: ClusterIP
-  ports:
-    - name: http
-      port: 80
-      targetPort: 4000
-  selector:
-    app.kubernetes.io/component: api
-    app.kubernetes.io/part-of: boardr
-    app.kubernetes.io/instance: boardr-vagrant
-
-# Boardr API deployment
+# Boardr worker deployment
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: boardr-api
+  name: boardr-worker
 spec:
   replicas: 1
   selector:
-    matchLabels: &boardr-api-labels
-      app.kubernetes.io/component: api
+    matchLabels: &boardr-worker-labels
+      app.kubernetes.io/component: worker
       app.kubernetes.io/part-of: boardr
       app.kubernetes.io/instance: boardr-vagrant
   template:
@@ -33,16 +16,14 @@ spec:
       labels:
         app.kubernetes.io/name: phoenix
         app.kubernetes.io/version: "0.1.0"
-        <<: *boardr-api-labels
+        <<: *boardr-worker-labels
         boardr.alphahydrae.io/cluster: main
     spec:
       containers:
         - name: phoenix
-          image: "localhost:32000/boardr-api:0.1.0"
+          image: "localhost:32000/boardr-worker:0.1.0"
           imagePullPolicy: Always
           env:
-            - name: BOARDR_BASE_URL
-              value: http://boardr.vagrant
             - name: BOARDR_DATABASE_URL
               value: ecto://boardr:changeme@boardr-db/boardr
             - name: BOARDR_LOG_LEVEL
@@ -55,8 +36,6 @@ spec:
               value: boardr
             - name: BOARDR_K8S_SELECTOR
               value: boardr.alphahydrae.io/cluster=main
-            - name: BOARDR_PORT
-              value: "4000"
             - name: BOARDR_PRIVATE_KEY_FILE
               value: /etc/boardr/private-key
             - name: BOARDR_RELEASE_NODE_NAME
@@ -67,11 +46,11 @@ spec:
                   name: boardr-release-cookie
                   key: cookie
           volumeMounts:
-            - name: boardr-api-private-key
+            - name: boardr-worker-private-key
               mountPath: /etc/boardr
               readOnly: true
       volumes:
-        - name: boardr-api-private-key
+        - name: boardr-worker-private-key
           secret:
             secretName: boardr-api-private-key
             items:

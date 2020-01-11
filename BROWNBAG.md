@@ -2,8 +2,8 @@
 
 ## Critical
 
-* [ ] Make separate web & worker releases work with swarm
-* [ ] Build cluster
+* [x] Make separate web & worker releases work with swarm
+* [ ] Test separate web & worker releases on cluster
 
 ## Important
 
@@ -26,4 +26,7 @@
 * [ ] Landing page
 * [ ] Frontend style
 * [ ] More tests
-* [ ] Read Erlang book
+* [ ] Kubernetes dashboard
+* [ ] Travis CI
+* [ ] Coveralls
+* [-] Read Erlang book

@@ -125,16 +125,31 @@
         state: present
       tags: [ microk8s, config ]
 
-    - name: Enable the microk8s DNS addon
-      command: /snap/bin/microk8s.enable dns
-      changed_when: "'created' in enable_microk8s_dns_result.stdout"
-      register: enable_microk8s_dns_result
+    - name: Get microk8s status
+      command: /snap/bin/microk8s.status --wait-ready
+      changed_when: false
+      register: microk8s_status_result
       tags: [ microk8s, config ]
 
-    - name: Enable the microk8s Docker registry addon
+    - name: Enable the microk8s dashboard addon
+      command: /snap/bin/microk8s.enable dashboard
+      register: enable_microk8s_dashboard_result
+      changed_when: "'created' in enable_microk8s_dashboard_result.stdout"
+      when: "'dashboard: enabled' not in microk8s_status_result.stdout_lines"
+      tags: [ microk8s, config ]
+
+    - name: Enable the microk8s dns addon
+      command: /snap/bin/microk8s.enable dns
+      register: enable_microk8s_dns_result
+      changed_when: "'created' in enable_microk8s_dns_result.stdout"
+      when: "'dns: enabled' not in microk8s_status_result.stdout_lines"
+      tags: [ microk8s, config ]
+
+    - name: Enable the microk8s registry addon
       command: /snap/bin/microk8s.enable registry
-      changed_when: "'created' in enable_microk8s_registry_result.stdout"
       register: enable_microk8s_registry_result
+      changed_when: "'created' in enable_microk8s_registry_result.stdout"
+      when: "'registry: enabled' not in microk8s_status_result.stdout_lines"
       tags: [ microk8s, config ]
 
     - name: Wait for the Docker registry to start
@@ -155,6 +170,21 @@
         name: 127.0.0.1:32000/boardr-api
         build:
           path: /srv/checkout/server
+          pull: no
+        force_source: yes
+        force_tag: yes
+        source: build
+        state: present
+        tag: 0.1.0
+        push: yes
+      tags: [ build ]
+
+    - name: Build worker Docker image
+      docker_image:
+        name: 127.0.0.1:32000/boardr-worker
+        build:
+          path: /srv/checkout/server
+          dockerfile: Dockerfile.worker
           pull: no
         force_source: yes
         force_tag: yes
