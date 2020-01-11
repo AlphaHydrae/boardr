@@ -9,6 +9,8 @@
 
 ## Important
 
+* [ ] Test playbook.yml
+* [ ] Add insecure registry to Docker config
 * [ ] Remove hardcoded secrets (including database)
 * [ ] Frontend
 * [ ] Generate documentation
