@@ -1,3 +1,8 @@
 {
-  "insecure-registries" : ["192.168.50.4:5000"]
+  "insecure-registries" : ["192.168.50.4:5000"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-file": "5",
+    "max-size": "10m"
+  }
 }
