@@ -10,7 +10,7 @@ spec:
     matchLabels: &boardr-worker-labels
       app.kubernetes.io/component: worker
       app.kubernetes.io/part-of: boardr
-      app.kubernetes.io/instance: boardr-vagrant
+      app.kubernetes.io/instance: boardr-cluster
   template:
     metadata:
       labels:

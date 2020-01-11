@@ -34,6 +34,7 @@ spec:
         app.kubernetes.io/name: phoenix
         app.kubernetes.io/version: "0.1.0"
         <<: *boardr-api-labels
+        boardr.alphahydrae.io/cluster: main
     spec:
       containers:
         - name: phoenix
@@ -44,14 +45,25 @@ spec:
               value: http://boardr.cluster
             - name: BOARDR_DATABASE_URL
               value: ecto://boardr:changeme@boardr-db/boardr
-            - name: BOARDR_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.podIP
+            - name: BOARDR_K8S_NODE_BASENAME
+              value: boardr
+            - name: BOARDR_K8S_SELECTOR
+              value: boardr.alphahydrae.io/cluster=main
             - name: BOARDR_PORT
               value: "4000"
             - name: BOARDR_PRIVATE_KEY_FILE
               value: /etc/boardr/private-key
+            - name: BOARDR_RELEASE_NODE_ADDRESS
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: BOARDR_RELEASE_NODE_NAME
+              value: boardr
+            - name: RELEASE_COOKIE
+              valueFrom:
+                secretKeyRef:
+                  name: boardr-release-cookie
+                  key: cookie
           volumeMounts:
             - name: boardr-api-private-key
               mountPath: /etc/boardr

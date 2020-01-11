@@ -7,6 +7,7 @@
 
 ## Important
 
+* [ ] Remove hardcoded secrets (including database)
 * [ ] Frontend
 * [ ] Generate documentation
 * [ ] Generate coverage

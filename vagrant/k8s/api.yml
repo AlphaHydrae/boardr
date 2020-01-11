@@ -47,10 +47,6 @@ spec:
               value: ecto://boardr:changeme@boardr-db/boardr
             - name: BOARDR_LOG_LEVEL
               value: debug
-            - name: BOARDR_RELEASE_NODE_ADDRESS
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.podIP
             - name: BOARDR_K8S_NODE_BASENAME
               value: boardr
             - name: BOARDR_K8S_SELECTOR
@@ -59,6 +55,10 @@ spec:
               value: "4000"
             - name: BOARDR_PRIVATE_KEY_FILE
               value: /etc/boardr/private-key
+            - name: BOARDR_RELEASE_NODE_ADDRESS
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: BOARDR_RELEASE_NODE_NAME
               value: boardr
             - name: RELEASE_COOKIE
