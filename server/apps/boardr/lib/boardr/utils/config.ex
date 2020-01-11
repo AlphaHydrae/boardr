@@ -44,6 +44,10 @@ defmodule Boardr.Config do
     parse_integer(value, error, {:port_out_of_bounds, 1, 65535})
   end
 
+  def system_has_env_var(name) do
+    !is_nil(System.get_env(name))
+  end
+
   defp check_integer_within_bounds(value, error, min, max)
        when is_integer(value) and is_atom(error) and
               is_integer(min) and is_integer(max) and min <= max do
