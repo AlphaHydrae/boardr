@@ -14,7 +14,7 @@ defmodule Boardr.Game do
     belongs_to :creator, User
     has_many :actions, Action
     has_many :players, Player
-    many_to_many :winners, Player, join_through: "winners"
+    many_to_many :winners, Player, join_through: "winners", on_replace: :mark_as_invalid
 
     field :rules, :string
     field :settings, EctoJsonb
