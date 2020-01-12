@@ -143,7 +143,7 @@ defmodule Boardr.Gaming.GameServer do
       game.players
       |> Enum.map(fn %Player{number: player_number} -> Domain.player(number: player_number) end)
 
-    rules_game = Domain.game(players: rules_players, rules: game.rules, settings: game.settings, state: String.to_atom(game.state))
+    rules_game = Domain.game(players: rules_players, rules: game.rules, settings: game.settings, state: :playing)
 
     {:ok, {rules_state, number_of_actions}} =
       Repo.transaction(fn ->
