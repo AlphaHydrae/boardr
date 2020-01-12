@@ -7,12 +7,19 @@ defmodule Boardr.Telemetry do
         %{query: query},
         _config
       ) do
-    if total_time > 100_000_000 do
+    total_time_ms = System.convert_time_unit(total_time, :native, :millisecond)
+    if total_time_ms > slow_query_time() do
       Logger.warn(
-        "Slow database query took #{System.convert_time_unit(total_time, :native, :millisecond)}ms\nMeasurements: #{
+        "Slow database query took #{total_time_ms}ms\nMeasurements: #{
           inspect(measurements)
         }\nQuery: #{query}"
       )
     end
+  end
+
+  defp slow_query_time() do
+    :boardr
+    |> Application.fetch_env!(__MODULE__)
+    |> Keyword.fetch!(:slow_query_time)
   end
 end

@@ -16,6 +16,9 @@ config :boardr,
 config :boardr, Boardr,
   rules_factory: Boardr.Rules.DefaultFactory
 
+config :boardr, Boardr.Auth.Token,
+  private_key: nil
+
 # Take the environment variable $USER or the Unix system username as the default
 # database username if the $BOARDR_DATABASE_USERNAME variable is not set.
 database_username =
@@ -42,14 +45,14 @@ database_options = [
 
 config :boardr, Boardr.Repo, database_options
 
+# Minimal database query duration considered slow (in milliseconds).
+config :boardr, Boardr.Telemetry, slow_query_time: 100
+
 # Configures the endpoint
 config :boardr, BoardrApi.Endpoint,
   jwt_issuer: "boardr.alphahydrae.io",
   render_errors: [view: BoardrApi.ErrorView, accepts: ~w(json)],
   pubsub: [name: Boardr.PubSub, adapter: Phoenix.PubSub.PG2]
-
-config :boardr, Boardr.Auth.Token,
-  private_key: nil
 
 # Configures Elixir's Logger
 config :logger, :console,

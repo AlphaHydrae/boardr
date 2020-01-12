@@ -30,7 +30,7 @@ config :boardr, BoardrApi.Endpoint,
 
 # Print only warnings and errors during test.
 unless System.get_env("DEBUG") do
-  config :logger, level: :warn
+  config :logger, :console, level: :warn
 else
   # Unless the $DEBUG variable is set (to any value).
   config :logger, :console, level: :debug
