@@ -2,7 +2,8 @@
 
 ## Critical
 
-* Test separate web & worker releases on cluster
+* Refactor code to spread computations across swarm
+* Test distribution on cluster
 * Set up /etc/hosts on master with node names
 * Fix FIXMEs & TODOs
 * Create script to quickly perform demo
