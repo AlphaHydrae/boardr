@@ -6,6 +6,8 @@
 * [ ] Test separate web & worker releases on cluster
 * [ ] Set up /etc/hosts on master with node names
 * [ ] Fix swarm process exit with retry
+* [ ] Fix FIXMEs & TODOs
+* [ ] Create script to quickly perform demo
 
 ## Important
 
@@ -16,6 +18,9 @@
 * [ ] Generate documentation
 * [ ] Generate coverage
 * [ ] Doctests
+* [ ] Optimize PostgreSQL
+  * [ ] Configuration
+  * [ ] Add indices
 * [ ] Intro video(s)
 * [ ] Slides
   * [ ] Introduction

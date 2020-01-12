@@ -1,9 +1,10 @@
 from locust import HttpLocust, seq_task, task, TaskSequence, TaskSet, between
 import logging
 import random
+import threading
 import uuid
 
-# logger = logging.getLogger('scenario')
+logger = logging.getLogger('scenario')
 
 class PlayGame(TaskSet):
   @task(1)
@@ -28,9 +29,14 @@ class PlayGame(TaskSet):
     action = random.choice(possible_actions)
     action_request_body = { key: action[key] for key in ["type", "position"] }
     actions_url = self.locust.data["game_actions_url"]
-    self.client.post(actions_url, None, action_request_body, headers = {
+    with self.client.post(actions_url, None, action_request_body, catch_response = True, headers = {
       "Authorization": "Bearer " + self.locust.data["token"]
-    }, name = "/api/games/:gameId/actions")
+    }, name = "/api/games/:gameId/actions") as create_action_res:
+      if create_action_res.status_code == 409:
+        return create_action_res.success()
+      elif create_action_res.status_code != 201:
+        create_action_res.failure("Could not perform game action")
+        return self.interrupt()
 
 class CreateAndPlayGame(TaskSequence):
   @seq_task(1)
@@ -61,7 +67,7 @@ class JoinAndPlayRandomGame(TaskSequence):
 
     available_games = games_body["_embedded"]["boardr:games"]
     if not available_games:
-      self.interrupt()
+      return self.interrupt()
 
     random_game = random.choice(available_games)
 
@@ -88,9 +94,51 @@ class JoinAndPlayRandomGame(TaskSequence):
   def play_game(self):
     self.schedule_task(PlayGame)
 
+class FinishPreviousGame(TaskSequence):
+  @seq_task(1)
+  def acquire_former_user_token(self):
+    with self.locust._lock:
+      if not self.locust.former_players:
+        return self.interrupt()
+
+      former_player = self.locust.former_players.pop(0)
+      self.locust.data["token"] = former_player["token"]
+      self.locust.data["games_url"] = former_player["games_url"]
+      self.locust.data["player_url"] = former_player["player_url"]
+
+  @seq_task(2)
+  def find_ongoing_game(self):
+    games_url = self.locust.data["games_url"]
+    games_body = self.client.get(games_url, name = '/api/games?state=playing&player=...', params = {
+      "player": self.locust.data["player_url"],
+      "state": "playing"
+    }).json()
+
+    available_games = games_body["_embedded"]["boardr:games"]
+    if not available_games:
+      with self.locust._lock:
+        self.locust.former_players.append({
+          "token": self.locust.data["token"],
+          "games_url": self.locust.data["games_url"],
+          "player_url": self.locust.data["player_url"]
+        })
+
+      return self.interrupt()
+
+    random_game = random.choice(available_games)
+
+    self.locust.data["game_actions_url"] = random_game["_links"]["boardr:actions"]["href"]
+    self.locust.data["game_url"] = random_game["_links"]["self"]["href"]
+    self.locust.data["game_possible_actions_url"] = random_game["_links"]["boardr:possible-actions"]["href"]
+
+  @seq_task(3)
+  def play_game(self):
+    self.schedule_task(PlayGame)
+
 class NormalPlayerBehavior(TaskSet):
   tasks = {
     CreateAndPlayGame: 1,
+    FinishPreviousGame: 4,
     JoinAndPlayRandomGame: 3
   }
 
@@ -116,10 +164,23 @@ class NormalPlayerBehavior(TaskSet):
 
     self.locust.data["token"] = user_body["_embedded"]["boardr:token"]["value"]
 
+  def on_stop(self):
+    player_url = self.locust.data["player_url"]
+    logger.info(f'Player {player_url} has stopped playing')
+    if player_url:
+      with self.locust._lock:
+        self.locust.former_players.append({
+          "token": self.locust.data["token"],
+          "games_url": self.locust.data["games_url"],
+          "player_url": player_url
+        })
+
 class WebsiteUser(HttpLocust):
+  former_players = []
   task_set = NormalPlayerBehavior
   wait_time = between(3, 8)
 
   def __init__(self, *args):
     super().__init__(*args)
     self.data = {}
+    self._lock = threading.Lock()
