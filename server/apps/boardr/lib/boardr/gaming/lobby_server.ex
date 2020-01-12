@@ -26,6 +26,7 @@ defmodule Boardr.Gaming.LobbyServer do
 
   @impl true
   def init(game_id) when is_binary(game_id) do
+    Process.flag(:trap_exit, true)
     {:ok, nil, {:continue, {:init, game_id}}}
   end
 
@@ -72,6 +73,16 @@ defmodule Boardr.Gaming.LobbyServer do
   end
 
   @impl true
+  def handle_call(
+    {:swarm, :begin_handoff},
+    _from,
+    state_record(game: %Game{id: game_id}) = state
+  ) do
+    Logger.debug("Swarm beginning handoff of lobby server for game #{game_id}")
+    {:reply, :restart, state}
+  end
+
+  @impl true
   def handle_continue({:init, game_id}, _state) when is_binary(game_id) do
     Logger.debug("Initializing lobby server for game #{game_id}")
 
@@ -83,9 +94,32 @@ defmodule Boardr.Gaming.LobbyServer do
   end
 
   @impl true
+  def handle_cast(
+    {:swarm, :resolve_conflict, _delay},
+    state_record() = state
+  ) do
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_info(:timeout, state_record(game: %Game{id: game_id}) = state) do
     Logger.info("Shutting down inactive lobby server for game #{game_id}")
     {:stop, {:shutdown, :timeout}, state}
+  end
+
+  @impl true
+  def handle_info(
+    {:swarm, :die},
+    state_record(game: %Game{id: game_id}) = state
+  ) do
+    Logger.info("Swarm shutting down lobby server for game #{game_id}")
+    {:noreply, state}
+  end
+
+  @impl true
+  def terminate(reason, state_record() = state) do
+    Logger.debug("Lobby server terminating due to #{inspect(reason)}")
+    Swarm.Tracker.handoff(__MODULE__, state)
   end
 
   # Gaming (functions)

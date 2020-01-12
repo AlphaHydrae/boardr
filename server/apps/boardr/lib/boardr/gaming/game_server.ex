@@ -34,6 +34,7 @@ defmodule Boardr.Gaming.GameServer do
 
   @impl true
   def init(game_id) when is_binary(game_id) do
+    Process.flag(:trap_exit, true)
     {:ok, nil, {:continue, {:init, game_id}}}
   end
 
@@ -108,6 +109,24 @@ defmodule Boardr.Gaming.GameServer do
   end
 
   @impl true
+  def handle_call(
+    {:swarm, :begin_handoff},
+    _from,
+    %State{game: %Game{id: game_id}} = state
+  ) do
+    Logger.debug("Swarm beginning handoff of game server for game #{game_id}")
+    {:reply, :restart, state}
+  end
+
+  @impl true
+  def handle_cast(
+    {:swarm, :resolve_conflict, _delay},
+    %State{} = state
+  ) do
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_continue({:init, game_id}, _state) when is_binary(game_id) do
     Logger.debug("Initializing game server for game #{game_id}")
 
@@ -161,6 +180,21 @@ defmodule Boardr.Gaming.GameServer do
   def handle_info(:timeout, %State{game: %Game{id: game_id}} = state) do
     Logger.info("Shutting down inactive game server for game #{game_id}")
     {:stop, {:shutdown, :timeout}, state}
+  end
+
+  @impl true
+  def handle_info(
+    {:swarm, :die},
+    %State{game: %Game{id: game_id}} = state
+  ) do
+    Logger.info("Swarm shutting down game server for game #{game_id}")
+    {:noreply, state}
+  end
+
+  @impl true
+  def terminate(reason, %State{} = state) do
+    Logger.debug("Game server terminating due to #{inspect(reason)}")
+    Swarm.Tracker.handoff(__MODULE__, state)
   end
 
   # Gaming (functions)
