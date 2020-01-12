@@ -24,11 +24,11 @@ defmodule BoardrApi.FallbackController do
     call conn, {:validation_error, changeset}
   end
 
-  def call(%Conn{} = conn, {:error, :game_already_started}) do
+  def call(%Conn{} = conn, {:error, {:game_error, game_error}}) do
     conn
     |> render_problem(%HttpProblemDetails{
       extra_properties: %{
-        gameError: :game_already_started
+        gameError: game_error
       },
       status: :conflict,
       title: "The request cannot be completed due to a conflict with the current state of the resource.",

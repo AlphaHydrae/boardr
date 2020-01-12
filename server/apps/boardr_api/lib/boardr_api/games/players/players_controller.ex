@@ -31,6 +31,6 @@ defmodule BoardrApi.Games.PlayersController do
   end
 
   defp join_game(game_id, game_state, user_id) when is_binary(game_id) and is_binary(game_state) and is_binary(user_id) do
-    {:error, :game_already_started}
+    {:error, {:game_error, :game_already_started}}
   end
 end

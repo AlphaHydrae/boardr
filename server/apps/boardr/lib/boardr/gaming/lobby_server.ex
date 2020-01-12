@@ -69,7 +69,7 @@ defmodule Boardr.Gaming.LobbyServer do
     _from,
     state_record() = state
   ) when is_binary(user_id) do
-    {:reply, {:error, :game_already_started}, state, @default_timeout}
+    {:reply, {:error, {:game_error, :game_already_started}}, state, @default_timeout}
   end
 
   @impl true
