@@ -1,4 +1,5 @@
 {
+  "insecure-registries" : ["localhost:32000"],
   "log-driver": "json-file",
   "log-opts": {
     "max-file": "5",
