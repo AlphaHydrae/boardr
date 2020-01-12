@@ -1,3 +1,4 @@
+# FIXME: use a record
 defmodule Boardr.Gaming.GameServer.State do
   defstruct [:game, :rules_game, :rules_state]
 

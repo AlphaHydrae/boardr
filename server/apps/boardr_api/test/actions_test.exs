@@ -9,7 +9,7 @@ defmodule BoardrApi.ActionsTest do
   @valid_properties %{"type" => "take", "position" => [0, 0]}
 
   setup do
-    game = Fixtures.game()
+    game = Fixtures.game(state: "playing")
 
     %{
       game: game,

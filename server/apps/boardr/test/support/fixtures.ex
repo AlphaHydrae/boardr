@@ -15,7 +15,7 @@ defmodule Boardr.Fixtures do
       creator_id: creator_id,
       rules: Keyword.get(properties, :rules, "tic-tac-toe"),
       settings: %{},
-      state: "waiting_for_players"
+      state: Keyword.get(properties, :state, "waiting_for_players")
     }
     |> Repo.insert!(returning: [:id])
   end

@@ -42,17 +42,6 @@ defmodule BoardrApi.Games.PossibleActionsController do
   end
 
   # TODO: extract to utility module
-  defp extract_path_params(url, plug) do
-    # TODO: check host, path, port & scheme match
-    %URI{host: host, path: path} = URI.parse(url)
-    # FIXME: host & path can be nil
-    case Phoenix.Router.route_info(Router, "GET", path, host) do
-      %{path_params: path_params, plug: ^plug, plug_opts: :show} -> path_params
-      _ -> nil
-    end
-  end
-
-  # TODO: extract to utility module
   defp to_list(value, default \\ [])
 
   defp to_list(value, default) when is_list(value) and is_list(default) do
