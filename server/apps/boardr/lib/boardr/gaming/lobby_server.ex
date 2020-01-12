@@ -90,13 +90,31 @@ defmodule Boardr.Gaming.LobbyServer do
 
   # Gaming (functions)
 
-  defp call_swarm(game_id, request) when is_binary(game_id) do
-    {:ok, pid} =
-      Swarm.whereis_or_register_name("lobby:#{game_id}", DynamicSupervisor, :start_child, [
-        Boardr.DynamicSupervisor,
-        Supervisor.child_spec({__MODULE__, game_id}, restart: :transient)
-      ])
+  defp call_swarm(game_id, request, retry \\ 3, error_details \\ nil)
 
-    GenServer.call(pid, request)
+  defp call_swarm(game_id, _request, -1, error_details) when is_binary(game_id) do
+    raise "Lobby server process not found: #{inspect(error_details)})}"
+  end
+
+  defp call_swarm(game_id, request, retry, _error_details) when is_binary(game_id) and is_integer(retry) and retry >= 0 do
+    {:ok, pid} =
+      Swarm.whereis_or_register_name(
+        "lobby:#{game_id}",
+        DynamicSupervisor,
+        :start_child,
+        [
+          Boardr.DynamicSupervisor,
+          Supervisor.child_spec({__MODULE__, game_id}, restart: :transient)
+        ],
+        10_000
+      )
+
+    try do
+      GenServer.call(pid, request, 10_000)
+    catch
+      :exit, {:noproc, details} ->
+        Logger.warn("Trying to start offline lobby server for game #{game_id} (retries left: #{retry - 1})")
+        call_swarm(game_id, request, retry - 1, details)
+    end
   end
 end

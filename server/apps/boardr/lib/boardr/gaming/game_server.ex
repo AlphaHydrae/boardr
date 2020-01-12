@@ -203,7 +203,13 @@ defmodule Boardr.Gaming.GameServer do
     }
   end
 
-  defp call_swarm(game_id, request) when is_binary(game_id) do
+  defp call_swarm(game_id, request, retry \\ 3, error_details \\ nil)
+
+  defp call_swarm(game_id, _request, -1, error_details) when is_binary(game_id) do
+    raise "Game server process not found: #{inspect(error_details)})}"
+  end
+
+  defp call_swarm(game_id, request, retry, _error_details) when is_binary(game_id) and is_integer(retry) and retry >= 0 do
     {:ok, pid} =
       Swarm.whereis_or_register_name(
         "game:#{game_id}",
@@ -216,8 +222,13 @@ defmodule Boardr.Gaming.GameServer do
         10_000
       )
 
-    # FIXME: restart server if shutting down due to timeout
-    GenServer.call(pid, request)
+    try do
+      GenServer.call(pid, request, 10_000)
+    catch
+      :exit, {:noproc, details} ->
+        Logger.warn("Trying to start offline game server for game #{game_id} (retries left: #{retry - 1})")
+        call_swarm(game_id, request, retry - 1, details)
+    end
   end
 
   defp get_rules!(Domain.game(rules: rules_name)) do
