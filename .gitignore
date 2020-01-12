@@ -1,5 +1,4 @@
-/client/.env*
-/client/node_modules
+/client/elm-stuff
 /cluster/inventory.yml
 /cluster/*.log
 /cluster/.vagrant
