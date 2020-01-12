@@ -5,7 +5,7 @@ kind: Deployment
 metadata:
   name: boardr-worker
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels: &boardr-worker-labels
       app.kubernetes.io/component: worker
