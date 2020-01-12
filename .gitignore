@@ -13,4 +13,5 @@
 /server/doc
 /server/erl_crash.dump
 /server/tmp
+/tmp
 /.vagrant
