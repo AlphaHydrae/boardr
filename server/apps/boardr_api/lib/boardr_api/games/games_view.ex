@@ -1,8 +1,10 @@
 defmodule BoardrApi.GamesView do
   use BoardrApi, :view
 
-  def render("create.json", %{game: game, player: player}) do
-    render_game game, player: player
+  alias Boardr.Game
+
+  def render("create.json", %{game: game}) do
+    render_one(game, __MODULE__, "show.json", as: :game, embed: ["boardr:player"])
   end
 
   def render("index.json", %{games: games}) do
@@ -15,11 +17,7 @@ defmodule BoardrApi.GamesView do
     |> put_hal_self_link(:games_url, [:index])
   end
 
-  def render("show.json", %{game: game}) do
-    render_game game, %{}
-  end
-
-  defp render_game(game, params) do
+  def render("show.json", %{game: %Game{} = game} = assigns) do
     result = %{
       createdAt: game.created_at,
       rules: game.rules,
@@ -48,10 +46,10 @@ defmodule BoardrApi.GamesView do
       result
     end
 
-    player = params[:player]
-    if player do
+    embed = Map.get(assigns, :embed, [])
+    if Ecto.assoc_loaded?(game.players) and length(game.players) == 1 and "boardr:player" in embed do
       embedded = result[:_embedded] || %{}
-      Map.put(result, :_embedded, Map.put(embedded, :'boardr:player', render_one(player, BoardrApi.Games.PlayersView, "show.json", as: :player)))
+      Map.put(result, :_embedded, Map.put(embedded, :'boardr:player', render_one(List.first(game.players), BoardrApi.Games.PlayersView, "show.json", as: :player)))
     else
       result
     end

@@ -54,8 +54,9 @@ defmodule Boardr.MixProject do
       {:jason, "~> 1.0"},
       {:joken, "~> 2.0"},
       {:libcluster, "~> 3.1"},
-      {:swarm, "~> 3.0"},
       {:postgrex, "~> 0.15.0"},
+      {:rop, "~> 0.5.3"},
+      {:swarm, "~> 3.0"},
       # Development
       {:ex_doc, "~> 0.21.2", only: :dev}, # Documentation generator
       # Test

@@ -1,21 +1,24 @@
 defmodule BoardrApi.GamesController do
   use BoardrApi, :controller
 
-  alias Boardr.{Game,Player}
+  alias Boardr.Game
   alias BoardrApi.Games.PlayersController
+  alias BoardrRes.GamesCollection
 
-  plug Authenticate, [:'api:games:create'] when action in [:create]
+  import BoardrRes
+
+  require BoardrRes
 
   def create(
-    %Conn{assigns: %{auth: %{"sub" => user_id}}} = conn,
+    %Conn{} = conn,
     game_properties
-  ) when is_map(game_properties) and is_binary(user_id) do
-    with {:ok, %{game: game, player: player}} <- create_game(game_properties, user_id) do
+  ) when is_map(game_properties) do
+    with {:ok, %Game{} = game} <- GamesCollection.create(game_properties, to_options(conn)) do
       conn
       |> put_status(201)
       |> put_resp_content_type("application/hal+json")
       |> put_resp_header("location", Routes.games_url(Endpoint, :show, game.id))
-      |> render(%{game: game, player: player})
+      |> render(%{game: game})
     end
   end
 
@@ -63,15 +66,7 @@ defmodule BoardrApi.GamesController do
     |> render(%{game: game})
   end
 
-  defp create_game(game_properties, user_id) when is_binary(user_id) do
-    game = Game.changeset(%Game{creator_id: user_id, rules: "tic-tac-toe", settings: %{}}, game_properties)
-
-    Multi.new()
-    |> Multi.insert(:game, game, returning: [:id])
-    |> Multi.run(:player, fn repo, %{game: inserted_game} ->
-        %Player{game_id: inserted_game.id, number: 1, user_id: user_id}
-        |> repo.insert(returning: [:id])
-    end)
-    |> Repo.transaction()
+  defp to_options(%Conn{} = conn) do
+    options(authorization_header: get_req_header(conn, "authorization"))
   end
 end
