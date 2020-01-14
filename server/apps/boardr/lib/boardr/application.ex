@@ -52,7 +52,9 @@ defmodule Boardr.Application do
       # Start the libcluster supervisor.
       {Cluster.Supervisor, [topologies, [name: Boardr.ClusterSupervisor]]},
       # Start a dynamic supervisor to manage gaming servers.
-      {DynamicSupervisor, name: Boardr.DynamicSupervisor, strategy: :one_for_one}
+      {DynamicSupervisor, name: Boardr.DynamicSupervisor, strategy: :one_for_one},
+      # Start a task supervisor to manage asynchronous tasks.
+      {Task.Supervisor, name: Boardr.TaskSupervisor}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

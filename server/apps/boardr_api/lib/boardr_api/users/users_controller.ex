@@ -1,22 +1,18 @@
 defmodule BoardrApi.UsersController do
   use BoardrApi, :controller
 
-  alias Boardr.Auth
-  alias Boardr.Auth.{Identity, Token, User}
+  alias Boardr.Auth.User
+  alias BoardrRes.UsersCollection
 
-  plug Authenticate, [:'api:users:show'] when action in [:show]
-  plug Authenticate, [:register] when action in [:create]
+  import Boardr.Distributed, only: [distribute: 3]
 
-  def create(%Conn{assigns: %{auth: %{"sub" => identity_id}}} = conn, body) when is_map(body) do
+  def create(%Conn{} = conn, body) when is_map(body) do
     # FIXME: only allow local identity with unverified email in dev
-    identity = Repo.get!(Identity, identity_id) |> Repo.preload(:user)
-    with {:ok, user, linked_identity} <- Auth.register_user(identity, body),
-         claims = create_user_claims(linked_identity),
-         {:ok, jwt} <- Token.generate(claims) do
+    with {:ok, %User{} = user} <- distribute(UsersCollection, :create, [body, to_options(conn)]) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.users_url(Endpoint, :show, user.id))
-      |> render(%{token: jwt, user: user})
+      |> render(%{user: user})
     end
   end
 
@@ -26,12 +22,5 @@ defmodule BoardrApi.UsersController do
     conn
     |> put_resp_content_type("application/hal+json")
     |> render(%{user: user})
-  end
-
-  defp create_user_claims(%Identity{user: %User{id: user_id}}) do
-    %{
-      scope: "api",
-      sub: user_id
-    }
   end
 end

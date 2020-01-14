@@ -1,5 +1,5 @@
 defmodule BoardrApi.UsersTest do
-  use BoardrApi.ConnCase, async: true
+  use BoardrApi.ConnCase
 
   alias Boardr.Auth.{Identity, User}
 

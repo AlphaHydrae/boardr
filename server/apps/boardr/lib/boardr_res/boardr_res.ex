@@ -22,7 +22,11 @@ defmodule BoardrRes do
   end
 
   def assign(context() = ctx, key, value) when is_atom(key) do
-    context(ctx, assigns: Map.put(context(ctx, :assigns), key, value))
+    {:ok, context(ctx, assigns: Map.put(context(ctx, :assigns), key, value))}
+  end
+
+  def assign_into(value, context() = ctx, key) when is_atom(key) do
+    assign(ctx, key, value)
   end
 
   def to_context(representation, options() = opts) when is_map(representation) do

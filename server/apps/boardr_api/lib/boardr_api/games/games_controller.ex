@@ -5,7 +5,7 @@ defmodule BoardrApi.GamesController do
   alias BoardrApi.Games.PlayersController
   alias BoardrRes.GamesCollection
 
-  import BoardrRes
+  import Boardr.Distributed, only: [distribute: 3]
 
   require BoardrRes
 
@@ -13,7 +13,7 @@ defmodule BoardrApi.GamesController do
     %Conn{} = conn,
     game_properties
   ) when is_map(game_properties) do
-    with {:ok, %Game{} = game} <- GamesCollection.create(game_properties, to_options(conn)) do
+    with {:ok, %Game{} = game} <- distribute(GamesCollection, :create, [game_properties, to_options(conn)]) do
       conn
       |> put_status(201)
       |> put_resp_content_type("application/hal+json")
@@ -64,9 +64,5 @@ defmodule BoardrApi.GamesController do
     conn
     |> put_resp_content_type("application/hal+json")
     |> render(%{game: game})
-  end
-
-  defp to_options(%Conn{} = conn) do
-    options(authorization_header: get_req_header(conn, "authorization"))
   end
 end

@@ -14,6 +14,7 @@ defmodule Boardr.Auth.User do
 
     # FIXME: limit length
     field :name, :string
+    field :token, :string, virtual: true
 
     timestamps inserted_at: :created_at
   end

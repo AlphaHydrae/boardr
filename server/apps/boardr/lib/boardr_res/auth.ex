@@ -38,7 +38,7 @@ defmodule BoardrRes.Auth do
 
   defp get_bearer_token(context(options: options(authorization_header: [header_value])) = ctx, true) when is_binary(header_value) do
     case String.split(header_value, " ", parts: 2) do
-      [ _, token ] -> {:ok, assign(ctx, :token, token)}
+      [ _, token ] -> assign(ctx, :token, token)
       _ -> {:error, :auth_header_malformed}
     end
   end
@@ -76,7 +76,7 @@ defmodule BoardrRes.Auth do
 
   defp verify_token(context(assigns: %{token: token}) = ctx, true) when is_binary(token) do
     case Token.verify(token) do
-      {:ok, claims} -> {:ok, assign(ctx, :claims, claims)}
+      {:ok, claims} -> assign(ctx, :claims, claims)
       {:error, err} -> {:error, err}
     end
   end

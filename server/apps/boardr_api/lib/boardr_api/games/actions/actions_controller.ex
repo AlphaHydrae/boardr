@@ -5,8 +5,6 @@ defmodule BoardrApi.Games.ActionsController do
   alias Boardr.Gaming.GameServer
 
   plug(Authenticate, [:"api:games:update:actions:create"] when action in [:create])
-  plug(Authenticate, [:"api:games:show:actions:index"] when action in [:index])
-  plug(Authenticate, [:"api:games:show:actions:show"] when action in [:show])
 
   def create(
         %Conn{assigns: %{auth: %{"sub" => user_id}}} = conn,

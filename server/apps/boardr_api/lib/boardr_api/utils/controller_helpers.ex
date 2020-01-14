@@ -2,9 +2,13 @@ defmodule BoardrApi.ControllerHelpers do
   alias Plug.Conn
 
   alias BoardrApi.Router
+  alias Plug.Conn
 
+  import BoardrRes, only: [options: 1]
   import Phoenix.Controller, only: [render: 2]
-  import Plug.Conn, only: [put_resp_content_type: 2]
+  import Plug.Conn, only: [get_req_header: 2, put_resp_content_type: 2]
+
+  require BoardrRes
 
   def extract_path_params(url, plug) do
     # TODO: check host, path, port & scheme match
@@ -20,5 +24,9 @@ defmodule BoardrApi.ControllerHelpers do
     conn
     |> put_resp_content_type("application/hal+json")
     |> render(assigns)
+  end
+
+  def to_options(%Conn{} = conn) do
+    options(authorization_header: get_req_header(conn, "authorization"))
   end
 end

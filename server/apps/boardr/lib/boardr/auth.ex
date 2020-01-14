@@ -52,7 +52,7 @@ defmodule Boardr.Auth do
 
   def register_user(%Identity{} = identity, user_properties) when is_map(user_properties) do
     case create_and_link_user_to_identity(identity, user_properties) do
-      {:ok, %{identity: identity, user: user}} -> {:ok, user, identity}
+      {:ok, %{identity: identity}} -> {:ok, identity}
       {:error, :user, %Changeset{} = validation_errors, _} -> {:validation_error, validation_errors}
       true -> {:error, :user_registration_failed}
     end

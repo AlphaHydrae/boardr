@@ -5,7 +5,6 @@ defmodule BoardrApi.Games.PlayersController do
   alias Boardr.Gaming.LobbyServer
 
   plug Authenticate, [:'api:players:create'] when action in [:create]
-  plug Authenticate, [:'api:players:show'] when action in [:show]
 
   def create(%Conn{assigns: %{auth: %{"sub" => user_id}}} = conn, %{"game_id" => game_id}) do
     game_state = Repo.one!(from(g in Game, select: g.state, where: g.id == ^game_id))

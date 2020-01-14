@@ -4,9 +4,6 @@ defmodule BoardrApi.IdentitiesController do
   alias Boardr.{Auth,Repo}
   alias Boardr.Auth.{Identity,User}
 
-  plug Authenticate, [:'api:identities:index'] when action in [:index]
-  plug Authenticate, [:'api:identities:show'] when action in [:show]
-
   def create(%Conn{} = conn, identity_properties) when is_map(identity_properties) do
     with {:ok, token} <- Authenticate.get_authorization_token(conn, false),
          {:ok, identity} <- Auth.ensure_identity(identity_properties, token),
