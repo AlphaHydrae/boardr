@@ -1,0 +1,12 @@
+---
+
+- name: Copy docker-compose.yml
+  template:
+    src: docker-compose.yml
+    dest: /srv/docker-compose.yml
+    mode: 0640
+
+- name: Run containers
+  command:
+    chdir: /srv
+    cmd: docker-compose up -d

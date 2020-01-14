@@ -1,0 +1,9 @@
+version: '3.7'
+
+services:
+  rp:
+    image: rp
+    build: /srv
+    ports:
+      - "80:80"
+    restart: always

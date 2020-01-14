@@ -1,0 +1,53 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+require 'shellwords'
+
+pubkey_path = File.join File.dirname(__FILE__), 'pubkey'
+raise "Please copy your public key into this directory: cp \"$(ls -1 ~/.ssh/id*.pub|head -n 1)\" #{pubkey_path}" unless File.exist? pubkey_path
+pubkey = File.read pubkey_path
+
+copy_pubkey = <<-SHELL
+  (umask 077 && mkdir -p ~/.ssh)
+  (umask 066 && echo #{Shellwords.shellescape pubkey} >> ~/.ssh/authorized_keys)
+SHELL
+
+# https://docs.vagrantup.com
+Vagrant.configure('2') do |config|
+  config.vm.box = 'ubuntu/bionic64'
+
+  config.vm.provider 'virtualbox' do |virtual_box|
+    virtual_box.cpus = 2
+    virtual_box.memory = '1024'
+  end
+
+  config.vm.define 'rp' do |rp|
+    rp.vm.network 'private_network', ip: '192.168.50.5'
+    rp.vm.provision 'shell', inline: copy_pubkey
+  end
+
+  config.vm.define 'db' do |db|
+    db.vm.network 'private_network', ip: '192.168.50.6'
+    db.vm.provision 'shell', inline: copy_pubkey
+  end
+
+  config.vm.define 'api' do |api|
+    api.vm.network 'private_network', ip: '192.168.50.7'
+
+    api.vm.provider 'virtualbox' do |virtual_box|
+      virtual_box.cpus = 4
+      virtual_box.memory = '2048'
+    end
+
+    api.vm.provision 'shell', inline: copy_pubkey
+  end
+
+  config.vm.define 'worker1' do |worker1|
+    worker1.vm.network 'private_network', ip: '192.168.50.8'
+    worker1.vm.provision 'shell', inline: copy_pubkey
+  end
+
+  config.vm.define 'worker2' do |worker2|
+    worker2.vm.network 'private_network', ip: '192.168.50.9'
+    worker2.vm.provision 'shell', inline: copy_pubkey
+  end
+end

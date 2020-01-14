@@ -21,7 +21,7 @@
 
 - name: Add Docker apt repository
   apt_repository:
-    repo: deb [arch=arm64] https://download.docker.com/linux/ubuntu disco stable
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable
     state: present
   tags: [ docker, install ]
 
@@ -43,3 +43,9 @@
     dest: /etc/docker/daemon.json
   notify: Restart Docker daemon
   tags: [ docker, config ]
+
+- name: Install Docker Compose
+  get_url:
+    url: https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-Linux-x86_64
+    dest: /usr/local/bin/docker-compose
+    mode: 0755

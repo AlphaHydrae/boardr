@@ -4,7 +4,9 @@
 /client/node_modules
 /cluster/inventory.yml
 /cluster/*.log
+/cluster/pubkey
 /cluster/.vagrant
+/cluster/variables.local.yml
 /inventory.yml
 /load-testing/tmp
 /*.log

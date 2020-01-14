@@ -1,0 +1,16 @@
+---
+
+- name: Copy files
+  template:
+    src: "{{ item }}"
+    dest: /srv/{{ item }}
+    mode: 0640
+  with_items:
+    - Dockerfile
+    - docker-compose.yml
+    - nginx.conf
+
+- name: Run containers
+  command:
+    chdir: /srv
+    cmd: docker-compose up --build -d

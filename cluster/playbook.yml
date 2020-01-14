@@ -1,8 +1,251 @@
 ---
 
-# - hosts: all
-#   become: true
+# Reverse proxy server
+# ====================
+- hosts: rp
+  become: true
+  vars_files:
+    - [ variables.local.yml, variables.default.yml ]
+  roles:
+    - role: rp
 
-- import_playbook: playbook.master.yml
-- import_playbook: playbook.nodes.yml
-- import_playbook: playbook.build.yml
+# Database server
+# ===============
+- hosts: db
+  become: true
+  vars_files:
+    - [ variables.local.yml, variables.default.yml ]
+  roles:
+    - role: db
+
+# API server
+# ==========
+- hosts: api
+  become: true
+
+  vars_files:
+    - [ variables.local.yml, variables.default.yml ]
+
+  tasks:
+
+    - name: Install tools
+      apt:
+        name:
+          - autoconf
+          - automake
+          - curl
+          - libffi-dev
+          - libncurses-dev
+          - libreadline-dev
+          - libssl-dev
+          - libtool
+          - libxslt-dev
+          - libyaml-dev
+          - unixodbc-dev
+          - unzip
+        state: present
+        update_cache: true
+
+    - name: Create boardr user
+      user:
+        name: boardr
+        shell: /bin/bash
+        state: present
+
+    - name: Install asdf
+      git:
+        repo: https://github.com/asdf-vm/asdf.git
+        dest: /home/boardr/.asdf
+        version: "{{ asdf_version }}"
+      become_user: boardr
+
+    - name: Install asdf erlang plugin
+      command:
+        cmd: /home/boardr/.asdf/bin/asdf plugin-add erlang
+        creates: /home/boardr/.asdf/plugins/erlang
+      become_user: boardr
+
+    - name: Install asdf elixir plugin
+      command:
+        cmd: /home/boardr/.asdf/bin/asdf plugin-add elixir
+        creates: /home/boardr/.asdf/plugins/elixir
+      become_user: boardr
+
+    - name: Configure boardr user shell to source asdf setup script
+      lineinfile:
+        path: /home/boardr/.bashrc
+        create: true
+        regexp: "^\\. \\~\\/.asdf\\/asdf.sh$"
+        line: ". ~/.asdf/asdf.sh"
+
+    - name: Configure boardr user shell to source asdf bash completions script
+      lineinfile:
+        path: /home/boardr/.bashrc
+        create: true
+        regexp: "^\\. \\~\\/.asdf\\/completions\\/asdf.bash$"
+        line: ". ~/.asdf/completions/asdf.bash"
+
+    - name: Create SSH directory
+      file:
+        path: /home/boardr/.ssh
+        owner: boardr
+        group: boardr
+        mode: 0700
+        state: directory
+
+    - name: Preconfigure SSH known hosts
+      known_hosts:
+        path: /home/boardr/.ssh/known_hosts
+        name: "{{ item.name }}"
+        key: "{{ item.key }}"
+      become_user: boardr
+      with_items: "{{ known_hosts }}"
+
+    - name: Generate SSH key pair
+      command:
+        cmd: ssh-keygen -C boardr -f /home/boardr/.ssh/id_ed25519 -N '' -t ed25519
+        creates: /home/boardr/.ssh/id_ed25519
+      become_user: boardr
+
+    - name: Clone boardr repository
+      git:
+        repo: "{{ repo }}"
+        dest: /home/boardr/repo
+        force: true
+        version: master
+      become_user: boardr
+
+    - name: Install boardr tools
+      command:
+        chdir: /home/boardr/repo
+        cmd: /home/boardr/.asdf/bin/asdf install
+      become_user: boardr
+      changed_when: false
+
+    - name: Copy asdf global versions from boardr
+      copy:
+        src: /home/boardr/repo/.tool-versions
+        dest: /home/boardr/.tool-versions
+        remote_src: true
+      become_user: boardr
+
+    - name: Update asdf shims
+      command:
+        cmd: /home/boardr/.asdf/bin/asdf reshim
+      become_user: boardr
+      changed_when: false
+
+    - name: Install hex
+      command:
+        chdir: /home/boardr/repo/server
+        cmd: mix local.hex --force
+      become_user: boardr
+      changed_when: '"creating" in install_hex_result.stdout'
+      environment:
+        MIX_ENV: prod
+        PATH: /home/boardr/.asdf/shims:{{ ansible_env.PATH }}
+      register: install_hex_result
+      tags: [ build ]
+
+    - name: Install rebar
+      command:
+        chdir: /home/boardr/repo/server
+        cmd: mix local.rebar --force
+      become_user: boardr
+      changed_when: '"creating" in install_rebar_result.stdout'
+      environment:
+        MIX_ENV: prod
+        PATH: /home/boardr/.asdf/shims:{{ ansible_env.PATH }}
+      register: install_rebar_result
+      tags: [ build ]
+
+    - name: Install boardr dependencies
+      command:
+        chdir: /home/boardr/repo/server
+        cmd: mix deps.get --only prod
+      become_user: boardr
+      changed_when: '"Getting" in install_boardr_deps_result.stdout'
+      environment:
+        MIX_ENV: prod
+        PATH: /home/boardr/.asdf/shims:{{ ansible_env.PATH }}
+      register: install_boardr_deps_result
+      tags: [ build ]
+
+    - name: Build boardr_api release
+      command:
+        chdir: /home/boardr/repo/server
+        cmd: mix release boardr_api --overwrite
+      become_user: boardr
+      environment:
+        MIX_ENV: prod
+        PATH: /home/boardr/.asdf/shims:{{ ansible_env.PATH }}
+      tags: [ build ]
+
+    - name: Build boardr release
+      command:
+        chdir: /home/boardr/repo/server
+        cmd: mix release boardr --overwrite
+      become_user: boardr
+      environment:
+        MIX_ENV: prod
+        PATH: /home/boardr/.asdf/shims:{{ ansible_env.PATH }}
+      tags: [ build ]
+
+    - name: Create boardr temporary directory
+      file:
+        path: /home/boardr/repo/tmp
+        owner: boardr
+        group: boardr
+        mode: 0700
+        state: directory
+
+    - name: Generate boardr SSH key pair
+      command:
+        cmd: ssh-keygen -b 1024 -C boardr -f /home/boardr/repo/tmp/id_rsa -N '' -t rsa
+        creates: /home/boardr/repo/tmp/id_rsa
+      become_user: boardr
+
+# Worker servers
+# ==============
+- hosts: workers
+  become: true
+  vars_files:
+    - [ variables.local.yml, variables.default.yml ]
+  tasks:
+
+    - name: Retrieve build server public key
+      slurp:
+        src: /home/boardr/.ssh/id_ed25519.pub
+      delegate_to: api
+      register: build_server_public_key
+      tags: [ worker ]
+
+    - name: Create boardr user
+      user:
+        name: boardr
+        shell: /bin/bash
+        state: present
+      tags: [ worker ]
+
+    - name: Authorize build server to access worker
+      authorized_key:
+        user: boardr
+        key: "{{ build_server_public_key['content'] | b64decode }}"
+        state: present
+      tags: [ worker ]
+
+    - name: Create releases directory
+      file:
+        path: /home/boardr/rels
+        owner: boardr
+        group: boardr
+        mode: 0700
+        state: directory
+      tags: [ worker ]
+
+    - name: Copy boardr release
+      command:
+        cmd: /usr/bin/rsync --delay-updates -F --compress --archive --rsh={{ '/usr/bin/ssh -S none -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' | quote }} /home/boardr/repo/server/_build/prod/rel/boardr {{ ansible_host | quote }}:/home/boardr/rels/boardr
+      become_user: boardr
+      delegate_to: api
+      tags: [ worker ]
