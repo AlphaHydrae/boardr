@@ -17,3 +17,4 @@
 /server/tmp
 /tmp
 /.vagrant
+/vagrant/*.log
