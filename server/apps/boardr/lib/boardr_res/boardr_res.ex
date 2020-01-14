@@ -18,6 +18,7 @@ defmodule BoardrRes do
 
       import BoardrRes
       import BoardrRes.Auth, only: [authorize: 2]
+      import Ecto.Query, only: [from: 2]
     end
   end
 
