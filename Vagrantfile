@@ -14,7 +14,7 @@ Vagrant.configure('2') do |config|
 
   config.vm.provision 'ansible' do |ansible|
     ansible.compatibility_mode = '2.0'
-    ansible.playbook = 'vagrant/playbook.yml'
+    ansible.playbook = 'k8s/playbook.yml'
     ansible.skip_tags = ENV.fetch('ANSIBLE_SKIP_TAGS', '').split(',')
     ansible.tags = ENV.key?('ANSIBLE_TAGS') ? ENV.fetch('ANSIBLE_TAGS', '').split(',') : nil
     ansible.verbose = '-vv'
