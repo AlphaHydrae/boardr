@@ -1,0 +1,5 @@
+---
+db_postgresql_apt_package: postgresql-{{ db_postgresql_version }}
+db_postgresql_client_apt_package: postgresql-client-{{ db_postgresql_version }}
+db_postgresql_server_dev_apt_package: postgresql-server-dev-{{ db_postgresql_version }}
+db_postgresql_version: 12

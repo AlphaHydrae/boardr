@@ -18,13 +18,12 @@
 - name: Install hex
   command:
     chdir: "{{ boardr_release_tools_server_directory }}"
-    cmd: mix local.hex --if-missing
+    cmd: mix local.hex --force
   become_user: "{{ boardr_release_tools_user }}"
-  changed_when: '"creating" in boardr_release_tools_install_hex_result.stdout'
+  changed_when: false
   environment:
     MIX_ENV: prod
     PATH: /home/boardr/.asdf/shims:{{ ansible_env.PATH }}
-  register: boardr_release_tools_install_hex_result
   tags: [ boardr-release-tools, install ]
 
 - name: Install rebar

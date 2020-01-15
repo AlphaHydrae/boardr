@@ -5,6 +5,7 @@
 /cluster/inventory.yml
 /cluster/*.log
 /cluster/pubkey
+/cluster/.screenrc
 /cluster/.vagrant
 /cluster/variables.local.yml
 /inventory.yml

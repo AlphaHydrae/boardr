@@ -8,16 +8,16 @@
 
 - name: Add PostgreSQL apt repository
   apt_repository:
-    repo: deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main
+    repo: deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main
     state: present
   tags: [ db, install ]
 
 - name: Install PostgreSQL
   apt:
     name:
-      - postgresql-12
-      - postgresql-client-12
-      - postgresql-server-dev-12
+      - "{{ db_postgresql_apt_package }}"
+      - "{{ db_postgresql_client_apt_package }}"
+      - "{{ db_postgresql_server_dev_apt_package }}"
     state: present
     update_cache: true
   tags: [ db, install ]
@@ -30,7 +30,7 @@
 
 - name: Configure PostgreSQL to use SCRAM-SHA-256 password encryption
   lineinfile:
-    path: /etc/postgresql/12/main/postgresql.conf
+    path: /etc/postgresql/{{ db_postgresql_version }}/main/postgresql.conf
     regexp: "^password_encryption ?="
     line: password_encryption = 'scram-sha-256'
     owner: postgres
@@ -78,7 +78,7 @@
 
 - name: Grant PostgreSQL boardr user remote access to the boardr database
   postgresql_pg_hba:
-    dest: /etc/postgresql/12/main/pg_hba.conf
+    dest: /etc/postgresql/{{ db_postgresql_version }}/main/pg_hba.conf
     contype: host
     users: boardr
     source: all
@@ -91,7 +91,7 @@
 
 - name: Configure PostgreSQL to accept remote connections
   lineinfile:
-    path: /etc/postgresql/12/main/postgresql.conf
+    path: /etc/postgresql/{{ db_postgresql_version }}/main/postgresql.conf
     regexp: "^listen_addresses ?="
     line: listen_addresses = '*'
     owner: postgres

@@ -39,7 +39,7 @@
   command:
     cmd: "{{ boardr_release_deploy_binary }} eval Boardr.Release.migrate"
   environment:
-    BOARDR_DATABASE_URL: BOARDR_DATABASE_URL=ecto://boardr:{{ boardr_db_user_password }}@{{ hostvars['db']['ansible_host'] }}:5432/boardr
+    BOARDR_DATABASE_URL: ecto://boardr:{{ boardr_db_user_password }}@{{ hostvars['db']['ansible_host'] }}:5432/boardr
     BOARDR_RELEASE_NODE_ADDRESS: "{{ ansible_host }}"
     BOARDR_RELEASE_NODE_NAME: "{{ boardr_release_deploy_name }}"
     RELEASE_COOKIE: "{{ boardr_release_cookie }}"

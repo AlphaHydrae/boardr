@@ -17,6 +17,12 @@ cd ../server
 iex --name "foo@127.0.0.1" --cookie "$ERLANG_COOKIE"
 ```
 
+# Set up Raspberry Pi cluster
+
+```bash
+TARGET_HOST="boardr.cluster" TARGET_IP="1.2.3.4" docker-compose up --build -d
+```
+
 # Set up vagrant demo
 
 ```bash

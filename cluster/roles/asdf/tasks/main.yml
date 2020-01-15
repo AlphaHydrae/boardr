@@ -13,6 +13,7 @@
       - libtool
       - libxslt-dev
       - libyaml-dev
+      - make
       - unixodbc-dev
       - unzip
     state: present
