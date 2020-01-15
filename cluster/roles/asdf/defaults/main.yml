@@ -1,0 +1,9 @@
+---
+asdf_binary: "{{ asdf_directory }}/bin/asdf"
+asdf_directory: /home/{{ asdf_user }}/.asdf
+asdf_plugins: []
+asdf_plugins_directory: "{{ asdf_directory }}/plugins"
+asdf_repo: https://github.com/asdf-vm/asdf.git
+asdf_shims_directory: "{{ asdf_directory }}/shims"
+asdf_user_bashrc_file: "{{ asdf_user_home_directory }}/.bashrc"
+asdf_user_home_directory: /home/{{ asdf_user }}

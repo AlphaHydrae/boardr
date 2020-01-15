@@ -1,0 +1,7 @@
+---
+dependencies:
+
+  - role: asdf
+    asdf_plugins: [ elixir, erlang ]
+
+  - role: boardr-repo

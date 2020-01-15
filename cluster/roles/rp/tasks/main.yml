@@ -1,16 +1,21 @@
 ---
 
-- name: Copy files
-  template:
-    src: "{{ item }}"
-    dest: /srv/{{ item }}
-    mode: 0640
-  with_items:
-    - Dockerfile
-    - docker-compose.yml
-    - nginx.conf
+- name: Install nginx
+  apt:
+    name: nginx=1.14.0-0ubuntu1.7
+    state: present
+    update_cache: true
+  tags: [ rp, install ]
 
-- name: Run containers
-  command:
-    chdir: /srv
-    cmd: docker-compose up --build -d
+- name: Start nginx
+  service:
+    name: nginx
+    state: started
+  tags: [ rp, install ]
+
+- name: Configure nginx
+  template:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+  notify: Restart nginx
+  tags: [ rp, config ]

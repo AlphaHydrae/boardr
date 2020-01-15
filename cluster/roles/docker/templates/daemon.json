@@ -1,7 +1,0 @@
-{
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-file": "5",
-    "max-size": "10m"
-  }
-}

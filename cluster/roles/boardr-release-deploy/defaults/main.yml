@@ -1,0 +1,11 @@
+---
+boardr_release_deploy_binary: "{{ boardr_release_deploy_directory }}/bin/{{ boardr_release_deploy_name }}"
+boardr_release_deploy_directory: /srv/{{ boardr_release_deploy_name }}
+boardr_release_deploy_enabled: true
+boardr_release_deploy_migrate: false
+boardr_release_deploy_name: boardr_api
+boardr_release_deploy_serve: false
+boardr_release_deploy_service_env_file: /etc/boardr/.env
+boardr_release_deploy_service_name: Boardr API
+boardr_release_deploy_user: boardr
+boardr_release_deploy_group: "{{ boardr_release_deploy_user }}"

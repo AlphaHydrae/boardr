@@ -1,0 +1,6 @@
+---
+ssh_known_hosts: []
+ssh_known_hosts_file: "{{ ssh_known_hosts_user_ssh_directory }}/known_hosts"
+ssh_known_hosts_group: "{{ ssh_known_hosts_user }}"
+ssh_known_hosts_user_home_directory: /home/{{ ssh_known_hosts_user }}
+ssh_known_hosts_user_ssh_directory: "{{ ssh_known_hosts_user_home_directory }}/.ssh"

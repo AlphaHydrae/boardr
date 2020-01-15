@@ -11,3 +11,30 @@
     regexp: "^127\\.0\\.0\\.1\\s+{{ inventory_hostname | regex_escape }}$"
     line: "127.0.0.1 {{ inventory_hostname }}"
   tags: [ config, server ]
+
+- name: Create .config directory
+  file:
+    path: /home/{{ ansible_user }}/.config
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: 0700
+    state: directory
+  tags: [ config, htop ]
+
+- name: Create htop configuration directory
+  file:
+    path: /home/{{ ansible_user }}/.config/htop
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: 0700
+    state: directory
+  tags: [ config, htop ]
+
+- name: Configure htop
+  template:
+    src: htoprc
+    dest: /home/{{ ansible_user }}/.config/htop/htoprc
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: 0644
+  tags: [ config, htop ]

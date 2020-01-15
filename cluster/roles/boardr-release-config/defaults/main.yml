@@ -1,0 +1,6 @@
+---
+boardr_release_config_directory: /etc/boardr
+boardr_release_config_environment_file: "{{ boardr_release_config_directory }}/.env"
+boardr_release_config_group: "{{ boardr_release_config_user }}"
+boardr_release_config_ssh_key_file: "{{ boardr_release_config_directory }}/id_rsa"
+boardr_release_config_ssh_key_bits: 1024

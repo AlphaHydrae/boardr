@@ -1,0 +1,47 @@
+---
+
+- name: Create {{ boardr_release_deploy_name }} service
+  template:
+    src: boardr.service
+    dest: /etc/systemd/system/{{ boardr_release_deploy_name }}.service
+  register: boardr_release_deploy_create_service_result
+  tags: [ boardr-release-deploy, install ]
+
+- name: Reload systemd configuration
+  command: systemctl daemon-reload
+  when: boardr_release_deploy_create_service_result is changed
+  tags: [ boardr-release-deploy, install ]
+
+- name: Enable & start {{ boardr_release_deploy_name }} service
+  service:
+    name: "{{ boardr_release_deploy_name }}"
+    enabled: true
+    state: started
+  when: boardr_release_deploy_enabled
+  tags: [ boardr-release-deploy, install ]
+
+- name: Restart boardr service
+  service:
+    name: "{{ boardr_release_deploy_name }}"
+    state: restarted
+  when: boardr_release_deploy_enabled and restart
+  tags: [ boardr-release-deploy, deploy ]
+
+- name: Wait for boardr API to start
+  wait_for:
+    host: "{{ ansible_host }}"
+    port: 4000
+    state: started
+  when: boardr_release_deploy_serve
+  tags: [ boardr-release-deploy, deploy ]
+
+- name: Migrate boardr database
+  command:
+    cmd: "{{ boardr_release_deploy_binary }} eval Boardr.Release.migrate"
+  environment:
+    BOARDR_DATABASE_URL: BOARDR_DATABASE_URL=ecto://boardr:{{ boardr_db_user_password }}@{{ hostvars['db']['ansible_host'] }}:5432/boardr
+    BOARDR_RELEASE_NODE_ADDRESS: "{{ ansible_host }}"
+    BOARDR_RELEASE_NODE_NAME: "{{ boardr_release_deploy_name }}"
+    RELEASE_COOKIE: "{{ boardr_release_cookie }}"
+  when: boardr_release_deploy_migrate
+  tags: [ boardr-release-deploy, deploy ]

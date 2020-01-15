@@ -1,0 +1,15 @@
+[Unit]
+Description={{ boardr_release_deploy_service_name }}
+
+[Service]
+Type=simple
+EnvironmentFile={{ boardr_release_deploy_service_env_file }}
+ExecStart={{ boardr_release_deploy_binary }} start
+ExecStop={{ boardr_release_deploy_binary }} stop
+Restart=on-failure
+User={{ boardr_release_deploy_user }}
+Group={{ boardr_release_deploy_group }}
+WorkingDirectory={{ boardr_release_deploy_directory }}
+
+[Install]
+WantedBy=multi-user.target

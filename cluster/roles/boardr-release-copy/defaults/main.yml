@@ -1,0 +1,4 @@
+---
+boardr_release_copy_build_server_user: "{{ boardr_release_copy_user }}"
+boardr_release_copy_dest: /srv/boardr
+boardr_release_copy_user_home_directory: /home/{{ boardr_release_copy_user }}

@@ -1,12 +1,101 @@
 ---
 
-- name: Copy docker-compose.yml
-  template:
-    src: docker-compose.yml
-    dest: /srv/docker-compose.yml
-    mode: 0640
+- name: Add PostgreSQL apt key
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+  tags: [ db, install ]
 
-- name: Run containers
-  command:
-    chdir: /srv
-    cmd: docker-compose up -d
+- name: Add PostgreSQL apt repository
+  apt_repository:
+    repo: deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main
+    state: present
+  tags: [ db, install ]
+
+- name: Install PostgreSQL
+  apt:
+    name:
+      - postgresql-12
+      - postgresql-client-12
+      - postgresql-server-dev-12
+    state: present
+    update_cache: true
+  tags: [ db, install ]
+
+- name: Start PostgreSQL
+  service:
+    name: postgresql
+    state: started
+  tags: [ db, install ]
+
+- name: Configure PostgreSQL to use SCRAM-SHA-256 password encryption
+  lineinfile:
+    path: /etc/postgresql/12/main/postgresql.conf
+    regexp: "^password_encryption ?="
+    line: password_encryption = 'scram-sha-256'
+    owner: postgres
+    group: postgres
+    mode: 0644
+  register: db_use_scram_sha_256_result
+  tags: [ db, config ]
+
+- name: Restart PostgreSQL
+  service:
+    name: postgresql
+    state: restarted
+  when: db_use_scram_sha_256_result is changed
+  tags: [ db, config ]
+
+- name: Install psycopg2
+  pip:
+    name: psycopg2
+    state: present
+  tags: [ db, install ]
+
+- name: Create PostgreSQL boardr user
+  postgresql_user:
+    name: boardr
+    password: "{{ boardr_db_user_password }}"
+    state: present
+  become_user: postgres
+  tags: [ db, config ]
+
+- name: Create PostgreSQL boardr database
+  postgresql_db:
+    name: boardr
+    owner: boardr
+    state: present
+  become_user: postgres
+  tags: [ db, config ]
+
+- name: Add uuid-ossp PostgreSQL extension to the boardr database
+  postgresql_ext:
+    name: uuid-ossp
+    db: boardr
+    state: present
+  become_user: postgres
+  tags: [ db, config ]
+
+- name: Grant PostgreSQL boardr user remote access to the boardr database
+  postgresql_pg_hba:
+    dest: /etc/postgresql/12/main/pg_hba.conf
+    contype: host
+    users: boardr
+    source: all
+    databases: boardr
+    method: scram-sha-256
+    create: false
+    state: present
+  notify: Restart PostgreSQL
+  tags: [ db, config ]
+
+- name: Configure PostgreSQL to accept remote connections
+  lineinfile:
+    path: /etc/postgresql/12/main/postgresql.conf
+    regexp: "^listen_addresses ?="
+    line: listen_addresses = '*'
+    owner: postgres
+    group: postgres
+    mode: 0644
+  notify: Restart PostgreSQL
+  tags: [ db, config ]

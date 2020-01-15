@@ -1,0 +1,52 @@
+---
+
+- name: Install tools
+  apt:
+    name:
+      - autoconf
+      - automake
+      - curl
+      - libffi-dev
+      - libncurses-dev
+      - libreadline-dev
+      - libssl-dev
+      - libtool
+      - libxslt-dev
+      - libyaml-dev
+      - unixodbc-dev
+      - unzip
+    state: present
+    update_cache: true
+  tags: [ asdf, install ]
+
+- name: Install asdf
+  git:
+    repo: "{{ asdf_repo }}"
+    dest: "{{ asdf_directory }}"
+    version: "{{ asdf_version }}"
+  become_user: "{{ asdf_user }}"
+  tags: [ asdf, install ]
+
+- name: Install asdf {{ item }} plugin
+  command:
+    cmd: "{{ asdf_binary }} plugin-add {{ item }}"
+    creates: "{{ asdf_plugins_directory }}/{{ item }}"
+  become_user: "{{ asdf_user }}"
+  with_items: "{{ asdf_plugins }}"
+  tags: [ asdf, install ]
+
+- name: Configure {{ asdf_user }} user shell to source asdf setup script
+  lineinfile:
+    path: "{{ asdf_user_bashrc_file }}"
+    create: true
+    regexp: "^\\. \\~\\/.asdf\\/asdf.sh$"
+    line: ". ~/.asdf/asdf.sh"
+  tags: [ asdf, install ]
+
+- name: Configure {{ asdf_user }} user shell to source asdf bash completions script
+  lineinfile:
+    path: "{{ asdf_user_bashrc_file }}"
+    create: true
+    regexp: "^\\. \\~\\/.asdf\\/completions\\/asdf.bash$"
+    line: ". ~/.asdf/completions/asdf.bash"
+  tags: [ asdf, install ]

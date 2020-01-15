@@ -1,0 +1,5 @@
+---
+asdf_user: "{{ boardr_release_user }}"
+boardr_release_group: "{{ boardr_release_user }}"
+boardr_release_tools_user: "{{ boardr_release_user }}"
+boardr_repo_user: "{{ boardr_release_tools_user }}"

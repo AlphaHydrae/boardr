@@ -1,0 +1,5 @@
+---
+ansible_python_interpreter: /usr/bin/python3
+asdf_version: v0.7.6
+restart: false
+ssh_known_hosts: []

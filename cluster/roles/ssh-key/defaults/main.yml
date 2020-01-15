@@ -1,0 +1,5 @@
+---
+ssh_key_algorithm: ed25519
+ssh_key_file: "{{ ssh_key_user_ssh_directory }}/id_{{ ssh_key_algorithm }}"
+ssh_key_user_home_directory: /home/{{ ssh_key_user }}
+ssh_key_user_ssh_directory: "{{ ssh_key_user_home_directory }}/.ssh"

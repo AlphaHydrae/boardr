@@ -1,0 +1,7 @@
+---
+
+- name: Create {{ user_name }} user
+  user:
+    name: "{{ user_name }}"
+    shell: /bin/bash
+    state: present

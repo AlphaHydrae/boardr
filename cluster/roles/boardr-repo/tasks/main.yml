@@ -1,0 +1,10 @@
+---
+
+- name: Clone boardr repository
+  git:
+    repo: "{{ boardr_repo }}"
+    dest: "{{ boardr_repo_path }}"
+    force: true
+    version: master
+  become_user: "{{ boardr_repo_user }}"
+  tags: [ boardr-repo, build ]

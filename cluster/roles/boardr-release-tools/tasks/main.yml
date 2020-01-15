@@ -1,0 +1,51 @@
+---
+
+- name: Install boardr tools
+  command:
+    chdir: "{{ boardr_repo_path }}"
+    cmd: "{{ asdf_binary }} install"
+  become_user: "{{ boardr_release_tools_user }}"
+  changed_when: false
+  tags: [ boardr-release-tools, install ]
+
+- name: Update asdf shims
+  command:
+    cmd: "{{ asdf_binary }} reshim"
+  become_user: "{{ boardr_release_tools_user }}"
+  changed_when: false
+  tags: [ boardr-release-tools, install ]
+
+- name: Install hex
+  command:
+    chdir: "{{ boardr_release_tools_server_directory }}"
+    cmd: mix local.hex --if-missing
+  become_user: "{{ boardr_release_tools_user }}"
+  changed_when: '"creating" in boardr_release_tools_install_hex_result.stdout'
+  environment:
+    MIX_ENV: prod
+    PATH: /home/boardr/.asdf/shims:{{ ansible_env.PATH }}
+  register: boardr_release_tools_install_hex_result
+  tags: [ boardr-release-tools, install ]
+
+- name: Install rebar
+  command:
+    chdir: "{{ boardr_release_tools_server_directory }}"
+    cmd: mix local.rebar --force
+  become_user: "{{ boardr_release_tools_user }}"
+  changed_when: false
+  environment:
+    MIX_ENV: prod
+    PATH: "{{ asdf_shims_directory }}:{{ ansible_env.PATH }}"
+  tags: [ boardr-release-tools, install ]
+
+- name: Install boardr dependencies
+  command:
+    chdir: "{{ boardr_release_tools_server_directory }}"
+    cmd: mix deps.get --only prod
+  become_user: "{{ boardr_release_tools_user }}"
+  changed_when: '"Getting" in boardr_release_tools_install_deps_result.stdout'
+  environment:
+    MIX_ENV: prod
+    PATH: "{{ asdf_shims_directory }}:{{ ansible_env.PATH }}"
+  register: boardr_release_tools_install_deps_result
+  tags: [ boardr-release-tools, build ]

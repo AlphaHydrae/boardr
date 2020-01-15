@@ -1,0 +1,7 @@
+---
+
+- name: Generate SSH key pair for user {{ ssh_key_user }}
+  command:
+    cmd: ssh-keygen -C {{ ssh_key_user | quote }} -f {{ ssh_key_file | quote }} -N '' -t {{ ssh_key_algorithm | quote }}
+    creates: "{{ ssh_key_file }}"
+  become_user: "{{ ssh_key_user }}"

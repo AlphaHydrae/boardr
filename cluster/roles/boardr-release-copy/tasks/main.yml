@@ -1,0 +1,41 @@
+---
+
+- name: Retrieve build server public key
+  slurp:
+    src: "{{ boardr_release_copy_build_server_public_key_file }}"
+  delegate_to: api
+  register: boardr_release_copy_build_server_public_key
+  when: boardr_release_copy_build_server_public_key_file is defined
+  tags: [ boardr-release-copy, install ]
+
+- name: Authorize build server to access worker
+  authorized_key:
+    user: "{{ boardr_release_copy_user }}"
+    key: "{{ boardr_release_copy_build_server_public_key['content'] | b64decode }}"
+    state: present
+  when: boardr_release_copy_build_server_public_key_file is defined
+  tags: [ boardr-release-copy, install ]
+
+- name: Create release copy directory
+  file:
+    path: "{{ boardr_release_copy_dest }}"
+    owner: "{{ boardr_release_copy_user }}"
+    group: "{{ boardr_release_copy_user }}"
+    mode: 0700
+    state: directory
+  tags: [ boardr-release-copy, install ]
+
+- name: Copy release to {{ boardr_release_copy_dest }}
+  command:
+    cmd: /usr/bin/rsync --delay-updates -F --compress --archive --delete-after {{ boardr_release_copy_src | quote }} {{ boardr_release_copy_dest | quote }}
+  become_user: "{{ boardr_release_copy_user }}"
+  when: boardr_release_copy_build_server_public_key_file is not defined
+  tags: [ boardr-release-copy, build ]
+
+- name: Copy release to {{ boardr_release_copy_dest }}
+  command:
+    cmd: /usr/bin/rsync --delay-updates -F --compress --archive --delete-after --rsh={{ '/usr/bin/ssh -S none -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' | quote }} {{ boardr_release_copy_src | quote }} {{ ansible_host | quote }}:{{ boardr_release_copy_dest | quote }}
+  become_user: "{{ boardr_release_copy_build_server_user }}"
+  delegate_to: "{{ boardr_release_copy_build_server }}"
+  when: boardr_release_copy_build_server_public_key_file is defined
+  tags: [ boardr-release-copy, build ]

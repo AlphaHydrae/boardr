@@ -1,0 +1,4 @@
+---
+boardr_repo: https://github.com/AlphaHydrae/boardr.git
+boardr_repo_path: "{{ boardr_repo_user_home_directory }}/repo"
+boardr_repo_user_home_directory: /home/{{ boardr_repo_user }}

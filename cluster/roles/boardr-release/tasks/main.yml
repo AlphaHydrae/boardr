@@ -1,0 +1,20 @@
+---
+
+- name: Build {{ boardr_release_name }} release
+  command:
+    chdir: "{{ boardr_release_tools_server_directory }}"
+    cmd: mix release {{ boardr_release_name }} --overwrite
+  become_user: "{{ boardr_release_user }}"
+  environment:
+    MIX_ENV: prod
+    PATH: "{{ asdf_shims_directory }}:{{ ansible_env.PATH }}"
+  tags: [ build ]
+
+- name: Restrict release directory permissions
+  file:
+    path: "{{ boardr_release_tools_server_directory }}/_build/prod/rel/{{ boardr_release_name }}"
+    owner: "{{ boardr_release_user }}"
+    group: "{{ boardr_release_group }}"
+    mode: 0700
+    state: directory
+  tags: [ build ]

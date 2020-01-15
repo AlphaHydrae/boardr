@@ -8,7 +8,7 @@ pubkey = File.read pubkey_path
 
 copy_pubkey = <<-SHELL
   (umask 077 && mkdir -p ~/.ssh)
-  (umask 066 && echo #{Shellwords.shellescape pubkey} >> ~/.ssh/authorized_keys)
+  (umask 066 && echo #{Shellwords.shellescape pubkey} > ~/.ssh/authorized_keys)
 SHELL
 
 # https://docs.vagrantup.com
