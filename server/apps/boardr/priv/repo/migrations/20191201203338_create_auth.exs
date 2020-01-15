@@ -2,7 +2,7 @@ defmodule Boardr.Repo.Migrations.CreateAuth do
   use Ecto.Migration
 
   def change do
-    execute ~s/CREATE EXTENSION "uuid-ossp"/, ~s/DROP EXTENSION "uuid-ossp"/
+    execute ~s/CREATE EXTENSION IF NOT EXISTS "uuid-ossp"/, ~s/DROP EXTENSION "uuid-ossp"/
     execute ~s/CREATE TYPE identity_providers AS ENUM ('google', 'local');/, ~s/DROP TYPE identity_providers;/
 
     create table(:users, primary_key: false) do
