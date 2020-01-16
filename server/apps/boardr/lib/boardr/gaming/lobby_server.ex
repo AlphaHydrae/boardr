@@ -40,7 +40,8 @@ defmodule Boardr.Gaming.LobbyServer do
     player_numbers = Enum.map(players, &(&1.number))
     next_available_player_number = Enum.reduce_while player_numbers, 1, fn n, acc -> if n > acc, do: {:halt, acc}, else: {:cont, acc + 1} end
 
-    player = Player.changeset(%Player{game_id: game_id, user_id: user_id}, %{number: next_available_player_number})
+    player = %Player{game_id: game_id, user_id: user_id}
+    |> Player.changeset(%{number: next_available_player_number})
 
     {:ok, %{game: updated_game, player: created_player}} = Multi.new()
     |> Multi.insert(:player, player, returning: [:id])

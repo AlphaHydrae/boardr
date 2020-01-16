@@ -47,13 +47,13 @@ defmodule Boardr.Rules.TicTacToeTest do
     end
 
     test "the second player cannot play first by taking position #{col},#{row}", %{game: game} do
-      assert {:error, :wrong_turn} = take(2, @col, @row, game)
+      assert {:error, {:game_error, :wrong_turn}} = take(2, @col, @row, game)
     end
 
     test "the second player cannot take position #{col},#{row} if it was already taken by the first player",
          %{game: game} do
       assert {:ok, _action, state, :playing} = take(1, @col, @row, game)
-      assert {:error, :position_already_taken} = take(2, @col, @row, game, state)
+      assert {:error, {:game_error, :position_already_taken}} = take(2, @col, @row, game, state)
     end
   end
 
@@ -107,7 +107,7 @@ defmodule Boardr.Rules.TicTacToeTest do
 
   test "the first player cannot play twice in a row", %{game: game} do
     assert {:ok, _action, state, :playing} = take(1, 0, 0, game)
-    assert {:error, :wrong_turn} = take(1, 0, 1, game, state)
+    assert {:error, {:game_error, :wrong_turn}} = take(1, 0, 1, game, state)
   end
 
   @tag :slow

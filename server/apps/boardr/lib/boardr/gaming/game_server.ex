@@ -42,11 +42,11 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
     :board,
     _from,
-    %State{rules_game: rules_game, rules_state: rules_state} = state
+    %State{rules: rules, rules_game: rules_game, rules_state: rules_state} = state
   ) do
     {
       :reply,
-      get_rules!(rules_game).board(rules_game, rules_state),
+      rules.board(rules_game, rules_state),
       state,
       @default_timeout
     }
@@ -56,14 +56,14 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
         {:play, player_id, action_properties},
         _from,
-        %State{game: game, rules_game: rules_game, rules_state: rules_state} = state
+        %State{game: game, rules: rules, rules_game: rules_game, rules_state: rules_state} = state
       )
       when is_binary(player_id) and is_map(action_properties) do
     # TODO: check player not nil
     player = game.players |> Enum.find(fn player -> player.id === player_id end)
 
     with {:ok, action, new_rules_state, game_result} <-
-           get_rules!(rules_game).play(
+           rules.play(
              Domain.take(
                player_number: player.number,
                position: Domain.position_from_list(action_properties["position"])
@@ -88,21 +88,20 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
     {:possible_actions, filters},
     _from,
-    %State{game: game, rules_game: Domain.game(players: rules_players) = rules_game, rules_state: rules_state} = state
+    %State{game: game, rules: rules, rules_game: Domain.game(players: rules_players) = rules_game, rules_state: rules_state} = state
   ) when is_map(filters) do
 
     rules_filters = %{}
 
     rules_filters = if player_ids = Map.get(filters, :player_ids) do
-      player_numbers = game.players |> Enum.filter(fn player -> player.id in player_ids end) |> Enum.map(&(&1.number))
-      Map.put(rules_filters, :players, rules_players |> Enum.filter(fn player -> Domain.player(player, :number) in player_numbers end))
+      Map.put(rules_filters, :players, game.players |> Enum.filter(fn player -> player.id in player_ids end) |> Enum.map(&(&1.number)))
     else
       rules_filters
     end
 
     {
       :reply,
-      get_rules!(rules_game).possible_actions(rules_filters, rules_game, rules_state),
+      rules.possible_actions(rules_filters, rules_game, rules_state),
       state,
       @default_timeout
     }
@@ -139,6 +138,8 @@ defmodule Boardr.Gaming.GameServer do
         winners: []
       )
 
+    rules = get_rules!(game.rules)
+
     rules_players =
       game.players
       |> Enum.map(fn %Player{number: player_number} -> Domain.player(number: player_number) end)
@@ -156,7 +157,7 @@ defmodule Boardr.Gaming.GameServer do
         |> Repo.stream(max_rows: 100)
         |> Enum.reduce({nil, 0}, fn {action, player}, {current_rules_state, n} ->
           result =
-            get_rules!(rules_game).play(
+            rules.play(
               Domain.take(
                 player_number: player.number,
                 position: Domain.position_from_list(action.position)
@@ -173,7 +174,7 @@ defmodule Boardr.Gaming.GameServer do
 
     Logger.info("Initialized game server for game #{game_id} with #{number_of_actions} actions")
 
-    {:noreply, %State{game: game, rules_game: rules_game, rules_state: rules_state}, @default_timeout}
+    {:noreply, %State{game: game, rules: rules, rules_game: rules_game, rules_state: rules_state}, @default_timeout}
   end
 
   @impl true
@@ -192,9 +193,9 @@ defmodule Boardr.Gaming.GameServer do
   end
 
   @impl true
-  def terminate(reason, %State{} = state) do
+  def terminate(reason, state) do
     Logger.debug("Game server terminating due to #{inspect(reason)}")
-    Swarm.Tracker.handoff(__MODULE__, state)
+    unless is_nil(state), do: Swarm.Tracker.handoff(__MODULE__, state)
   end
 
   # Gaming (functions)
@@ -261,12 +262,9 @@ defmodule Boardr.Gaming.GameServer do
     catch
       :exit, {:noproc, details} ->
         Logger.warn("Trying to start offline game server for game #{game_id} (retries left: #{retry - 1})")
+        Swarm.Tracker.untrack(pid)
         call_swarm(game_id, request, retry - 1, details)
     end
-  end
-
-  defp get_rules!(Domain.game(rules: rules_name)) do
-    get_rules!(rules_name)
   end
 
   defp get_rules!(rules_name) when is_binary(rules_name) do

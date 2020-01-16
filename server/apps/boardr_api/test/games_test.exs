@@ -1,5 +1,5 @@
 defmodule BoardrApi.GamesTest do
-  use BoardrApi.ConnCase, async: true
+  use BoardrApi.ConnCase
 
   alias Boardr.{Game,Player}
 

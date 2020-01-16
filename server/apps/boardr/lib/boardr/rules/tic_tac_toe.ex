@@ -43,12 +43,12 @@ defmodule Boardr.Rules.TicTacToe do
 
   @impl true
   def play(_action, Domain.game(state: :draw), _state) do
-    {:error, :game_finished}
+    {:error, {:game_error, :game_finished}}
   end
 
   @impl true
   def play(_action, Domain.game(state: :win), _state) do
-    {:error, :game_finished}
+    {:error, {:game_error, :game_finished}}
   end
 
   @impl true
@@ -58,7 +58,7 @@ defmodule Boardr.Rules.TicTacToe do
         nil
       )
       when player_number !== first_player_number do
-    {:error, :wrong_turn}
+    {:error, {:game_error, :wrong_turn}}
   end
 
   @impl true
@@ -78,7 +78,7 @@ defmodule Boardr.Rules.TicTacToe do
         %State{board: board}
       )
       when not is_nil(elem(board, row * 3 + col)) do
-    {:error, :position_already_taken}
+    {:error, {:game_error, :position_already_taken}}
   end
 
   @impl true
@@ -92,7 +92,7 @@ defmodule Boardr.Rules.TicTacToe do
         play_and_get_state(action, game, state)
 
       true ->
-        {:error, :wrong_turn}
+        {:error, {:game_error, :wrong_turn}}
     end
   end
 
@@ -141,35 +141,41 @@ defmodule Boardr.Rules.TicTacToe do
     )
   end
 
-  defp generate_possible_actions(player_number, filters, Domain.game(players: players), board)
+  defp generate_possible_actions(player_number, %{players: player_numbers}, Domain.game() = game, board)
+       when is_integer(player_number) and is_list(player_numbers) and is_tuple(board) do
+    if player_number in player_numbers do
+      generate_possible_actions(player_number, game, board)
+    else
+      {:ok, []}
+    end
+  end
+
+  defp generate_possible_actions(player_number, filters, Domain.game() = game, board)
        when is_integer(player_number) and is_map(filters) and is_tuple(board) do
+    generate_possible_actions(player_number, game, board)
+  end
+
+  defp generate_possible_actions(player_number, Domain.game(), board)
+       when is_integer(player_number) and is_tuple(board) do
     {
       :ok,
-      filters
-      |> Map.get(:players, players)
-      |> Enum.filter(fn player -> Domain.player(player, :number) == player_number end)
-      |> Enum.reduce([], fn player, acc ->
-        player_actions =
-          Range.new(0, tuple_size(board) - 1)
-          |> Enum.reduce([], fn i, acc ->
-            value = elem(board, i)
+      Range.new(0, tuple_size(board) - 1)
+      |> Enum.reduce([], fn i, acc ->
+        value = elem(board, i)
 
-            cond do
-              is_nil(value) ->
-                [
-                  Domain.take(
-                    player_number: Domain.player(player, :number),
-                    position: Domain.d2(col: rem(i, 3), row: div(i, 3))
-                  )
-                  | acc
-                ]
+        cond do
+          is_nil(value) ->
+            [
+              Domain.take(
+                player_number: player_number,
+                position: Domain.d2(col: rem(i, 3), row: div(i, 3))
+              )
+              | acc
+            ]
 
-              true ->
-                acc
-            end
-          end)
-
-        player_actions ++ acc
+          true ->
+            acc
+        end
       end)
     }
   end
