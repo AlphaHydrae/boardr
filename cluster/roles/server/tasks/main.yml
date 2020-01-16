@@ -3,14 +3,14 @@
 - name: Set hostname
   hostname:
     name: "{{ inventory_hostname }}"
-  tags: [ config, server ]
+  tags: [ server, install ]
 
 - name: Add hostname to /etc/hosts
   lineinfile:
     path: /etc/hosts
     regexp: "^127\\.0\\.0\\.1\\s+{{ inventory_hostname | regex_escape }}$"
     line: "127.0.0.1 {{ inventory_hostname }}"
-  tags: [ config, server ]
+  tags: [ server, config ]
 
 - name: Create .config directory
   file:
@@ -19,7 +19,7 @@
     group: "{{ ansible_user }}"
     mode: 0700
     state: directory
-  tags: [ config, htop ]
+  tags: [ server, install ]
 
 - name: Create htop configuration directory
   file:
@@ -28,7 +28,7 @@
     group: "{{ ansible_user }}"
     mode: 0700
     state: directory
-  tags: [ config, htop ]
+  tags: [ server, install ]
 
 - name: Configure htop
   template:
@@ -37,4 +37,4 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: 0644
-  tags: [ config, htop ]
+  tags: [ server, config ]

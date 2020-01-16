@@ -9,6 +9,7 @@
     state: directory
   tags: [ boardr-release-config, config ]
 
+# FIXME: private key must be in PEM format
 - name: Generate boardr SSH key pair
   command:
     cmd: ssh-keygen -b {{ boardr_release_config_ssh_key_bits | quote }} -C boardr -f {{ boardr_release_config_ssh_key_file | quote }} -N '' -t rsa

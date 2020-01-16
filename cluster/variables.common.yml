@@ -1,5 +1,6 @@
 ---
 ansible_python_interpreter: /usr/bin/python3
 asdf_version: v0.7.6
+cluster_host: boardr.cluster.vagrant
 restart: false
 ssh_known_hosts: []
