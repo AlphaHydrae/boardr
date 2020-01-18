@@ -1,14 +1,13 @@
 defmodule BoardrApi.Games.PlayersController do
   use BoardrApi, :controller
 
-  alias Boardr.{Game,Player}
-  alias Boardr.Gaming.LobbyServer
+  alias Boardr.Player
+  alias BoardrRes.PlayersCollection
 
-  plug Authenticate, [:'api:players:create'] when action in [:create]
+  import Boardr.Distributed, only: [distribute: 3]
 
-  def create(%Conn{assigns: %{auth: %{"sub" => user_id}}} = conn, %{"game_id" => game_id}) do
-    game_state = Repo.one!(from(g in Game, select: g.state, where: g.id == ^game_id))
-    with {:ok, %Player{} = player} <- join_game(game_id, game_state, user_id) do
+  def create(%Conn{} = conn, %{"game_id" => game_id}) do
+    with {:ok, %Player{} = player} <- distribute(PlayersCollection, :create, [%{"game_id" => game_id}, to_options(conn)]) do
       conn
       |> put_status(201)
       |> put_resp_content_type("application/hal+json")
@@ -23,13 +22,5 @@ defmodule BoardrApi.Games.PlayersController do
     conn
     |> put_resp_content_type("application/hal+json")
     |> render(%{player: player})
-  end
-
-  defp join_game(game_id, "waiting_for_players", user_id) when is_binary(game_id) and is_binary(user_id) do
-    LobbyServer.join(game_id, user_id)
-  end
-
-  defp join_game(game_id, game_state, user_id) when is_binary(game_id) and is_binary(game_state) and is_binary(user_id) do
-    {:error, {:game_error, :game_already_started}}
   end
 end
