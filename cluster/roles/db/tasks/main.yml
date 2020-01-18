@@ -99,3 +99,10 @@
     mode: 0644
   notify: Restart PostgreSQL
   tags: [ db, config ]
+
+- name: Wipe the boardr database clean
+  postgresql_query:
+    db: boardr
+    query: DELETE from actions; DELETE from winners; DELETE from players; DELETE from games; DELETE from identities; DELETE from users;
+  become_user: postgres
+  tags: [ db, cleanup ]
