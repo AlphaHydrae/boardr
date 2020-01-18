@@ -1,7 +1,33 @@
 defmodule Boardr.Fixtures do
-  alias Boardr.{Game,Player}
+  alias Boardr.{Action,Game,Player}
   alias Boardr.Auth.{Identity,User}
   alias Boardr.Repo
+
+  def action(properties \\ []) when is_list(properties) do
+    game_id = Keyword.get_lazy(properties, :game_id, fn ->
+      game = Keyword.get_lazy(properties, :game, fn ->
+        game(Keyword.get(properties, :game_properties, []))
+      end)
+      unless is_nil(game), do: game.id, else: nil
+    end)
+
+    player_id = Keyword.get_lazy(properties, :player_id, fn ->
+      player = Keyword.get_lazy(properties, :player, fn ->
+        player(Keyword.get(properties, :player_properties, []))
+      end)
+      unless is_nil(player), do: player.id, else: nil
+    end)
+
+    %Action{
+      data: Keyword.get(properties, :data, %{}),
+      game_id: game_id,
+      player_id: player_id,
+      position: Keyword.get(properties, :position, [0, 0]),
+      type: Keyword.get(properties, :type, "take"),
+      performed_at: Keyword.get_lazy(properties, :performed_at, &DateTime.utc_now/0)
+    }
+    |> Repo.insert!(returning: [:id])
+  end
 
   def game(properties \\ []) when is_list(properties) do
     creator_id = Keyword.get_lazy(properties, :creator_id, fn ->

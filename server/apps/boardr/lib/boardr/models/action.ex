@@ -1,7 +1,7 @@
 defmodule Boardr.Action do
   use Ecto.Schema
 
-  alias Boardr.{Game,Player}
+  alias Boardr.{Game, Player}
   alias Boardr.Rules.Domain
 
   import Ecto.Changeset
@@ -14,6 +14,7 @@ defmodule Boardr.Action do
     belongs_to(:game, Game)
     belongs_to(:player, Player)
 
+    field(:data, EctoJsonb)
     field(:position, {:array, :integer})
     field(:type, :string)
 

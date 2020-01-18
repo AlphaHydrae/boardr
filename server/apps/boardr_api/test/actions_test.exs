@@ -62,6 +62,7 @@ defmodule BoardrApi.ActionsTest do
 
         # Properties
         |> assert_keys(@valid_properties)
+        |> assert_key_absent("data")
         |> assert_key("performedAt", &(&1.subject |> just_after(test_start)))
 
       # Database changes

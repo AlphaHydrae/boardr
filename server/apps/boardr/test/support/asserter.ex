@@ -23,6 +23,9 @@ defmodule Asserter do
 
     {asserted_keys, result} =
       cond do
+        is_list(subject) ->
+          {nil, []}
+
         is_map(subject) ->
           :ok = Asserter.Server.register_map(self(), ref, subject)
           {[], %{}}

@@ -177,21 +177,49 @@ defmodule Asserter.Assertions do
     end)
   end
 
+  def assert_list(value, opts \\ [])
+
+  def assert_list(%Asserter{subject: subject}, opts)
+      when not is_list(subject) and is_list(opts) do
+    raise Error, message: "value is not a list", subject: subject
+  end
+
+  def assert_list(%Asserter{options: options, subject: subject} = asserter, opts)
+      when is_list(subject) and is_list(opts) do
+    %Asserter{asserter | options: Keyword.merge(options, opts)}
+  end
+
+  def assert_list(value, opts) when is_list(value) and is_list(opts) do
+    Asserter.new(value, opts)
+  end
+
   def assert_map(value, opts \\ [])
 
-  def assert_map(%Asserter{options: options, subject: subject} = asserter, opts)
-      when is_list(opts) do
-    unless is_map(subject) do
-      raise Error,
-        message: "value is not a map",
-        subject: subject
-    end
+  def assert_map(%Asserter{subject: subject}, opts)
+      when not is_map(subject) and is_list(opts) do
+    raise Error, message: "value is not a map", subject: subject
+  end
 
+  def assert_map(%Asserter{options: options, subject: subject} = asserter, opts)
+      when is_map(subject) and is_list(opts) do
     %Asserter{asserter | options: Keyword.merge(options, opts)}
   end
 
   def assert_map(value, opts) when is_map(value) and is_list(opts) do
     Asserter.new(value, opts)
+  end
+
+  def assert_member(%Asserter{subject: subject} = asserter, value, opts \\ []) when is_list(subject) and is_list(opts) do
+    #mark_asserted_keys!(asserter, [key])
+
+    unless Enum.member?(subject, value) do
+      raise Error,
+        message: "value is not a member of the list",
+        expected: value,
+        subject: subject
+    end
+
+    update_result(asserter, value, opts)
   end
 
   def ignore_keys(
@@ -242,6 +270,30 @@ defmodule Asserter.Assertions do
 
   defp update_result(
          %Asserter{
+           options: options,
+           result: result,
+           subject: subject
+         } = asserter,
+         value,
+         opts
+       ) when is_list(result) and is_list(subject) and is_list(opts) do
+    effective_options = Keyword.merge(options, opts)
+    into = Keyword.get(effective_options, :into)
+
+    cond do
+      into == false ->
+        asserter
+
+      not is_nil(into) ->
+        raise ":into option can only be nil or false for lists"
+
+      true ->
+        %Asserter{asserter | result: result ++ [value]}
+    end
+  end
+
+  defp update_result(
+         %Asserter{
            asserted_keys: asserted_keys,
            options: options,
            result: result,
@@ -250,7 +302,7 @@ defmodule Asserter.Assertions do
          key,
          value,
          opts
-       ) do
+       ) when is_map(result) and is_map(subject) and is_list(opts) do
     effective_options = Keyword.merge(options, opts)
     from = Keyword.get(effective_options, :from)
     into = Keyword.get(effective_options, :into)
