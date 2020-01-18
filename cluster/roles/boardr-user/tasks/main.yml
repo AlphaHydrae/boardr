@@ -1,0 +1,10 @@
+---
+
+- name: Create .bash_profile
+  template:
+    src: .bash_profile
+    dest: /home/boardr/.bash_profile
+    owner: "{{ boardr_user_name }}"
+    group: "{{ boardr_user_group }}"
+    mode: 0600
+  tags: [ boardr-user, config ]

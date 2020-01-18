@@ -1,0 +1,4 @@
+---
+boardr_user_group: "{{ boardr_user_name }}"
+boardr_user_home_directory: /home/{{ boardr_user_name }}
+boardr_user_name: boardr
