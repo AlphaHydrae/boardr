@@ -1,6 +1,8 @@
 defmodule BoardrApi.GamesPossibleActionsTest do
   use BoardrApi.ConnCase
 
+  alias Boardr.{Game, Player}
+
   require EEx
   EEx.function_from_string(:def, :api_path, "/api/games/<%= game.id %>/possible-actions", [:game])
 
@@ -35,33 +37,7 @@ defmodule BoardrApi.GamesPossibleActionsTest do
         |> json_response(200)
 
       # Response
-      %{result: %{possible_actions: possible_action_results}} =
-        assert_api_map(body)
-
-        # HAL links
-        |> assert_hal_links(fn links ->
-          links
-          |> assert_hal_curies()
-          |> assert_hal_link("self", test_api_url("/games/#{game.id}/possible-actions"))
-        end)
-
-        # Embedded HAL documents
-        |> assert_hal_embedded(fn embedded ->
-          embedded
-          |> assert_key(
-            "boardr:possible-actions",
-            fn possible_actions ->
-              @all_board_positions
-              |> Enum.reduce(assert_list(possible_actions), fn pos, acc ->
-                acc |> assert_member(expected_possible_action(pos, game.id, player1.id))
-              end)
-            end,
-            into: :possible_actions
-          )
-        end)
-
-      # FIXME: verify no more remaining members in asserter
-      assert length(possible_action_results) == 9
+      assert_possible_actions(body, game, player1, @all_board_positions)
 
       # Database changes
       assert_db_queries(max_selects: 6)
@@ -77,11 +53,12 @@ defmodule BoardrApi.GamesPossibleActionsTest do
       now = DateTime.utc_now()
 
       actions =
-        [[0, 0], [2, 2], [2, 0], [1, 0]]
+        [[0, 0], [2, 2], [2, 0], [1, 0], [1, 2]]
         |> Enum.with_index()
         |> Enum.map(fn {pos, i} ->
           Fixtures.action(
-            performed_at: DateTime.add(now, i * 10 + -60, :second),
+            game: game,
+            performed_at: DateTime.add(now, i * 10 - 100, :second),
             player: if(rem(i, 2) == 0, do: player1, else: player2),
             position: pos
           )
@@ -96,39 +73,101 @@ defmodule BoardrApi.GamesPossibleActionsTest do
         |> json_response(200)
 
       # Response
-      %{result: %{possible_actions: possible_action_results}} =
-        assert_api_map(body)
-
-        # HAL links
-        |> assert_hal_links(fn links ->
-          links
-          |> assert_hal_curies()
-          |> assert_hal_link("self", test_api_url("/games/#{game.id}/possible-actions"))
-        end)
-
-        # Embedded HAL documents
-        |> assert_hal_embedded(fn embedded ->
-          embedded
-          |> assert_key(
-            "boardr:possible-actions",
-            fn possible_actions ->
-              assert_list(possible_actions)
-
-              (@all_board_positions -- Enum.map(actions, & &1.position))
-              |> Enum.reduce(assert_list(possible_actions), fn pos, acc ->
-                acc |> assert_member(expected_possible_action(pos, game.id, player1.id))
-              end)
-            end,
-            into: :possible_actions
-          )
-        end)
-
-      # FIXME: verify no more remaining members in asserter
-      assert length(possible_action_results) == 5
+      assert_possible_actions(
+        body,
+        game,
+        player2,
+        @all_board_positions -- Enum.map(actions, & &1.position)
+      )
 
       # Database changes
       assert_db_queries(max_selects: 6)
     end
+
+    test "embed the game when retrieving possible actions", %{
+      conn: %Conn{} = conn,
+      game: game,
+      player1: player1,
+      test: test
+    } do
+      count_queries(test)
+
+      # FIXME: check Location header
+      body =
+        conn
+        |> get("#{api_path(game)}?embed=boardr:game")
+        |> json_response(200)
+
+      # Response
+      assert_possible_actions(body, game, player1, @all_board_positions, embedded_game: true)
+
+      # Database changes
+      assert_db_queries(max_selects: 6)
+    end
+  end
+
+  defp assert_possible_actions(body, %Game{} = game, %Player{id: player_id}, positions, options \\ [])
+       when is_list(positions) and is_list(options) do
+    # Response
+    %{result: %{possible_actions: possible_action_results}} =
+      assert_api_map(body)
+
+      # HAL links
+      |> assert_hal_links(fn links ->
+        links
+        |> assert_hal_curies()
+        |> assert_hal_link("self", test_api_url("/games/#{game.id}/possible-actions"))
+      end)
+
+      # Embedded HAL documents
+      |> assert_hal_embedded(fn embedded ->
+        embedded = embedded
+        |> assert_key(
+          "boardr:possible-actions",
+          fn possible_actions ->
+            positions
+            |> Enum.reduce(assert_list(possible_actions), fn pos, acc ->
+              acc |> assert_member(expected_possible_action(pos, game.id, player_id))
+            end)
+          end,
+          into: :possible_actions
+        )
+
+        if Keyword.get(options, :embedded_game, false) do
+          embedded
+          |> assert_key(
+            "boardr:game",
+            fn embedded_game ->
+              embedded_game
+
+              # HAL links
+              |> assert_hal_links(fn links ->
+                links
+                |> assert_hal_curies()
+                |> assert_hal_link("collection", test_api_url("/games"))
+                |> assert_hal_link("boardr:creator", test_api_url("/users/#{game.creator_id}"))
+                |> assert_hal_link("self", test_api_url("/games/#{game.id}"))
+                |> assert_hal_link("boardr:actions", test_api_url("/games/#{game.id}/actions"))
+                |> assert_hal_link("boardr:board", test_api_url("/games/#{game.id}/board"))
+                |> assert_hal_link("boardr:players", test_api_url("/games/#{game.id}/players"))
+                |> assert_hal_link("boardr:possible-actions", test_api_url("/games/#{game.id}/possible-actions"))
+              end)
+
+              # Properties
+              |> assert_key("createdAt", DateTime.to_iso8601(game.created_at))
+              |> assert_key("rules", "tic-tac-toe")
+              |> assert_key("settings", %{})
+              |> assert_key("state", "playing")
+              |> assert_key("updatedAt", DateTime.to_iso8601(game.updated_at))
+            end
+          )
+        else
+          embedded
+        end
+      end)
+
+    # FIXME: verify no more remaining members in asserter
+    assert length(possible_action_results) == length(positions)
   end
 
   defp expected_possible_action([col, row], game_id, player_id)
@@ -138,7 +177,7 @@ defmodule BoardrApi.GamesPossibleActionsTest do
         "boardr:game" => %{"href" => test_api_url("/games/#{game_id}")},
         "boardr:player" => %{"href" => test_api_url("/games/#{game_id}/players/#{player_id}")}
       },
-      "position" => [0, 0],
+      "position" => [col, row],
       "type" => "take"
     }
   end

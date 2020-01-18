@@ -88,7 +88,7 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
     {:possible_actions, filters},
     _from,
-    %State{game: game, rules: rules, rules_game: Domain.game(players: rules_players) = rules_game, rules_state: rules_state} = state
+    %State{game: game, rules: rules, rules_game: rules_game, rules_state: rules_state} = state
   ) when is_map(filters) do
 
     rules_filters = %{}
@@ -99,9 +99,19 @@ defmodule Boardr.Gaming.GameServer do
       rules_filters
     end
 
+    {:ok, possible_domain_actions} = rules.possible_actions(rules_filters, rules_game, rules_state)
+    possible_actions = Enum.map(possible_domain_actions, fn a ->
+      %Action{
+        game_id: game.id,
+        player_id: Enum.find(game.players, fn p -> p.number == Domain.take(a, :player_number) end).id,
+        position: a |> Domain.take(:position) |> Domain.position_to_list(),
+        type: "take"
+      }
+    end)
+
     {
       :reply,
-      rules.possible_actions(rules_filters, rules_game, rules_state),
+      {:ok, possible_actions},
       state,
       @default_timeout
     }

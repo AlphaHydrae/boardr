@@ -26,7 +26,7 @@ defmodule BoardrApi.ControllerHelpers do
     |> render(assigns)
   end
 
-  def to_options(%Conn{} = conn) do
-    options(authorization_header: get_req_header(conn, "authorization"))
+  def to_options(%Conn{} = conn, opts \\ []) when is_list(opts) do
+    options(authorization_header: get_req_header(conn, "authorization"), filters: Keyword.get(opts, :filters, %{}))
   end
 end

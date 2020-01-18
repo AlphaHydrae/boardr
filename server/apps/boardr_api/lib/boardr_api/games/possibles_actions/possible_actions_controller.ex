@@ -1,54 +1,39 @@
 defmodule BoardrApi.Games.PossibleActionsController do
   use BoardrApi, :controller
 
-  alias Boardr.{Game, Repo}
-  alias Boardr.Gaming.GameServer
+  alias Boardr.Game
   alias BoardrApi.Games.PlayersController
+  alias BoardrRes.PossibleActionsCollection
+
+  import Boardr.Data, only: [to_list: 1]
+  import Boardr.Distributed, only: [distribute: 3]
 
   def index(%Conn{} = conn, %{"game_id" => game_id}) do
 
-    game = Repo.one!(from(g in Game, left_join: p in assoc(g, :players), preload: [players: p], where: g.id == ^game_id))
+    filters = %{game_id: game_id}
 
     filters = if player = conn.query_params["player"] do
-      player_urls = if is_list(player), do: player, else: [player]
-      player_ids = player_urls
+      player_ids = to_list(player)
       |> Enum.reduce([], fn player_url, acc ->
         case extract_path_params(player_url, PlayersController) do
           %{"game_id" => ^game_id, "id" => player_id} -> [ player_id | acc ]
-          _ -> acc
+          _ -> [ "" | acc ]
         end
       end)
 
-      # TODO: validate players exist
-      %{
-        player_ids: player_ids
-      }
+      Map.put(filters, :player_ids, player_ids)
     else
-      %{}
+      filters
     end
 
-    {:ok, possible_actions} = case game.state do
-      "playing" -> GameServer.possible_actions(game.id, filters)
-      _ -> {:ok, []}
+    with {:ok, {possible_actions, %Game{} = game}} <- distribute(PossibleActionsCollection, :retrieve, [to_options(conn, filters: filters)]) do
+      conn
+      |> put_resp_content_type("application/hal+json")
+      |> render(%{
+        embed: to_list(conn.query_params["embed"]),
+        game: game,
+        possible_actions: possible_actions
+      })
     end
-
-    conn
-    |> put_resp_content_type("application/hal+json")
-    |> render(%{
-      embed: to_list(conn.query_params["embed"]),
-      game: game,
-      possible_actions: possible_actions
-    })
-  end
-
-  # TODO: extract to utility module
-  defp to_list(value, default \\ [])
-
-  defp to_list(value, default) when is_list(value) and is_list(default) do
-    value
-  end
-
-  defp to_list(value, default) when is_list(default) do
-    if value, do: [value], else: default
   end
 end
