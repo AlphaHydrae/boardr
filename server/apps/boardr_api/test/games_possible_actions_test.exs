@@ -137,29 +137,7 @@ defmodule BoardrApi.GamesPossibleActionsTest do
           embedded
           |> assert_key(
             "boardr:game",
-            fn embedded_game ->
-              embedded_game
-
-              # HAL links
-              |> assert_hal_links(fn links ->
-                links
-                |> assert_hal_curies()
-                |> assert_hal_link("collection", test_api_url("/games"))
-                |> assert_hal_link("boardr:creator", test_api_url("/users/#{game.creator_id}"))
-                |> assert_hal_link("self", test_api_url("/games/#{game.id}"))
-                |> assert_hal_link("boardr:actions", test_api_url("/games/#{game.id}/actions"))
-                |> assert_hal_link("boardr:board", test_api_url("/games/#{game.id}/board"))
-                |> assert_hal_link("boardr:players", test_api_url("/games/#{game.id}/players"))
-                |> assert_hal_link("boardr:possible-actions", test_api_url("/games/#{game.id}/possible-actions"))
-              end)
-
-              # Properties
-              |> assert_key("createdAt", DateTime.to_iso8601(game.created_at))
-              |> assert_key("rules", "tic-tac-toe")
-              |> assert_key("settings", %{})
-              |> assert_key("state", "playing")
-              |> assert_key("updatedAt", DateTime.to_iso8601(game.updated_at))
-            end
+            &(assert_game_resource(&1, game))
           )
         else
           embedded

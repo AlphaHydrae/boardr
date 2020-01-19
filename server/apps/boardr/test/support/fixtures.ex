@@ -38,12 +38,15 @@ defmodule Boardr.Fixtures do
     end)
 
     %Game{
+      created_at: Keyword.get(properties, :created_at),
       creator_id: creator_id,
       rules: Keyword.get(properties, :rules, "tic-tac-toe"),
       settings: %{},
-      state: Keyword.get(properties, :state, "waiting_for_players")
+      state: Keyword.get(properties, :state, "waiting_for_players"),
+      updated_at: Keyword.get(properties, :updated_at)
     }
     |> Repo.insert!(returning: [:id])
+    |> Repo.preload(:creator)
   end
 
   def identity(properties \\ []) when is_list(properties) do

@@ -6,6 +6,7 @@ defmodule BoardrRes.PossibleActionsCollection do
 
   @behaviour BoardrRes.Collection
 
+  @impl true
   def retrieve(options() = opts) do
     context(options: opts) |> determine_possible_actions()
   end

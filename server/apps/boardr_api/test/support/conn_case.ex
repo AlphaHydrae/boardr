@@ -39,6 +39,7 @@ defmodule BoardrApi.ConnCase do
           test_api_url_regex: 1,
           verify_jwt_token!: 1
         ]
+      import BoardrApi.DomainAssertions
 
       import QueryCounter, only: [count_queries: 1, counted_queries: 0]
 

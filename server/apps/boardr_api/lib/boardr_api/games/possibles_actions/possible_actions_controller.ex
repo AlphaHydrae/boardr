@@ -17,7 +17,7 @@ defmodule BoardrApi.Games.PossibleActionsController do
       |> Enum.reduce([], fn player_url, acc ->
         case extract_path_params(player_url, PlayersController) do
           %{"game_id" => ^game_id, "id" => player_id} -> [ player_id | acc ]
-          _ -> [ "" | acc ]
+          _ -> [ "00000000-0000-0000-0000-000000000000" | acc ]
         end
       end)
 

@@ -22,39 +22,31 @@ defmodule BoardrApi.GamesController do
     end
   end
 
-  def index(%Conn{} = conn, _) do
+  def index(%Conn{} = conn, params) when is_map(params) do
+    filters = %{
+      state: params["state"]
+    }
 
-    query = from g in Game, select: g, group_by: g.id, order_by: [desc: g.created_at]
-
-    query = if state = conn.query_params["state"] do
-      from q in query, where: q.state == ^state
-    else
-      query
-    end
-
-    query = if player = conn.query_params["player"] do
+    filters = if player = conn.query_params["player"] do
       player_urls = if is_list(player), do: player, else: [player]
       player_ids = player_urls
       |> Enum.reduce([], fn player_url, acc ->
         case extract_path_params(player_url, PlayersController) do
           %{"id" => player_id} -> [ player_id | acc ]
-          _ -> acc
+          _ -> [ "00000000-0000-0000-0000-000000000000" | acc ]
         end
       end)
 
-      # TODO: validate players exist
-      from q in query, join: p in assoc(q, :players), where: p.id in ^player_ids
+      Map.put(filters, :player_ids, player_ids)
     else
-      query
+      filters
     end
 
-    games = query
-    |> Repo.all()
-    |> Repo.preload([:winners])
-
-    conn
-    |> put_resp_content_type("application/hal+json")
-    |> render(%{games: games})
+    with {:ok, games} <- distribute(GamesCollection, :retrieve, [to_options(conn, filters: filters)]) do
+      conn
+      |> put_resp_content_type("application/hal+json")
+      |> render(%{games: games})
+    end
   end
 
   def show(%Conn{} = conn, %{"id" => id}) when is_binary(id) do
