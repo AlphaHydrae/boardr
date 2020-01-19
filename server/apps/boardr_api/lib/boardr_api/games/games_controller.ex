@@ -4,8 +4,6 @@ defmodule BoardrApi.GamesController do
   alias Boardr.Game
   alias BoardrRest.GamesService
 
-  require BoardrRes
-
   def create(%Conn{} = conn, _params) do
     with {:ok, %Game{} = game} <- distribute_to_service(conn, GamesService, :create) do
       conn

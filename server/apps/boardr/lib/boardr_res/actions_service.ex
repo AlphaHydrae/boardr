@@ -1,20 +1,29 @@
-defmodule BoardrRes.ActionsCollection do
-  use BoardrRes
+defmodule BoardrRest.ActionsService do
+  use BoardrRest
 
   alias Boardr.Player
   alias Boardr.Gaming.GameServer
 
-  @behaviour BoardrRes.Collection
+  @behaviour BoardrRest.Service
 
   @impl true
-  def create(representation, options() = opts) when is_map(representation) do
-    representation
-    |> to_context(opts)
-    |> authorize(:'api:actions:create')
-    >>> play()
+  def handle_operation(operation(type: :create) = op) do
+    op
+    |> authorize(:"api:actions:create") >>>
+      parse_json_object_entity() >>>
+      play()
   end
 
-  def play(context(assigns: %{claims: %{"sub" => user_id}}, representation: %{"game_id" => game_id} = rep)) when is_binary(user_id) and is_binary(game_id) do
+  def play(
+        operation(
+          options: %{
+            authorization_claims: %{"sub" => user_id},
+            game_id: game_id,
+            parsed_entity: entity
+          }
+        )
+      )
+      when is_binary(user_id) and is_binary(game_id) and is_map(entity) do
     {player_id, game_state} =
       Repo.one!(
         from(p in Player,
@@ -24,7 +33,7 @@ defmodule BoardrRes.ActionsCollection do
         )
       )
 
-    play(game_id, game_state, player_id, Map.delete(rep, "game_id"))
+    play(game_id, game_state, player_id, entity)
   end
 
   defp play(game_id, "waiting_for_players", player_id, action_properties)

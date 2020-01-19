@@ -1,21 +1,18 @@
-defmodule BoardrRes.PlayersCollection do
-  use BoardrRes
+defmodule BoardrRest.PlayersService do
+  use BoardrRest
 
   alias Boardr.Game
   alias Boardr.Gaming.LobbyServer
 
-  @behaviour BoardrRes.Collection
+  @behaviour BoardrRest.Service
 
   @impl true
-  def create(representation, options() = opts) when is_map(representation) do
-    representation |> to_context(opts) |> authorize(:"api:players:create") >>> join_game()
+  def handle_operation(operation(type: :create) = op) do
+    op |> authorize(:"api:players:create") >>> join_game()
   end
 
   def join_game(
-        context(
-          assigns: %{claims: %{"sub" => user_id}},
-          representation: %{"game_id" => game_id}
-        )
+        operation(options: %{authorization_claims: %{"sub" => user_id}, game_id: game_id})
       )
       when is_binary(user_id) and is_binary(game_id) do
     game_state = Repo.one!(from(g in Game, select: g.state, where: g.id == ^game_id))

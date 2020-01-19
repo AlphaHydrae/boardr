@@ -1,10 +1,9 @@
 defmodule BoardrRest.GamesService do
   use BoardrRest
 
-  alias Boardr.{Game, Player}
+  alias Boardr.{Data, Game, Player}
 
   @behaviour BoardrRest.Service
-  @uuid_regexp ~r(^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$)
 
   @impl true
   def handle_operation(operation(type: :create) = op) do
@@ -53,14 +52,12 @@ defmodule BoardrRest.GamesService do
       end
 
     query =
-      if player = Map.get(filters, "player") do
-        player_urls = if is_list(player), do: player, else: [player]
-
+      if player_urls = Map.get(filters, "player") do
         # FIXME: improve URL parsing
         player_ids =
-          player_urls
+          Data.to_list(player_urls)
           |> Enum.map(fn url -> url |> String.split("/") |> List.last() end)
-          |> Enum.map(fn id -> if String.match?(id, @uuid_regexp), do: id, else: false end)
+          |> Enum.map(fn id -> if Data.uuid?(id), do: id, else: false end)
 
         if Enum.all?(player_ids, &(&1)) do
           from(q in query, join: p in assoc(q, :players), where: p.id in ^player_ids)

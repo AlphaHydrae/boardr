@@ -2,13 +2,11 @@ defmodule BoardrApi.UsersController do
   use BoardrApi, :controller
 
   alias Boardr.Auth.User
-  alias BoardrRes.UsersCollection
-
-  import Boardr.Distributed, only: [distribute: 3]
+  alias BoardrRest.UsersService
 
   def create(%Conn{} = conn, body) when is_map(body) do
     # FIXME: only allow local identity with unverified email in dev
-    with {:ok, %User{} = user} <- distribute(UsersCollection, :create, [body, to_options(conn)]) do
+    with {:ok, %User{} = user} <- distribute_to_service(conn, UsersService, :create) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.users_url(Endpoint, :show, user.id))
