@@ -4,7 +4,7 @@ import random
 import threading
 import uuid
 
-logger = logging.getLogger('scenario')
+# logger = logging.getLogger('scenario')
 
 class PlayGame(TaskSet):
   @task(1)
@@ -166,7 +166,7 @@ class NormalPlayerBehavior(TaskSet):
 
   def on_stop(self):
     player_url = self.locust.data["player_url"]
-    logger.info(f'Player {player_url} has stopped playing')
+    # logger.info(f'Player {player_url} has stopped playing')
     if player_url:
       with self.locust._lock:
         self.locust.former_players.append({
