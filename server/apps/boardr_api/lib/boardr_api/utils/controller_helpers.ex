@@ -5,11 +5,9 @@ defmodule BoardrApi.ControllerHelpers do
   alias Plug.Conn
 
   import Boardr.Distributed, only: [distribute: 3]
-  import BoardrRes, only: [options: 1]
   import Phoenix.Controller, only: [render: 2]
   import Plug.Conn, only: [get_req_header: 2, put_resp_content_type: 2]
 
-  require BoardrRes
   require BoardrRest
 
   def extract_path_params(url, plug) do
@@ -26,10 +24,6 @@ defmodule BoardrApi.ControllerHelpers do
     conn
     |> put_resp_content_type("application/hal+json")
     |> render(assigns)
-  end
-
-  def to_options(%Conn{} = conn, opts \\ []) when is_list(opts) do
-    options(authorization_header: get_req_header(conn, "authorization"), filters: Keyword.get(opts, :filters, %{}))
   end
 
   def distribute_to_service(%Conn{} = conn, service, type, options \\ %{})
