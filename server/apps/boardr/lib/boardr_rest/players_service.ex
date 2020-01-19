@@ -2,7 +2,7 @@ defmodule BoardrRest.PlayersService do
   use BoardrRest
 
   alias Boardr.Game
-  alias Boardr.Gaming.LobbyServer
+  alias Boardr.Gaming.GameServer
 
   @behaviour BoardrRest.Service
 
@@ -21,7 +21,7 @@ defmodule BoardrRest.PlayersService do
 
   defp join_game(game_id, "waiting_for_players", user_id)
        when is_binary(game_id) and is_binary(user_id) do
-    LobbyServer.join(game_id, user_id)
+    GameServer.join(game_id, user_id)
   end
 
   defp join_game(game_id, game_state, user_id)

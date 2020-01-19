@@ -21,6 +21,10 @@ defmodule Boardr.Gaming.GameServer do
     call_swarm(game_id, :board)
   end
 
+  def join(game_id, user_id) do
+    call_swarm(game_id, {:join, user_id})
+  end
+
   def play(game_id, player_id, action_properties)
       when is_binary(game_id) and is_binary(player_id) and is_map(action_properties) do
     call_swarm(game_id, {:play, player_id, action_properties})
@@ -40,13 +44,79 @@ defmodule Boardr.Gaming.GameServer do
 
   @impl true
   def handle_call(
-    :board,
-    _from,
-    %State{rules: rules, rules_game: rules_game, rules_state: rules_state} = state
-  ) do
+        :board,
+        _from,
+        %State{rules: rules, rules_game: rules_game, rules_state: rules_state} = state
+      ) do
     {
       :reply,
       rules.board(rules_game, rules_state),
+      state,
+      @default_timeout
+    }
+  end
+
+  @impl true
+  def handle_call(
+        {:join, user_id},
+        _from,
+        %State{
+          game: %Game{id: game_id, players: players, state: "waiting_for_players"} = game,
+          rules_game: Domain.game(players: domain_players) = rules_game
+        } = state
+      )
+      when is_binary(user_id) do
+    player_numbers = Enum.map(players, & &1.number)
+
+    next_available_player_number =
+      Enum.reduce_while(player_numbers, 1, fn n, acc ->
+        if n > acc, do: {:halt, acc}, else: {:cont, acc + 1}
+      end)
+
+    player =
+      %Player{game_id: game_id, user_id: user_id}
+      |> Player.changeset(%{number: next_available_player_number})
+
+    {:ok, %{game: updated_game, player: created_player}} =
+      Multi.new()
+      |> Multi.insert(:player, player, returning: [:id])
+      |> Multi.run(:game, fn repo, %{player: inserted_player} ->
+        if inserted_player.number == 2 do
+          %Game{id: game_id}
+          |> Game.changeset(%{state: "playing"})
+          |> repo.update()
+        else
+          {:ok, game}
+        end
+      end)
+      |> Repo.transaction()
+
+    new_players = players ++ [created_player]
+    new_domain_players = domain_players ++ [Domain.player(number: created_player.number)]
+
+    {
+      :reply,
+      {:ok, created_player},
+      %State{
+        state
+        | game: %Game{game | players: new_players, state: updated_game.state},
+          rules_game:
+            Domain.game(rules_game, players: new_domain_players, state: updated_game.state)
+      },
+      @default_timeout
+    }
+  end
+
+  @impl true
+  def handle_call(
+        {:join, user_id},
+        _from,
+        %State{} = state
+      )
+      when is_binary(user_id) do
+    {
+      :reply,
+      {:error, {:game_error, :game_already_started}},
       state,
       @default_timeout
     }
@@ -71,7 +141,8 @@ defmodule Boardr.Gaming.GameServer do
              rules_game,
              rules_state
            ),
-         {:ok, %{action: persisted_action, game: persisted_game}} <- persist_action(action, player, game, game_result) do
+         {:ok, %{action: persisted_action, game: persisted_game}} <-
+           persist_action(action, player, game, game_result) do
       {
         :reply,
         {:ok, persisted_action},
@@ -86,28 +157,39 @@ defmodule Boardr.Gaming.GameServer do
 
   @impl true
   def handle_call(
-    {:possible_actions, filters},
-    _from,
-    %State{game: game, rules: rules, rules_game: rules_game, rules_state: rules_state} = state
-  ) when is_map(filters) do
-
+        {:possible_actions, filters},
+        _from,
+        %State{game: game, rules: rules, rules_game: rules_game, rules_state: rules_state} = state
+      )
+      when is_map(filters) do
     rules_filters = %{}
 
-    rules_filters = if player_ids = Map.get(filters, :player_ids) do
-      Map.put(rules_filters, :players, game.players |> Enum.filter(fn player -> player.id in player_ids end) |> Enum.map(&(&1.number)))
-    else
-      rules_filters
-    end
+    rules_filters =
+      if player_ids = Map.get(filters, :player_ids) do
+        Map.put(
+          rules_filters,
+          :players,
+          game.players
+          |> Enum.filter(fn player -> player.id in player_ids end)
+          |> Enum.map(& &1.number)
+        )
+      else
+        rules_filters
+      end
 
-    {:ok, possible_domain_actions} = rules.possible_actions(rules_filters, rules_game, rules_state)
-    possible_actions = Enum.map(possible_domain_actions, fn a ->
-      %Action{
-        game_id: game.id,
-        player_id: Enum.find(game.players, fn p -> p.number == Domain.take(a, :player_number) end).id,
-        position: a |> Domain.take(:position) |> Domain.position_to_list(),
-        type: "take"
-      }
-    end)
+    {:ok, possible_domain_actions} =
+      rules.possible_actions(rules_filters, rules_game, rules_state)
+
+    possible_actions =
+      Enum.map(possible_domain_actions, fn a ->
+        %Action{
+          game_id: game.id,
+          player_id:
+            Enum.find(game.players, fn p -> p.number == Domain.take(a, :player_number) end).id,
+          position: a |> Domain.take(:position) |> Domain.position_to_list(),
+          type: "take"
+        }
+      end)
 
     {
       :reply,
@@ -119,19 +201,19 @@ defmodule Boardr.Gaming.GameServer do
 
   @impl true
   def handle_call(
-    {:swarm, :begin_handoff},
-    _from,
-    %State{game: %Game{id: game_id}} = state
-  ) do
+        {:swarm, :begin_handoff},
+        _from,
+        %State{game: %Game{id: game_id}} = state
+      ) do
     Logger.debug("Swarm beginning handoff of game server for game #{game_id}")
     {:reply, :restart, state}
   end
 
   @impl true
   def handle_cast(
-    {:swarm, :resolve_conflict, _delay},
-    %State{} = state
-  ) do
+        {:swarm, :resolve_conflict, _delay},
+        %State{} = state
+      ) do
     {:noreply, state}
   end
 
@@ -154,7 +236,13 @@ defmodule Boardr.Gaming.GameServer do
       game.players
       |> Enum.map(fn %Player{number: player_number} -> Domain.player(number: player_number) end)
 
-    rules_game = Domain.game(players: rules_players, rules: game.rules, settings: game.settings, state: :playing)
+    rules_game =
+      Domain.game(
+        players: rules_players,
+        rules: game.rules,
+        settings: game.settings,
+        state: :playing
+      )
 
     {:ok, {rules_state, number_of_actions}} =
       Repo.transaction(fn ->
@@ -184,7 +272,8 @@ defmodule Boardr.Gaming.GameServer do
 
     Logger.info("Initialized game server for game #{game_id} with #{number_of_actions} actions")
 
-    {:noreply, %State{game: game, rules: rules, rules_game: rules_game, rules_state: rules_state}, @default_timeout}
+    {:noreply, %State{game: game, rules: rules, rules_game: rules_game, rules_state: rules_state},
+     @default_timeout}
   end
 
   @impl true
@@ -195,9 +284,9 @@ defmodule Boardr.Gaming.GameServer do
 
   @impl true
   def handle_info(
-    {:swarm, :die},
-    %State{game: %Game{id: game_id}} = state
-  ) do
+        {:swarm, :die},
+        %State{game: %Game{id: game_id}} = state
+      ) do
     Logger.info("Swarm shutting down game server for game #{game_id}")
     {:noreply, state}
   end
@@ -233,9 +322,20 @@ defmodule Boardr.Gaming.GameServer do
     Game.changeset(game, %{state: "draw", updated_at: action_performed_at})
   end
 
-  defp game_result_changeset(%Game{players: players} = game, %Action{performed_at: action_performed_at}, {:win, winners}) when is_list(winners) do
+  defp game_result_changeset(
+         %Game{players: players} = game,
+         %Action{performed_at: action_performed_at},
+         {:win, winners}
+       )
+       when is_list(winners) do
     Game.changeset(game, %{state: "win", updated_at: action_performed_at})
-    |> Changeset.put_assoc(:winners, winners |> Enum.map(fn player_number -> players |> Enum.find(fn player -> player.number === player_number end) end))
+    |> Changeset.put_assoc(
+      :winners,
+      winners
+      |> Enum.map(fn player_number ->
+        players |> Enum.find(fn player -> player.number === player_number end)
+      end)
+    )
   end
 
   defp action_record_to_struct(Domain.take(position: position), game_id, player_id)
@@ -254,7 +354,8 @@ defmodule Boardr.Gaming.GameServer do
     raise "Game server process not found: #{inspect(error_details)})}"
   end
 
-  defp call_swarm(game_id, request, retry, _error_details) when is_binary(game_id) and is_integer(retry) and retry >= 0 do
+  defp call_swarm(game_id, request, retry, _error_details)
+       when is_binary(game_id) and is_integer(retry) and retry >= 0 do
     {:ok, pid} =
       Swarm.whereis_or_register_name(
         "game:#{game_id}",
@@ -271,16 +372,20 @@ defmodule Boardr.Gaming.GameServer do
       GenServer.call(pid, request, 10_000)
     catch
       :exit, {:noproc, details} ->
-        Logger.warn("Trying to start offline game server for game #{game_id} (retries left: #{retry - 1})")
+        Logger.warn(
+          "Trying to start offline game server for game #{game_id} (retries left: #{retry - 1})"
+        )
+
         Swarm.Tracker.untrack(pid)
         call_swarm(game_id, request, retry - 1, details)
     end
   end
 
   defp get_rules!(rules_name) when is_binary(rules_name) do
-    factory = :boardr
-    |> Application.fetch_env!(Boardr)
-    |> Keyword.fetch!(:rules_factory)
+    factory =
+      :boardr
+      |> Application.fetch_env!(Boardr)
+      |> Keyword.fetch!(:rules_factory)
 
     factory.get_rules(rules_name)
   end

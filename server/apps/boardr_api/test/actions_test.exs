@@ -8,18 +8,8 @@ defmodule BoardrApi.ActionsTest do
 
   @valid_properties %{"type" => "take", "position" => [0, 0]}
 
-  setup do
-    game = Fixtures.game(state: "playing")
-
-    %{
-      game: game,
-      first_player: Fixtures.player(game: game),
-      second_player: Fixtures.player(game: game, number: 2)
-    }
-  end
-
   describe "POST /api/games/:gameId/actions" do
-    setup :count_queries
+    setup [:create_playing_game, :count_queries]
 
     test "play the first move in a tic-tac-toe game", %{
       conn: %Conn{} = conn,
@@ -75,5 +65,78 @@ defmodule BoardrApi.ActionsTest do
       assert updated_game.state == "playing"
       assert Map.drop(game, [:creator, :state, :updated_at]) == Map.drop(updated_game, [:creator, :state, :updated_at])
     end
+  end
+
+  describe "with a game that is waiting for players" do
+    setup [:create_waiting_game, :count_queries]
+
+    test "POST /api/games/:gameId/actions returns an error", %{
+      conn: %Conn{} = conn,
+      game: game,
+      first_player: %Player{user: user}
+    } do
+      body =
+        conn
+        |> put_req_header("authorization", "Bearer #{generate_token!(user)}")
+        |> post_json(api_path(game), @valid_properties)
+        |> json_response(409)
+
+      assert_api_map(body)
+      |> assert_key("gameError", "game_not_started")
+      |> assert_key("status", 409)
+      |> assert_key("title", "The request cannot be completed due to a conflict with the current state of the resource.")
+      |> assert_key("type", test_api_url("/problems/game-error"))
+    end
+  end
+
+  describe "with a game that is finished" do
+    setup [:create_finished_game, :count_queries]
+
+    test "POST /api/games/:gameId/actions returns an error", %{
+      conn: %Conn{} = conn,
+      game: game,
+      first_player: %Player{user: user}
+    } do
+      body =
+        conn
+        |> put_req_header("authorization", "Bearer #{generate_token!(user)}")
+        |> post_json(api_path(game), @valid_properties)
+        |> json_response(409)
+
+      assert_api_map(body)
+      |> assert_key("gameError", "game_finished")
+      |> assert_key("status", 409)
+      |> assert_key("title", "The request cannot be completed due to a conflict with the current state of the resource.")
+      |> assert_key("type", test_api_url("/problems/game-error"))
+    end
+  end
+
+  def create_finished_game(context) when is_map(context) do
+    game = Fixtures.game(state: "draw")
+
+    %{
+      game: game,
+      first_player: Fixtures.player(game: game),
+      second_player: Fixtures.player(game: game, number: 2)
+    }
+  end
+
+  def create_playing_game(context) when is_map(context) do
+    game = Fixtures.game(state: "playing")
+
+    %{
+      game: game,
+      first_player: Fixtures.player(game: game),
+      second_player: Fixtures.player(game: game, number: 2)
+    }
+  end
+
+  def create_waiting_game(context) when is_map(context) do
+    game = Fixtures.game()
+
+    %{
+      game: game,
+      first_player: Fixtures.player(game: game)
+    }
   end
 end
