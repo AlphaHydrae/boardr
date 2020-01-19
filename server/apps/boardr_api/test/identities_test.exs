@@ -1,14 +1,14 @@
 defmodule BoardrApi.IdentitiesTest do
-  use BoardrApi.ConnCase, async: true
+  use BoardrApi.ConnCase
 
   alias Boardr.Auth.Identity
 
   @api_path "/api/identities"
   @valid_properties %{"email" => "jdoe@example.com", "provider" => "local"}
 
-  setup :count_queries
-
   describe "POST /api/identities" do
+    setup [:clean_database, :count_queries]
+
     test "create a local identity", %{
       conn: %Conn{} = conn,
       test_start: %DateTime{} = test_start

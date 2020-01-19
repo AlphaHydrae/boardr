@@ -30,6 +30,8 @@ defmodule BoardrApi.ConnCase do
       import BoardrApi.Assertions
       import BoardrApi.ConnCaseHelpers,
         only: [
+          clean_database: 0,
+          clean_database: 1,
           generate_token!: 1,
           just_after: 2,
           just_after: 3,

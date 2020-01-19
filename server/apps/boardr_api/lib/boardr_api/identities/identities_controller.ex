@@ -1,17 +1,17 @@
 defmodule BoardrApi.IdentitiesController do
   use BoardrApi, :controller
 
-  alias Boardr.{Auth,Repo}
-  alias Boardr.Auth.{Identity,User}
+  alias Boardr.Repo
+  alias Boardr.Auth.Identity
+  alias BoardrRes.IdentitiesCollection
+
+  import Boardr.Distributed, only: [distribute: 3]
 
   def create(%Conn{} = conn, identity_properties) when is_map(identity_properties) do
-    with {:ok, token} <- Authenticate.get_authorization_token(conn, false),
-         {:ok, identity} <- Auth.ensure_identity(identity_properties, token),
-         claims = create_identity_claims(identity),
-         {:ok, jwt} <- Auth.Token.generate(claims) do
+    with {:ok, %Identity{} = identity} <- distribute(IdentitiesCollection, :create, [identity_properties, to_options(conn)]) do
       conn
       |> put_identity_created(identity)
-      |> render_hal(%{identity: identity, token: jwt})
+      |> render_hal(%{identity: identity})
     end
   end
 
@@ -27,20 +27,6 @@ defmodule BoardrApi.IdentitiesController do
 
     conn
     |> render_hal(%{identity: identity})
-  end
-
-  defp create_identity_claims(%Identity{id: id, user: %User{}}) do
-    %{
-      scope: "api",
-      sub: id
-    }
-  end
-
-  defp create_identity_claims(%Identity{id: id, user: nil}) do
-    %{
-      scope: "register",
-      sub: id
-    }
   end
 
   defp put_identity_created(%Conn{} = conn, %Identity{} = identity) do

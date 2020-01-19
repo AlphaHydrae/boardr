@@ -1,5 +1,5 @@
 defmodule BoardrApi.ConnCaseHelpers do
-  alias Boardr.Auth.User
+  alias Boardr.Auth.{Identity, User}
   alias Plug.Conn
 
   import ExUnit.Assertions
@@ -7,6 +7,12 @@ defmodule BoardrApi.ConnCaseHelpers do
   import Plug.Conn, only: [put_req_header: 3]
 
   @endpoint BoardrApi.Endpoint
+
+  def clean_database(context \\ %{}) when is_map(context) do
+    Boardr.Repo.delete_all(User)
+    Boardr.Repo.delete_all(Identity)
+    :ok
+  end
 
   def generate_token!(%User{id: user_id}) do
     {:ok, token} =

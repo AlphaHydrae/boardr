@@ -17,8 +17,8 @@ defmodule BoardrApi.IdentitiesView do
     |> put_hal_self_link(:identities_url, [:index])
   end
 
-  def render("show.json", %{identity: %Identity{} = identity, token: token}) do
-    Map.merge(render("show.json", %{identity: identity}), %{
+  def render("show.json", %{identity: %Identity{token: token} = identity}) when is_binary(token) do
+    Map.merge(render("show.json", %{identity: %Identity{identity | token: nil}}), %{
       _embedded: %{
         'boardr:token': %{
           value: token

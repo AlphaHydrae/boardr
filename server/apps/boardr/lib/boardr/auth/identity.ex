@@ -20,6 +20,7 @@ defmodule Boardr.Auth.Identity do
     field :last_seen_at, :utc_datetime_usec
     field :provider, :string
     field :provider_id, :string
+    field :token, :string, virtual: true
 
     timestamps inserted_at: :created_at
   end

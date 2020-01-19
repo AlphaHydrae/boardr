@@ -24,23 +24,27 @@ defmodule BoardrRes.Auth do
     >>> verify_scopes(required_scopes)
   end
 
-  defp get_bearer_token(context() = ctx, false) do
+  def get_bearer_token(context() = ctx, false) do
     {:ok, ctx}
   end
 
-  defp get_bearer_token(context(options: options(authorization_header: [])), true) do
+  def get_bearer_token(context(options: options(authorization_header: nil)), true) do
     {:error, :auth_header_missing}
   end
 
-  defp get_bearer_token(context(options: options(authorization_header: header_values)), true) when length(header_values) >= 2 do
-    {:error, :auth_header_duplicated}
+  def get_bearer_token(context(options: options(authorization_header: [])), true) do
+    {:error, :auth_header_missing}
   end
 
-  defp get_bearer_token(context(options: options(authorization_header: [header_value])) = ctx, true) when is_binary(header_value) do
+  def get_bearer_token(context(options: options(authorization_header: [header_value])) = ctx, true) when is_binary(header_value) do
     case String.split(header_value, " ", parts: 2) do
       [ _, token ] -> assign(ctx, :token, token)
       _ -> {:error, :auth_header_malformed}
     end
+  end
+
+  def get_bearer_token(context(options: options(authorization_header: header_values)), true) when is_list(header_values) do
+    {:error, :auth_header_duplicated}
   end
 
   defp get_missing_scopes(%MapSet{} = scopes, %MapSet{} = required_scopes) do
