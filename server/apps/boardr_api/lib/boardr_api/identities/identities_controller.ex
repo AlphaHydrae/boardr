@@ -3,12 +3,12 @@ defmodule BoardrApi.IdentitiesController do
 
   alias Boardr.Repo
   alias Boardr.Auth.Identity
-  alias BoardrRes.IdentitiesCollection
+  alias BoardrRest.IdentitiesService
 
-  import Boardr.Distributed, only: [distribute: 3]
+  require BoardrRest
 
   def create(%Conn{} = conn, identity_properties) when is_map(identity_properties) do
-    with {:ok, %Identity{} = identity} <- distribute(IdentitiesCollection, :create, [identity_properties, to_options(conn)]) do
+    with {:ok, %Identity{} = identity} <- distribute_to_service(conn, IdentitiesService, :create) do
       conn
       |> put_identity_created(identity)
       |> render_hal(%{identity: identity})
@@ -23,7 +23,7 @@ defmodule BoardrApi.IdentitiesController do
   end
 
   def show(%Conn{} = conn, %{"id" => id}) when is_binary(id) do
-    identity = Repo.get! Identity, id
+    identity = Repo.get!(Identity, id)
 
     conn
     |> render_hal(%{identity: identity})

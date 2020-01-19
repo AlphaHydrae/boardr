@@ -2,18 +2,12 @@ defmodule BoardrApi.GamesController do
   use BoardrApi, :controller
 
   alias Boardr.Game
-  alias BoardrApi.Games.PlayersController
-  alias BoardrRes.GamesCollection
-
-  import Boardr.Distributed, only: [distribute: 3]
+  alias BoardrRest.GamesService
 
   require BoardrRes
 
-  def create(
-    %Conn{} = conn,
-    game_properties
-  ) when is_map(game_properties) do
-    with {:ok, %Game{} = game} <- distribute(GamesCollection, :create, [game_properties, to_options(conn)]) do
+  def create(%Conn{} = conn, _params) do
+    with {:ok, %Game{} = game} <- distribute_to_service(conn, GamesService, :create) do
       conn
       |> put_status(201)
       |> put_resp_content_type("application/hal+json")
@@ -23,26 +17,7 @@ defmodule BoardrApi.GamesController do
   end
 
   def index(%Conn{} = conn, params) when is_map(params) do
-    filters = %{
-      state: params["state"]
-    }
-
-    filters = if player = conn.query_params["player"] do
-      player_urls = if is_list(player), do: player, else: [player]
-      player_ids = player_urls
-      |> Enum.reduce([], fn player_url, acc ->
-        case extract_path_params(player_url, PlayersController) do
-          %{"id" => player_id} -> [ player_id | acc ]
-          _ -> [ "00000000-0000-0000-0000-000000000000" | acc ]
-        end
-      end)
-
-      Map.put(filters, :player_ids, player_ids)
-    else
-      filters
-    end
-
-    with {:ok, games} <- distribute(GamesCollection, :retrieve, [to_options(conn, filters: filters)]) do
+    with {:ok, games} <- distribute_to_service(conn, GamesService, :retrieve) do
       conn
       |> put_resp_content_type("application/hal+json")
       |> render(%{games: games})
@@ -50,8 +25,9 @@ defmodule BoardrApi.GamesController do
   end
 
   def show(%Conn{} = conn, %{"id" => id}) when is_binary(id) do
-    game = Repo.get!(Game, id)
-    |> Repo.preload([:winners])
+    game =
+      Repo.get!(Game, id)
+      |> Repo.preload([:winners])
 
     conn
     |> put_resp_content_type("application/hal+json")

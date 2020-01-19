@@ -4,11 +4,13 @@ defmodule BoardrApi.ControllerHelpers do
   alias BoardrApi.Router
   alias Plug.Conn
 
+  import Boardr.Distributed, only: [distribute: 3]
   import BoardrRes, only: [options: 1]
   import Phoenix.Controller, only: [render: 2]
   import Plug.Conn, only: [get_req_header: 2, put_resp_content_type: 2]
 
   require BoardrRes
+  require BoardrRest
 
   def extract_path_params(url, plug) do
     # TODO: check host, path, port & scheme match
@@ -28,5 +30,31 @@ defmodule BoardrApi.ControllerHelpers do
 
   def to_options(%Conn{} = conn, opts \\ []) when is_list(opts) do
     options(authorization_header: get_req_header(conn, "authorization"), filters: Keyword.get(opts, :filters, %{}))
+  end
+
+  def distribute_to_service(%Conn{} = conn, service, type, options \\ %{})
+       when is_atom(type) and is_map(options) do
+    with {:ok, op} <- to_rest_operation(conn, type, options) do
+      distribute(service, :handle_operation, [op])
+    end
+  end
+
+  defp to_rest_operation(%Conn{} = conn, type, options)
+       when is_atom(type) and is_map(options) do
+    {id, remaining_options} = Map.pop(options, :id)
+    authorization = conn |> get_req_header("authorization") |> List.first
+
+    with {:ok, entity, _} <- Plug.Conn.read_body(conn) do
+      {
+        :ok,
+        BoardrRest.operation(
+          type: type,
+          entity: entity,
+          id: id,
+          options: Map.put(remaining_options, :authorization, authorization),
+          query: conn.query_string
+        )
+      }
+    end
   end
 end
