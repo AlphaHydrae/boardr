@@ -9,10 +9,6 @@
 
 * Add indices
 
-## Distribution
-
-* https://github.com/bitwalker/swarm
-
 ## Testing
 
 * https://github.com/thoughtbot/ex_machina
@@ -22,6 +18,10 @@
 ### Load Testing
 
 * Roles: normal, maniac, interloper
+
+### Monitoring
+
+* https://github.com/shinyscorpion/wObserver
 
 # Error handling
 
