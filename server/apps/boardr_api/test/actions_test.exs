@@ -56,7 +56,7 @@ defmodule BoardrApi.ActionsTest do
         |> assert_key("performedAt", &(&1.subject |> just_after(test_start)))
 
       # Database changes
-      assert_db_queries(insert: 1, max_selects: 6, max_transactions: 2, update: 1)
+      assert_db_queries(insert: 1, max_transactions: 2, select: 4, update: 1)
       assert_in_db(Action, action_id, expected_action)
 
       # Make sure the game's state and last modification date were updated.

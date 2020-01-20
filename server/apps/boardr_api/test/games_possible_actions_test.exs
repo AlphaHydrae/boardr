@@ -40,7 +40,7 @@ defmodule BoardrApi.GamesPossibleActionsTest do
       assert_possible_actions(body, game, player1, @all_board_positions)
 
       # Database changes
-      assert_db_queries(max_selects: 6)
+      assert_db_queries(select: 4)
     end
 
     test "get possible actions midway through a tic-tac-toe game", %{
@@ -81,7 +81,7 @@ defmodule BoardrApi.GamesPossibleActionsTest do
       )
 
       # Database changes
-      assert_db_queries(max_selects: 6)
+      assert_db_queries(select: 4)
     end
 
     test "embed the game when retrieving possible actions", %{
@@ -102,7 +102,7 @@ defmodule BoardrApi.GamesPossibleActionsTest do
       assert_possible_actions(body, game, player1, @all_board_positions, embedded_game: true)
 
       # Database changes
-      assert_db_queries(max_selects: 6)
+      assert_db_queries(select: 4)
     end
   end
 

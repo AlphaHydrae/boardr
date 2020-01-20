@@ -258,7 +258,9 @@ defmodule Boardr.Gaming.GameServer do
           select: {a, p},
           where: a.game_id == ^game_id
         )
-        |> Repo.stream(max_rows: 100)
+        # FIXME: why does Repo.stream make 3 queries?
+        #|> Repo.stream(max_rows: 100)
+        |> Repo.all()
         |> Enum.reduce({nil, 0}, fn {action, player}, {current_rules_state, n} ->
           result =
             rules.play(

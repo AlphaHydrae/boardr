@@ -58,7 +58,7 @@ defmodule BoardrApi.GamesPlayersTest do
         |> assert_key_absent("settings")
 
       # Database changes
-      assert_db_queries(insert: 1, max_selects: 6, max_transactions: 2)
+      assert_db_queries(insert: 1, max_transactions: 2, select: 4)
       assert_in_db(Player, player_id, expected_player)
     end
 
@@ -111,7 +111,7 @@ defmodule BoardrApi.GamesPlayersTest do
         |> assert_key_absent("settings")
 
       # Database changes
-      assert_db_queries(insert: 1, max_selects: 6, max_transactions: 2, update: 1)
+      assert_db_queries(insert: 1, max_transactions: 2, select: 4, update: 1)
       assert_in_db(Player, player_id, expected_player)
 
       # Make sure the game's state and last modification date were updated.
@@ -154,7 +154,7 @@ defmodule BoardrApi.GamesPlayersTest do
       |> assert_key("type", test_api_url("/problems/game-error"))
 
       # Database changes
-      assert_db_queries(max_selects: 5)
+      assert_db_queries(select: 4)
     end
   end
 end

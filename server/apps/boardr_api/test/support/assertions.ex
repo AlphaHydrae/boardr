@@ -42,7 +42,8 @@ defmodule BoardrApi.Assertions do
       assert transactions[:begin] <= Map.get(transaction_options, :max_transactions, 1)
     end
 
-    {max_selects, remaining_expected} = Map.pop(remaining_expected, :max_selects, 1)
+    # FIXME: do not check :max_selects if :select is set
+    {max_selects, remaining_expected} = Map.pop(remaining_expected, :max_selects, Map.get(remaining_expected, :select, 1))
     if Map.has_key?(remaining_queries, :select) do
       assert remaining_queries.select <= max_selects
     end
