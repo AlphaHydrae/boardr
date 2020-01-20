@@ -1,37 +1,21 @@
-startup_message off
+source $HOME/.screenrc
 
-split
-split
-split
-focus down
-split -v
-focus down
-split -v
-focus down
-split -v
-
-focus top
-screen -t ouroboros ssh -t ubuntu@10.0.1.200 htop
-
-focus down
-screen -t cerberus ssh -t ubuntu@10.0.1.201 htop
-
-focus right
-screen -t tiamat ssh -t ubuntu@10.0.1.202 htop
-
-focus down
-focus left
-screen -t hydra ssh -t ubuntu@10.0.1.203 htop
-
-focus right
-screen -t basilisk ssh -t ubuntu@10.0.1.204 htop
-
-focus down
-focus left
-screen -t leviathan ssh -t ubuntu@10.0.1.205 htop
-
-focus right
-screen -t manticore ssh -t ubuntu@10.0.1.206 htop
-
-focus top
-focus left
+screen -t load 0
+stuff "TARGET_IP=\"10.0.1.200\" TARGET_HOST=\"boardr.cluster\" docker-compose up --build -d --force-recreate\012"
+screen -t api-logs 1
+stuff "ssh -t ubuntu@10.0.1.201 sudo journalctl -fu boardr_api\012"
+screen -t api 2
+stuff "ssh -t ubuntu@10.0.1.201 sudo su - boardr /srv/boardr_api/bin/boardr_api remote\012"
+screen -t shell 2
+stuff "ansible-playbook -D -vv -i inventory.yml -l db -t cleanup playbook.yml && ansible-playbook -D -vv -i inventory.yml -l api,workers -t build,deploy -e restart=true playbook.yml"
+screen -t w1 3
+stuff "ssh -t ubuntu@10.0.1.203 sudo su - boardr /srv/boardr/bin/boardr remote\012"
+screen -t w2 4
+stuff "ssh -t ubuntu@10.0.1.204 sudo su - boardr /srv/boardr/bin/boardr remote\012"
+screen -t w3 5
+stuff "ssh -t ubuntu@10.0.1.205 sudo su - boardr /srv/boardr/bin/boardr remote\012"
+screen -t w3 6
+stuff "ssh -t ubuntu@10.0.1.206 sudo su - boardr /srv/boardr/bin/boardr remote\012"
+screen -t db 7
+stuff "ssh -t ubuntu@10.0.1.202 sudo su - boardr /srv/boardr/bin/boardr remote\012"
+select shell

@@ -1,0 +1,37 @@
+startup_message off
+
+split
+split
+split
+focus down
+split -v
+focus down
+split -v
+focus down
+split -v
+
+focus top
+screen -t rp ssh -t ubuntu@10.0.1.200 htop
+
+focus down
+screen -t api ssh -t ubuntu@10.0.1.201 htop
+
+focus right
+screen -t db ssh -t ubuntu@10.0.1.202 htop
+
+focus down
+focus left
+screen -t web ssh -t ubuntu@10.0.1.203 htop
+
+focus right
+screen -t worker1 ssh -t ubuntu@10.0.1.204 htop
+
+focus down
+focus left
+screen -t worker2 ssh -t ubuntu@10.0.1.205 htop
+
+focus right
+screen -t worker3 ssh -t ubuntu@10.0.1.206 htop
+
+focus top
+focus left
