@@ -48,12 +48,7 @@ defmodule Boardr.Gaming.GameServer do
         _from,
         %State{rules: rules, rules_game: rules_game, rules_state: rules_state} = state
       ) do
-    {
-      :reply,
-      rules.board(rules_game, rules_state),
-      state,
-      @default_timeout
-    }
+    reply(rules.board(rules_game, rules_state), state)
   end
 
   @impl true
@@ -94,17 +89,15 @@ defmodule Boardr.Gaming.GameServer do
     new_players = players ++ [created_player]
     new_domain_players = domain_players ++ [Domain.player(number: created_player.number)]
 
-    {
-      :reply,
-      {:ok, created_player},
+    reply(
+      created_player,
       %State{
         state
         | game: %Game{game | players: new_players, state: updated_game.state},
           rules_game:
             Domain.game(rules_game, players: new_domain_players, state: updated_game.state)
-      },
-      @default_timeout
-    }
+      }
+    )
   end
 
   @impl true
@@ -114,25 +107,33 @@ defmodule Boardr.Gaming.GameServer do
         %State{} = state
       )
       when is_binary(user_id) do
-    {
-      :reply,
-      {:error, {:game_error, :game_already_started}},
-      state,
-      @default_timeout
-    }
+    game_error_reply(:game_already_started, state)
   end
 
   @impl true
   def handle_call(
-        {:play, player_id, action_properties},
+        {:play, user_id, action_properties},
         _from,
-        %State{game: game, rules: rules, rules_game: rules_game, rules_state: rules_state} = state
+        %State{game: %{state: "waiting_for_players"}} = state
       )
-      when is_binary(player_id) and is_map(action_properties) do
-    # TODO: check player not nil
-    player = game.players |> Enum.find(fn player -> player.id === player_id end)
+      when is_binary(user_id) and is_map(action_properties) do
+    game_error_reply(:game_not_started, state)
+  end
 
-    with {:ok, action, new_rules_state, game_result} <-
+  @impl true
+  def handle_call(
+        {:play, user_id, action_properties},
+        _from,
+        %State{
+          game: %Game{state: "playing"} = game,
+          rules: rules,
+          rules_game: rules_game,
+          rules_state: rules_state
+        } = state
+      )
+      when is_binary(user_id) and is_map(action_properties) do
+    with {:ok, player} <- get_player(game, user_id),
+         {:ok, action, new_rules_state, game_result} <-
            rules.play(
              Domain.take(
                player_number: player.number,
@@ -143,23 +144,28 @@ defmodule Boardr.Gaming.GameServer do
            ),
          {:ok, %{action: persisted_action, game: persisted_game}} <-
            persist_action(action, player, game, game_result) do
-      {
-        :reply,
-        {:ok, persisted_action},
-        %State{state | game: persisted_game, rules_state: new_rules_state},
-        @default_timeout
-      }
+      reply(persisted_action, %State{state | game: persisted_game, rules_state: new_rules_state})
     else
       error ->
-        {:reply, error, state, @default_timeout}
+        error_reply(error, state)
     end
+  end
+
+  @impl true
+  def handle_call(
+        {:play, user_id, action_properties},
+        _from,
+        %State{} = state
+      )
+      when is_binary(user_id) and is_map(action_properties) do
+    game_error_reply(:game_finished, state)
   end
 
   @impl true
   def handle_call(
         {:possible_actions, filters},
         _from,
-        %State{game: game, rules: rules, rules_game: rules_game, rules_state: rules_state} = state
+        %State{game: %Game{state: "playing"} = game, rules: rules, rules_game: rules_game, rules_state: rules_state} = state
       )
       when is_map(filters) do
     rules_filters = %{}
@@ -191,12 +197,12 @@ defmodule Boardr.Gaming.GameServer do
         }
       end)
 
-    {
-      :reply,
-      {:ok, possible_actions},
-      state,
-      @default_timeout
-    }
+    reply({possible_actions, game}, state)
+  end
+
+  @impl true
+  def handle_call({:possible_actions, filters}, _from, %State{game: game} = state) when is_map(filters) do
+    reply({[], game}, state)
   end
 
   @impl true
@@ -272,8 +278,11 @@ defmodule Boardr.Gaming.GameServer do
 
     Logger.info("Initialized game server for game #{game_id} with #{number_of_actions} actions")
 
-    {:noreply, %State{game: game, rules: rules, rules_game: rules_game, rules_state: rules_state},
-     @default_timeout}
+    {
+      :noreply,
+      %State{game: game, rules: rules, rules_game: rules_game, rules_state: rules_state},
+      @default_timeout
+    }
   end
 
   @impl true
@@ -381,6 +390,13 @@ defmodule Boardr.Gaming.GameServer do
     end
   end
 
+  defp get_player(%Game{players: players}, user_id) do
+    case Enum.find(players, fn p -> p.user_id == user_id end) do
+      nil -> {:error, {:game_error, :user_not_in_game}}
+      player -> {:ok, player}
+    end
+  end
+
   defp get_rules!(rules_name) when is_binary(rules_name) do
     factory =
       :boardr
@@ -388,5 +404,31 @@ defmodule Boardr.Gaming.GameServer do
       |> Keyword.fetch!(:rules_factory)
 
     factory.get_rules(rules_name)
+  end
+
+  def error_reply(err, %State{} = state) do
+    {
+      :reply,
+      {:error, err},
+      state,
+      @default_timeout
+    }
+  end
+
+  def game_error_reply(err, %State{} = state) do
+    error_reply({:game_error, err}, state)
+  end
+
+  def reply({:ok, value}, %State{} = state) do
+    reply(value, state)
+  end
+
+  def reply(value, %State{} = state) do
+    {
+      :reply,
+      {:ok, value},
+      state,
+      @default_timeout
+    }
   end
 end

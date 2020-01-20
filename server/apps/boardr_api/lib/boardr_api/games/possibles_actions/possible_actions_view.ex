@@ -3,7 +3,7 @@ defmodule BoardrApi.Games.PossibleActionsView do
 
   alias Boardr.{Action, Game}
 
-  def render("index.json", %{embed: embed, game: %Game{id: game_id} = game, possible_actions: possible_actions}) when is_list(embed) and is_binary(game_id) and is_list(possible_actions) do
+  def render("index.json", %{embed: embed, game: %Game{id: game_id} = game, possible_actions: possible_actions}) when is_list(embed) and is_list(possible_actions) do
     embedded = %{
       'boardr:possible-actions': render_many(possible_actions, __MODULE__, "show.json", as: :possible_action, embed: embed)
     }

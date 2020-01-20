@@ -22,7 +22,6 @@ defmodule BoardrApi do
       use Phoenix.Controller, namespace: BoardrApi
 
       alias Boardr.Repo
-      alias BoardrApi.Authenticate
       alias BoardrApi.Endpoint
       alias BoardrApi.HttpProblemDetails
       alias BoardrApi.Router

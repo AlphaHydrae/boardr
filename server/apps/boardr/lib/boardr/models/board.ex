@@ -1,11 +1,11 @@
 defmodule Boardr.Board do
   defstruct data: [],
             dimensions: [],
-            game: nil
+            game_id: nil
 
   @type t :: %Boardr.Board{
     data: List.t,
     dimensions: [integer()],
-    game: Boardr.Game.t
+    game_id: binary
   }
 end

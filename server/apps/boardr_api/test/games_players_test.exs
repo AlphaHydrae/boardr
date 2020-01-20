@@ -154,7 +154,7 @@ defmodule BoardrApi.GamesPlayersTest do
       |> assert_key("type", test_api_url("/problems/game-error"))
 
       # Database changes
-      assert_db_queries(max_selects: 1)
+      assert_db_queries(max_selects: 5)
     end
   end
 end

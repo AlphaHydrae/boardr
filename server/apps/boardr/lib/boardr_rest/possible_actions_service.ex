@@ -17,34 +17,24 @@ defmodule BoardrRest.PossibleActionsService do
     query = URI.decode_query(query_string)
     filters = %{}
 
-    filters = if player_urls = query["player"] do
-      # FIXME: improve URL parsing
-      player_ids =
-        Data.to_list(player_urls)
-        |> Enum.map(fn url -> url |> String.split("/") |> List.last() end)
-        |> Enum.map(fn id -> if Data.uuid?(id), do: id, else: false end)
+    player_ids = query
+    |> Map.get("player")
+    |> Data.to_list()
+    |> Enum.map(fn url -> url |> String.split("/") |> List.last() end)
+    |> Enum.map(fn id -> if Data.uuid?(id), do: id, else: "00000000-0000-0000-0000-000000000000" end)
 
-      if Enum.all?(player_ids, &(&1)) do
-        Map.put(filters, :player_ids, player_ids)
-      else
-        false
-      end
-    else
-      filters
-    end
+    filters = if length(player_ids) >= 1, do: Map.put(filters, :player_ids, player_ids), else: filters
 
-    game = Repo.get!(Game, game_id)
-    embed = Data.to_list(query["embed"])
-
-    cond do
-      filters && game.state == "playing" ->
-        with {:ok, possible_actions} <-
-               GameServer.possible_actions(game.id, Map.delete(filters, :game_id)) do
-          {:ok, {possible_actions, game, embed}}
-        end
-
-      true ->
-        {:ok, {[], game, embed}}
+    with {:ok, {possible_actions, %Game{} = game}} <-
+            GameServer.possible_actions(game_id, filters) do
+      {
+        :ok,
+        {
+          possible_actions,
+          game,
+          query["embed"] |> Data.to_list() |> Enum.uniq()
+        }
+      }
     end
   end
 end
