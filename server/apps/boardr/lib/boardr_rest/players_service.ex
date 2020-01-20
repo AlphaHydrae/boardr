@@ -1,7 +1,6 @@
 defmodule BoardrRest.PlayersService do
   use BoardrRest
 
-  alias Boardr.Game
   alias Boardr.Gaming.GameServer
 
   @behaviour BoardrRest.Service
