@@ -170,8 +170,11 @@ defmodule Boardr.Gaming.GameServer do
         state_record(state, game: persisted_game, rules_state: new_rules_state)
       )
     else
-      error ->
-        error_reply(error, state)
+      {:error, error} ->
+        case error do
+          {:game_error, game_error} -> game_error_reply(game_error, state)
+          other_error -> error_reply(other_error, state)
+        end
     end
   end
 
