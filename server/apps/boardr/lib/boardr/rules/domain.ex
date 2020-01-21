@@ -8,7 +8,7 @@ defmodule Boardr.Rules.Domain do
 
   @type game_state :: :waiting_for_players | :playing | :win | :draw
 
-  @type game :: record(:game, players: [player], rules: String.t(), settings: map | nil, state: game_state)
+  @type game :: record(:game, players: [player], rules: binary, settings: map | nil, state: game_state)
   Record.defrecord(:game, players: [], rules: nil, settings: nil, state: :waiting_for_player)
 
   @type player :: record(:player, number: pos_integer, settings: map | nil)

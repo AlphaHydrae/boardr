@@ -1,8 +1,7 @@
 defmodule Boardr.Gaming.GameServer do
   use GenServer
 
-  alias Boardr.{Action, Game, Player, Repo}
-  alias Boardr.Gaming.GameServer.State
+  alias Boardr.{Action, Game, Player, Repo, Rules}
   alias Boardr.Rules.Domain
   alias Ecto.{Changeset, Multi}
 
@@ -10,6 +9,10 @@ defmodule Boardr.Gaming.GameServer do
 
   require Boardr.Rules.Domain
   require Logger
+  require Record
+
+  @type game :: record(:state_record, game: Game.t | nil, rules: Rules.t, rules_game: Domain.game | nil, rules_state: map | nil)
+  Record.defrecord(:state_record, __MODULE__, game: nil, rules: nil, rules_game: nil, rules_state: nil)
 
   @default_timeout 5_000
 
@@ -46,7 +49,7 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
         :board,
         _from,
-        %State{rules: rules, rules_game: rules_game, rules_state: rules_state} = state
+        state_record(rules: rules, rules_game: rules_game, rules_state: rules_state) = state
       ) do
     reply(rules.board(rules_game, rules_state), state)
   end
@@ -55,10 +58,10 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
         {:join, user_id},
         _from,
-        %State{
+        state_record(
           game: %Game{id: game_id, players: players, state: "waiting_for_players"} = game,
           rules_game: Domain.game(players: domain_players) = rules_game
-        } = state
+        ) = state
       )
       when is_binary(user_id) do
     player_numbers = Enum.map(players, & &1.number)
@@ -91,12 +94,11 @@ defmodule Boardr.Gaming.GameServer do
 
     reply(
       created_player,
-      %State{
-        state
-        | game: %Game{game | players: new_players, state: updated_game.state},
-          rules_game:
-            Domain.game(rules_game, players: new_domain_players, state: updated_game.state)
-      }
+      state_record(
+        state,
+        game: %Game{game | players: new_players, state: updated_game.state},
+        rules_game: Domain.game(rules_game, players: new_domain_players, state: updated_game.state)
+      )
     )
   end
 
@@ -104,7 +106,7 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
         {:join, user_id},
         _from,
-        %State{} = state
+        state_record() = state
       )
       when is_binary(user_id) do
     game_error_reply(:game_already_started, state)
@@ -114,7 +116,7 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
         {:play, user_id, action_properties},
         _from,
-        %State{game: %{state: "waiting_for_players"}} = state
+        state_record(game: %{state: "waiting_for_players"}) = state
       )
       when is_binary(user_id) and is_map(action_properties) do
     game_error_reply(:game_not_started, state)
@@ -124,12 +126,12 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
         {:play, user_id, action_properties},
         _from,
-        %State{
+        state_record(
           game: %Game{state: "playing"} = game,
           rules: rules,
           rules_game: rules_game,
           rules_state: rules_state
-        } = state
+        ) = state
       )
       when is_binary(user_id) and is_map(action_properties) do
     with {:ok, player} <- get_player(game, user_id),
@@ -144,7 +146,7 @@ defmodule Boardr.Gaming.GameServer do
            ),
          {:ok, %{action: persisted_action, game: persisted_game}} <-
            persist_action(action, player, game, game_result) do
-      reply(persisted_action, %State{state | game: persisted_game, rules_state: new_rules_state})
+      reply(persisted_action, state_record(state, game: persisted_game, rules_state: new_rules_state))
     else
       error ->
         error_reply(error, state)
@@ -155,7 +157,7 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
         {:play, user_id, action_properties},
         _from,
-        %State{} = state
+        state_record() = state
       )
       when is_binary(user_id) and is_map(action_properties) do
     game_error_reply(:game_finished, state)
@@ -165,7 +167,7 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
         {:possible_actions, filters},
         _from,
-        %State{game: %Game{state: "playing"} = game, rules: rules, rules_game: rules_game, rules_state: rules_state} = state
+        state_record(game: %Game{state: "playing"} = game, rules: rules, rules_game: rules_game, rules_state: rules_state) = state
       )
       when is_map(filters) do
     rules_filters = %{}
@@ -201,7 +203,7 @@ defmodule Boardr.Gaming.GameServer do
   end
 
   @impl true
-  def handle_call({:possible_actions, filters}, _from, %State{game: game} = state) when is_map(filters) do
+  def handle_call({:possible_actions, filters}, _from, state_record(game: game) = state) when is_map(filters) do
     reply({[], game}, state)
   end
 
@@ -209,7 +211,7 @@ defmodule Boardr.Gaming.GameServer do
   def handle_call(
         {:swarm, :begin_handoff},
         _from,
-        %State{game: %Game{id: game_id}} = state
+        state_record(game: %Game{id: game_id}) = state
       ) do
     Logger.debug("Swarm beginning handoff of game server for game #{game_id}")
     {:reply, :restart, state}
@@ -218,7 +220,7 @@ defmodule Boardr.Gaming.GameServer do
   @impl true
   def handle_cast(
         {:swarm, :resolve_conflict, _delay},
-        %State{} = state
+        state_record() = state
       ) do
     {:noreply, state}
   end
@@ -282,13 +284,13 @@ defmodule Boardr.Gaming.GameServer do
 
     {
       :noreply,
-      %State{game: game, rules: rules, rules_game: rules_game, rules_state: rules_state},
+      state_record(game: game, rules: rules, rules_game: rules_game, rules_state: rules_state),
       @default_timeout
     }
   end
 
   @impl true
-  def handle_info(:timeout, %State{game: %Game{id: game_id}} = state) do
+  def handle_info(:timeout, state_record(game: %Game{id: game_id}) = state) do
     Logger.info("Shutting down inactive game server for game #{game_id}")
     {:stop, {:shutdown, :timeout}, state}
   end
@@ -296,7 +298,7 @@ defmodule Boardr.Gaming.GameServer do
   @impl true
   def handle_info(
         {:swarm, :die},
-        %State{game: %Game{id: game_id}} = state
+        state_record(game: %Game{id: game_id}) = state
       ) do
     Logger.info("Swarm shutting down game server for game #{game_id}")
     {:noreply, state}
@@ -408,7 +410,7 @@ defmodule Boardr.Gaming.GameServer do
     factory.get_rules(rules_name)
   end
 
-  def error_reply(err, %State{} = state) do
+  def error_reply(err, state_record() = state) do
     {
       :reply,
       {:error, err},
@@ -417,15 +419,15 @@ defmodule Boardr.Gaming.GameServer do
     }
   end
 
-  def game_error_reply(err, %State{} = state) do
+  def game_error_reply(err, state_record() = state) do
     error_reply({:game_error, err}, state)
   end
 
-  def reply({:ok, value}, %State{} = state) do
+  def reply({:ok, value}, state_record() = state) do
     reply(value, state)
   end
 
-  def reply(value, %State{} = state) do
+  def reply(value, state_record() = state) do
     {
       :reply,
       {:ok, value},
