@@ -31,6 +31,16 @@ defmodule Boardr.Application do
     if env != compiled_env,
       do: Application.put_env(:boardr, Boardr.Auth.Token, env)
 
+    {:ok, port} = Config.get_required_env(
+             "BOARDR_PORT",
+             :port_missing,
+             System.get_env("PORT", "4000")
+           )
+    {:ok, valid_port} = Config.parse_port(port, :port_invalid)
+    base_url = System.get_env("BOARDR_BASE_URL", "http://localhost:#{valid_port}")
+
+    Application.put_env(:boardr, BoardrRest, base_url: base_url)
+
     :ok =
       :telemetry.attach(:boardr, [:boardr, :repo, :query], &Boardr.Telemetry.handle_event/4, %{})
 

@@ -48,9 +48,9 @@ defmodule BoardrApi do
       alias BoardrApi.Endpoint
       alias BoardrApi.Router.Helpers, as: Routes
 
-      import BoardrApi.HalDocument, only: [put_link: 3, put_link: 4]
       import BoardrApi.MapUtils, only: [maybe_put: 4]
       import BoardrApi.ViewHelpers
+      import BoardrRest.HalDocument, only: [put_link: 3, put_link: 4]
       import Phoenix.Controller, only: [view_module: 1]
     end
   end

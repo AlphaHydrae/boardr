@@ -2,7 +2,7 @@ defmodule BoardrApi.ViewHelpers do
   alias BoardrApi.Endpoint, as: Endpoint
   alias BoardrApi.Router.Helpers, as: Routes
 
-  import BoardrApi.HalDocument, only: [put_curie: 4, put_link: 4]
+  import BoardrRest.HalDocument, only: [put_curie: 4, put_link: 4]
 
   def api_document(properties \\ %{}) when is_map(properties) do
     properties

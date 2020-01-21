@@ -2,19 +2,50 @@ defmodule BoardrRest.GamesService do
   use BoardrRest
 
   alias Boardr.{Data, Game, Player}
+  # alias BoardrRest.PlayersService
 
   @behaviour BoardrRest.Service
 
   @impl true
   def handle_operation(operation(type: :create) = op) do
     op |> authorize(:"api:games:create") >>>
-      parse_json_object_entity() >>>
-      insert_game_and_player()
+      insert_game_and_player() >>>
+      to_json_value(%{})
+      # TODO: auto-embed boardr:player
   end
 
   @impl true
   def handle_operation(operation(type: :retrieve) = op) do
     op |> list_games()
+  end
+
+  def to_json_value(%Game{} = game, %{embed: embed}) when is_list(embed) do
+    api_hal_document(%{
+      createdAt: game.created_at,
+      rules: game.rules,
+      settings: game.settings,
+      state: game.state,
+      title: game.title,
+      updatedAt: game.updated_at
+    })
+    |> Data.drop_nil()
+    # |> put_hal_links(%{
+    #   'boardr:actions': %{ href: Routes.games_actions_url(Endpoint, :index, game.id) },
+    #   'boardr:board': %{ href: Routes.games_board_url(Endpoint, :show, game.id) },
+    #   'boardr:creator': %{ href: Routes.users_url(Endpoint, :show, game.creator_id) },
+    #   'boardr:players': %{ href: Routes.games_players_url(Endpoint, :create, game.id) },
+    #   'boardr:possible-actions': %{ href: Routes.games_possible_actions_url(Endpoint, :index, game.id) },
+    #   collection: %{ href: Routes.games_url(Endpoint, :index) }
+    # })
+    # |> put_hal_self_link(:games_url, [:show, game.id])
+    # |> put_embedded(
+    #   :'boardr:winners',
+    #   Enum.map(game.players, fn p -> PlayersService.to_json_value(p, %{}) end)
+    # )
+    # |> put_embedded(
+    #   :'boardr:player',
+    #   PlayersService.to_json_value(List.first(game.players), %{})
+    # )
   end
 
   defp insert_game_and_player(
