@@ -19,9 +19,12 @@ defmodule BoardrApi.Endpoint do
         :ok,
         Keyword.merge(
           config,
-          http: [
-            port: valid_port
-          ],
+          http: Keyword.merge(
+            Keyword.get(config, :http, []),
+            [
+              port: valid_port
+            ]
+          ),
           url: base_url_options |> Map.take([:host, :path, :port, :scheme]) |> Map.to_list()
         )
       }
