@@ -2,11 +2,10 @@ defmodule BoardrApi.Games.ActionsController do
   use BoardrApi, :controller
 
   alias Boardr.{Action, Repo}
-  alias BoardrRest.ActionsService
+  alias BoardrRest.ActionResources
 
   def create(%Conn{} = conn, %{"game_id" => game_id}) when is_binary(game_id) do
-    with {:ok, %Action{} = action} <-
-           distribute_to_service(conn, ActionsService, :create, %{game_id: game_id}) do
+    with {:ok, %Action{} = action} <- rest(conn, ActionResources, :create, %{game_id: game_id}) do
       conn
       |> put_status(201)
       |> put_resp_content_type("application/hal+json")

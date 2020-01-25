@@ -1,29 +1,32 @@
-defmodule BoardrRest.GamesService do
+defmodule BoardrRest.GameResources do
   use BoardrRest
 
   alias Boardr.{Data, Game, Player}
 
-  @behaviour BoardrRest.Service
+  @behaviour BoardrRest.Resources
 
   @impl true
-  def handle_operation(operation(type: :create) = op) do
-    op |> authorize(:"api:games:create") >>>
-      parse_json_object_entity() >>>
-      insert_game_and_player()
+  def handle_operation(operation(type: :create, data: http_request(body: body)) = op) do
+    with {:ok, {:user, user_id, _}} <- authorize(op, :user, :"api:games:create"),
+         {:ok, game_properties} <- parse_json_object(body) do
+      insert_game_and_player(user_id, game_properties)
+    end
   end
 
   @impl true
-  def handle_operation(operation(type: :retrieve) = op) do
-    op |> list_games()
+  def handle_operation(
+        operation(type: :retrieve, data: http_request(query_string: query_string))
+      ) do
+    with {:ok, filters} <- decode_game_filters(query_string) do
+      list_games(filters)
+    end
   end
 
-  defp insert_game_and_player(
-         operation(options: %{authorization_claims: %{"sub" => user_id}, parsed_entity: entity})
-       )
-       when is_map(entity) do
+  defp insert_game_and_player(user_id, game_properties)
+       when is_binary(user_id) and is_map(game_properties) do
     game =
       %Game{creator_id: user_id, rules: "tic-tac-toe", settings: %{}}
-      |> Game.changeset(entity)
+      |> Game.changeset(game_properties)
 
     result =
       Multi.new()
@@ -39,9 +42,7 @@ defmodule BoardrRest.GamesService do
     end
   end
 
-  def list_games(operation(query: query_string)) when is_binary(query_string) do
-    filters = URI.decode_query(query_string)
-
+  def list_games(filters) when is_map(filters) do
     query = from(g in Game, select: g, group_by: g.id, order_by: [desc: g.created_at])
 
     query =
@@ -59,7 +60,7 @@ defmodule BoardrRest.GamesService do
           |> Enum.map(fn url -> url |> String.split("/") |> List.last() end)
           |> Enum.map(fn id -> if Data.uuid?(id), do: id, else: false end)
 
-        if Enum.all?(player_ids, &(&1)) do
+        if Enum.all?(player_ids, & &1) do
           from(q in query, join: p in assoc(q, :players), where: p.id in ^player_ids)
         else
           false
@@ -78,5 +79,14 @@ defmodule BoardrRest.GamesService do
     else
       {:ok, []}
     end
+  end
+
+  defp decode_game_filters(nil), do: %{}
+
+  defp decode_game_filters(query_string) when is_binary(query_string) do
+    {
+      :ok,
+      URI.decode_query(query_string)
+    }
   end
 end

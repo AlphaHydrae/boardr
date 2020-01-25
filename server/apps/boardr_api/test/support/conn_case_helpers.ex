@@ -18,7 +18,7 @@ defmodule BoardrApi.ConnCaseHelpers do
     {:ok, token} =
       Boardr.Auth.Token.generate(%{
         scope: "api",
-        sub: user_id
+        sub: "u:#{user_id}"
       })
 
     token

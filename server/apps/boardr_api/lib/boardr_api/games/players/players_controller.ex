@@ -2,11 +2,10 @@ defmodule BoardrApi.Games.PlayersController do
   use BoardrApi, :controller
 
   alias Boardr.Player
-  alias BoardrRest.PlayersService
+  alias BoardrRest.PlayerResources
 
   def create(%Conn{} = conn, %{"game_id" => game_id}) do
-    with {:ok, %Player{} = player} <-
-           distribute_to_service(conn, PlayersService, :create, %{game_id: game_id}) do
+    with {:ok, %Player{} = player} <- rest(conn, PlayerResources, :create, %{game_id: game_id}) do
       conn
       |> put_status(201)
       |> put_resp_content_type("application/hal+json")

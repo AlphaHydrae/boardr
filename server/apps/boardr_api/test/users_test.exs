@@ -65,7 +65,7 @@ defmodule BoardrApi.UsersTest do
       |> assert_key("iss", "boardr.alphahydrae.io")
       |> assert_key("nbf", &(&1 |> just_after(truncated_test_start)), value: true)
       |> assert_key("scope", "api")
-      |> assert_key("sub", user_id)
+      |> assert_key("sub", "u:#{user_id}")
 
       # Database changes
       assert_db_queries(insert: 1, update: 1)
@@ -77,7 +77,7 @@ defmodule BoardrApi.UsersTest do
     {:ok, token} =
       Boardr.Auth.Token.generate(%{
         scope: "register",
-        sub: identity_id
+        sub: "i:#{identity_id}"
       })
 
     token

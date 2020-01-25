@@ -1,56 +1,52 @@
 defmodule BoardrRest.Auth do
-  use Rop
-
   alias Boardr.Auth.Token
 
   import BoardrRest
 
-  def authorize(op, required_scopes \\ nil)
+  @type auth_error_details ::
+          {:auth_error, :jwt_scope_insufficient, list(binary)}
+          | {:auth_error, :jwt_scope_missing}
+          | {:auth_error, :jwt_subject_invalid}
+          | {:auth_error, :jwt_subject_missing}
+          | {:auth_error, :missing_authorization}
 
-  def authorize(operation() = op, nil) do
-    authorize(op, [])
+  @spec authorize(BoardrRest.operation, :identity | :user, atom | list(atom)) ::
+          {:ok, BoardrRest.authorization} | {:error, auth_error_details}
+
+  def authorize(operation() = op, subject_type, required_scope)
+      when is_atom(subject_type) and is_atom(required_scope) do
+    authorize(op, subject_type, [required_scope])
   end
 
-  def authorize(operation() = op, required_scope) when is_atom(required_scope) do
-    authorize(op, [required_scope])
+  def authorize(operation(authorization: nil), subject_type, [_ | _])
+      when is_atom(subject_type) do
+    {:error, {:auth_error, :missing_authorization}}
   end
 
-  def authorize(operation() = op, required_scopes) when is_list(required_scopes) do
-    auth_header_required = length(required_scopes) >= 1
-
-    op
-    |> get_bearer_token(auth_header_required) >>>
-      verify_token(auth_header_required) >>>
-      verify_scopes(required_scopes)
-  end
-
-  def get_bearer_token(operation() = op, false) do
-    {:ok, op}
-  end
-
-  def get_bearer_token(
-        operation(options: %{authorization: authorization} = options) = op,
-        true
+  def authorize(
+        operation(authorization: {:bearer_token, token}),
+        subject_type,
+        [_ | _] = required_scopes
       )
-      when is_binary(authorization) do
-    case String.split(authorization, " ", parts: 2) do
-      [_, token] ->
-        {
-          :ok,
-          operation(op, options: Map.put(options, :authorization_token, token))
-        }
-
-      _ ->
-        {:error, :auth_malformed}
+      when is_atom(subject_type) do
+    with {:ok, claims} <- Token.verify(token),
+         {:ok, scopes} <- verify_scopes(claims, required_scopes) do
+      create_authorization(subject_type, claims, scopes)
     end
   end
 
-  def get_bearer_token(operation(options: %{authorization: _authorization}), true) do
-    {:error, :auth_type_mismatch}
+  defp create_authorization(:identity, %{"sub" => subject}, scopes) when is_list(scopes) do
+    case subject do
+      "i:" <> identity_id -> {:ok, {:identity, identity_id, scopes}}
+      _ -> {:error, {:auth_error, :jwt_subject_invalid}}
+    end
   end
 
-  def get_bearer_token(operation(), true) do
-    {:error, :auth_missing}
+  defp create_authorization(:user, %{"sub" => subject}, scopes) when is_list(scopes) do
+    case subject do
+      "u:" <> user_id -> {:ok, {:user, user_id, scopes}}
+      _ -> {:error, {:auth_error, :jwt_subject_invalid}}
+    end
   end
 
   defp get_missing_scopes(%MapSet{} = scopes, %MapSet{} = required_scopes) do
@@ -65,45 +61,21 @@ defmodule BoardrRest.Auth do
     end)
   end
 
-  defp verify_scopes(operation() = op, []) do
-    {:ok, op}
-  end
-
-  defp verify_scopes(
-         operation(options: %{authorization_claims: %{"scope" => scope, "sub" => sub}}) = op,
-         required_scopes
-       )
+  defp verify_scopes(%{"scope" => scope, "sub" => sub}, required_scopes)
        when is_binary(scope) and is_binary(sub) and is_list(required_scopes) do
-    case get_missing_scopes(MapSet.new(String.split(scope, " ")), MapSet.new(required_scopes)) do
-      [] -> {:ok, op}
-      missing_scopes -> {:error, {:auth_missing_scopes, missing_scopes}}
+    scopes = String.split(scope, " ")
+
+    case get_missing_scopes(MapSet.new(scopes), MapSet.new(required_scopes)) do
+      [] -> {:ok, scopes}
+      missing_scopes -> {:error, {:auth_error, :jwt_scope_insufficient, missing_scopes}}
     end
   end
 
-  defp verify_scopes(operation(options: %{authorization_claims: %{"sub" => subject}}), _)
-       when is_binary(subject) do
-    {:error, :auth_jwt_scope_missing}
+  defp verify_scopes(%{"sub" => subject}, _) when is_binary(subject) do
+    {:error, {:auth_error, :jwt_scope_missing}}
   end
 
-  defp verify_scopes(operation(options: %{authorization_claims: %{}}), _) do
-    {:error, :auth_jwt_subject_missing}
-  end
-
-  defp verify_token(operation() = op, false) do
-    {:ok, op}
-  end
-
-  defp verify_token(operation(options: %{authorization_token: token} = options) = op, true)
-       when is_binary(token) do
-    case Token.verify(token) do
-      {:ok, claims} ->
-        {
-          :ok,
-          operation(op, options: Map.put(options, :authorization_claims, claims))
-        }
-
-      {:error, err} ->
-        {:error, err}
-    end
+  defp verify_scopes(%{}, _) do
+    {:error, {:auth_error, :jwt_subject_missing}}
   end
 end

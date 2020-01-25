@@ -63,7 +63,7 @@ defmodule BoardrApi.IdentitiesTest do
       |> assert_key("iss", "boardr.alphahydrae.io")
       |> assert_key("nbf", &(&1 |> just_after(truncated_test_start)), value: true)
       |> assert_key("scope", "register")
-      |> assert_key("sub", identity_id)
+      |> assert_key("sub", "i:#{identity_id}")
 
       # Database changes
       assert_db_queries(insert: 1)

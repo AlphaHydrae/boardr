@@ -3,12 +3,12 @@ defmodule BoardrApi.IdentitiesController do
 
   alias Boardr.Repo
   alias Boardr.Auth.Identity
-  alias BoardrRest.IdentitiesService
+  alias BoardrRest.IdentityResources
 
   require BoardrRest
 
   def create(%Conn{} = conn, identity_properties) when is_map(identity_properties) do
-    with {:ok, %Identity{} = identity} <- distribute_to_service(conn, IdentitiesService, :create) do
+    with {:ok, %Identity{} = identity} <- rest(conn, IdentityResources, :create) do
       conn
       |> put_identity_created(identity)
       |> render_hal(%{identity: identity})

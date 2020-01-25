@@ -2,3 +2,4 @@
 --ignore-dir=cover
 --ignore-dir=doc
 --ignore-dir=deps
+--ignore-file=ext:dump

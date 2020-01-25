@@ -2,10 +2,10 @@ defmodule BoardrApi.GamesController do
   use BoardrApi, :controller
 
   alias Boardr.Game
-  alias BoardrRest.GamesService
+  alias BoardrRest.GameResources
 
   def create(%Conn{} = conn, _params) do
-    with {:ok, %Game{} = game} <- distribute_to_service(conn, GamesService, :create) do
+    with {:ok, %Game{} = game} <- rest(conn, GameResources, :create) do
       conn
       |> put_status(201)
       |> put_resp_content_type("application/hal+json")
@@ -15,7 +15,7 @@ defmodule BoardrApi.GamesController do
   end
 
   def index(%Conn{} = conn, params) when is_map(params) do
-    with {:ok, games} <- distribute_to_service(conn, GamesService, :retrieve) do
+    with {:ok, games} <- rest(conn, GameResources, :retrieve) do
       conn
       |> put_resp_content_type("application/hal+json")
       |> render(%{games: games})

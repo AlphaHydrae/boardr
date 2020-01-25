@@ -7,7 +7,7 @@ defmodule BoardrApi.FallbackController do
 
   import BoardrApi.HttpProblemDetailsHelpers
 
-  def call(%Conn{} = conn, {:auth_error, error}) do
+  def call(%Conn{} = conn, {:error, {:auth_error, error}}) do
     render_problem conn, %HttpProblemDetails{
       status: :unauthorized,
       title: "Authentication has failed.",

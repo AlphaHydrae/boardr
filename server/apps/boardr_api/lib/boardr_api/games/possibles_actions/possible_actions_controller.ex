@@ -2,11 +2,11 @@ defmodule BoardrApi.Games.PossibleActionsController do
   use BoardrApi, :controller
 
   alias Boardr.Game
-  alias BoardrRest.PossibleActionsService
+  alias BoardrRest.PossibleActionResources
 
   def index(%Conn{} = conn, %{"game_id" => game_id}) do
     with {:ok, {possible_actions, %Game{} = game, embed}} <-
-           distribute_to_service(conn, PossibleActionsService, :retrieve, %{id: game_id}) do
+           rest(conn, PossibleActionResources, :retrieve, %{id: game_id}) do
       conn
       |> put_resp_content_type("application/hal+json")
       |> render(%{

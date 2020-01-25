@@ -1,7 +1,6 @@
 defmodule BoardrApi.ControllerHelpers do
   alias Plug.Conn
 
-  alias BoardrApi.Router
   alias Plug.Conn
 
   import Boardr.Distributed, only: [distribute: 3]
@@ -10,43 +9,41 @@ defmodule BoardrApi.ControllerHelpers do
 
   require BoardrRest
 
-  def extract_path_params(url, plug) do
-    # TODO: check host, path, port & scheme match
-    %URI{host: host, path: path} = URI.parse(url)
-    # FIXME: host & path can be nil
-    case Phoenix.Router.route_info(Router, "GET", path, host) do
-      %{path_params: path_params, plug: ^plug, plug_opts: :show} -> path_params
-      _ -> nil
-    end
-  end
-
   def render_hal(%Conn{} = conn, assigns) when is_map(assigns) do
     conn
     |> put_resp_content_type("application/hal+json")
     |> render(assigns)
   end
 
-  def distribute_to_service(%Conn{} = conn, service, type, options \\ %{})
-       when is_atom(type) and is_map(options) do
-    with {:ok, op} <- to_rest_operation(conn, type, options) do
-      distribute(service, :handle_operation, [op])
+  def rest(%Conn{} = conn, resources, operation_type, options \\ %{})
+      when is_atom(operation_type) and is_map(options) do
+    with {:ok, op} <- to_rest_operation(conn, operation_type, options) do
+      distribute(resources, :handle_operation, [op])
     end
   end
 
-  defp to_rest_operation(%Conn{} = conn, type, options)
-       when is_atom(type) and is_map(options) do
-    {id, remaining_options} = Map.pop(options, :id)
-    authorization = conn |> get_req_header("authorization") |> List.first
+  defp get_authorization(%Conn{} = conn),
+    do: conn |> get_req_header("authorization") |> get_authorization()
 
-    with {:ok, entity, _} <- Plug.Conn.read_body(conn) do
+  defp get_authorization([_, _]), do: {:error, {:auth_error, :auth_header_duplicated}}
+  defp get_authorization(["Bearer " <> token]), do: {:ok, {:bearer_token, token}}
+  defp get_authorization([_]), do: {:error, {:auth_error, :auth_header_malformed}}
+  defp get_authorization([]), do: {:ok, nil}
+
+  defp to_rest_operation(%Conn{} = conn, operation_type, options)
+       when is_atom(operation_type) and is_map(options) do
+    {id, remaining_options} = Map.pop(options, :id)
+
+    with {:ok, authorization} <- get_authorization(conn),
+         {:ok, body, _} <- Plug.Conn.read_body(conn) do
       {
         :ok,
         BoardrRest.operation(
-          type: type,
-          entity: entity,
+          type: operation_type,
           id: id,
-          options: Map.put(remaining_options, :authorization, authorization),
-          query: conn.query_string
+          data: BoardrRest.http_request(body: body, query_string: conn.query_string),
+          authorization: authorization,
+          options: Map.put(remaining_options, :authorization, authorization)
         )
       }
     end
