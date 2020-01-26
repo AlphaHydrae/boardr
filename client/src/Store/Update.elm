@@ -7,7 +7,7 @@ import Msg exposing (Msg)
 import Pages.Home.Page as HomePage
 import Routes exposing (toRoute)
 import Store.Model exposing (BusinessDataModel, LocationModel, Model, UiModel)
-import Url exposing (Url)
+import Url
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -24,7 +24,7 @@ updateBusinessDataModel msg ( model, cmd ) =
         Msg.ApiGameListRetrieved res ->
             case res of
                 Ok apiGameList ->
-                    ( { model | games = List.foldl (\g d -> Dict.insert g.links.self.href g d) model.games apiGameList.embedded.games }, cmd )
+                    ( { model | games = List.foldl (\g d -> Dict.insert g.links.self.href g d) model.games apiGameList }, cmd )
 
                 Err _ ->
                     ( model, cmd )

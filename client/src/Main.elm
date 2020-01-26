@@ -2,23 +2,20 @@ module Main exposing (main)
 
 import Browser exposing (Document)
 import Browser.Navigation as Nav
-import Dict exposing (Dict)
 import Flags exposing (defaultFlags, Flags, flagsDecoder, ProgramFlags)
 import Html exposing (Html, p, text)
 import Html.Lazy exposing (lazy)
 import Http
-import Json.Decode as Decode exposing (string)
-import Json.Decode.Pipeline exposing (hardcoded, optional, required)
+import Json.Decode as Decode
 import Store.Init
 import Store.Model exposing (Model)
 import Store.Update exposing (update)
 import Msg exposing (Msg)
+import Pages.Game.Page as GamePage
 import Pages.Home.Page as HomePage
 import Routes exposing (Route (..))
-import Tuple
 import Url
-import Url.Parser exposing (Parser, map, oneOf, parse, s, top)
-import Utils.Api exposing (ApiGame, ApiGameList, apiGameListDecoder)
+import Utils.Api exposing (apiRootDecoder)
 
 
 main : Program ProgramFlags Model Msg
@@ -42,8 +39,8 @@ initWithFlags : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 initWithFlags flags url key =
     ( Store.Init.init flags url key
     , Http.get
-        { url = flags.apiUrl ++ "/api/games"
-        , expect = Http.expectJson Msg.ApiGameListRetrieved apiGameListDecoder
+        { url = flags
+        , expect = Http.expectJson Msg.ApiRootRetrieved apiRootDecoder
         }
     )
 
@@ -75,6 +72,9 @@ viewBody model =
     case model.location.route of
         HomeRoute ->
             lazy HomePage.view (HomePage.selector model)
+
+        GameRoute _ ->
+            lazy GamePage.view (GamePage.selector model)
 
         StatsRoute ->
             p [] [ text "Stats" ]

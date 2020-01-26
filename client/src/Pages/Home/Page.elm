@@ -4,10 +4,11 @@ import Dict exposing (Dict)
 import Flags exposing (Flags)
 import Html exposing (Html, a, div, h1, li, p, text, ul)
 import Html.Attributes exposing (href)
+import Http
 import Msg exposing (Msg)
 import Pages.Home.Model exposing (Model, ViewModel)
 import Store.Model
-import Utils.Api exposing (ApiGame)
+import Utils.Api exposing (ApiGame, apiGameListDecoder)
 
 
 init : Flags -> Model
@@ -29,7 +30,15 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Msg.ApiGameListRetrieved (Ok apiGameList) ->
-            ( { model | displayedGameIds = apiGameList.embedded.games |> List.map (\g -> g.links.self.href) }, Cmd.none )
+            ( { model | displayedGameIds = apiGameList |> List.map (\g -> g.links.self.href) }, Cmd.none )
+
+        Msg.ApiRootRetrieved (Ok apiRoot) ->
+            ( model
+            , Http.get
+                { url = apiRoot.gamesLink.href
+                , expect = Http.expectJson Msg.ApiGameListRetrieved apiGameListDecoder
+                }
+            )
 
         _ ->
             ( model, Cmd.none )
@@ -55,7 +64,7 @@ viewGamesList games =
 viewGame : ApiGame -> Html msg
 viewGame game =
     li []
-        [ text (viewGameTitle game) ]
+        [ a [ href ("/games/" ++ game.id) ] [ text (viewGameTitle game) ] ]
 
 
 viewGameTitle : ApiGame -> String

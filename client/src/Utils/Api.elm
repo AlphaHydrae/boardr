@@ -1,43 +1,43 @@
-module Utils.Api exposing (ApiGame, ApiGameList, apiGameListDecoder)
+module Utils.Api exposing (ApiGame, ApiGameList, ApiRoot, apiGameListDecoder, apiRootDecoder)
 
-import Json.Decode as Decode exposing (Decoder, list, maybe, string)
-import Json.Decode.Pipeline exposing (hardcoded, optional, required)
+import Json.Decode as Decode exposing (Decoder, bool, field, list, maybe, string)
+import Json.Decode.Pipeline exposing (optional, required)
 
 
 type alias ApiGame =
     { links : ApiGameLinks
     , createdAt : String
+    , id : String
     , rules : String
     , title : Maybe String
     }
 
 
 type alias ApiGameLinks =
-    { self : HalLink }
-
-
-type alias ApiGameListEmbedded =
-    { games : List ApiGame }
-
-
-type alias HalLink =
-    { href : String }
+    { collection : HalLink
+    , self : HalLink
+    }
 
 
 type alias ApiGameList =
-    { embedded : ApiGameListEmbedded }
+    List ApiGame
 
 
-apiGameListEmbeddedDecoder : Decoder ApiGameListEmbedded
-apiGameListEmbeddedDecoder =
-    Decode.succeed ApiGameListEmbedded
-        |> required "boardr:games" (list apiGameDecoder)
+type alias ApiRoot =
+    { gameLink : HalLink
+    , gamesLink: HalLink
+    }
+
+
+type alias HalLink =
+    { href : String
+    , templated : Bool
+    }
 
 
 apiGameListDecoder : Decoder ApiGameList
 apiGameListDecoder =
-    Decode.succeed ApiGameList
-        |> required "_embedded" apiGameListEmbeddedDecoder
+    field "_embedded" (field "boardr:games" (list apiGameDecoder))
 
 
 apiGameDecoder : Decoder ApiGame
@@ -45,6 +45,7 @@ apiGameDecoder =
     Decode.succeed ApiGame
         |> required "_links" apiGameLinksDecoder
         |> required "createdAt" string
+        |> required "id" string
         |> required "rules" string
         |> required "title" (maybe string)
 
@@ -52,10 +53,19 @@ apiGameDecoder =
 apiGameLinksDecoder : Decoder ApiGameLinks
 apiGameLinksDecoder =
     Decode.succeed ApiGameLinks
+        |> required "collection" halLinkDecoder
         |> required "self" halLinkDecoder
+
+
+apiRootDecoder : Decoder ApiRoot
+apiRootDecoder =
+    Decode.succeed ApiRoot
+        |> required "_links" (field "boardr:game" halLinkDecoder)
+        |> required "_links" (field "boardr:games" halLinkDecoder)
 
 
 halLinkDecoder : Decoder HalLink
 halLinkDecoder =
     Decode.succeed HalLink
         |> required "href" string
+        |> optional "templated" bool False

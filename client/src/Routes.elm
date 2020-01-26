@@ -1,20 +1,22 @@
 module Routes exposing (Route (..), toRoute)
 
 import Url exposing (Url)
-import Url.Parser as UrlParser
+import Url.Parser as UrlParser exposing ((</>), map, oneOf, s, string, top)
 
 
 type Route
     = HomeRoute
+    | GameRoute String
     | StatsRoute
     | NotFound
 
 
 routes : UrlParser.Parser (Route -> a) a
 routes =
-    UrlParser.oneOf
-        [ UrlParser.map HomeRoute UrlParser.top
-        , UrlParser.map StatsRoute (UrlParser.s "stats")
+    oneOf
+        [ map HomeRoute top
+        , map GameRoute (s "games" </> string)
+        , map StatsRoute (s "stats")
         ]
 
 

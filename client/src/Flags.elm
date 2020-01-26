@@ -1,23 +1,28 @@
 module Flags exposing (defaultFlags, Flags, flagsDecoder, ProgramFlags)
 
-import Json.Decode as Decode exposing (string)
-import Json.Decode.Pipeline exposing (optional)
+import Json.Decode as Decode exposing (field, map, maybe, string)
 
+-- FIXME: apiUrl should be an Url
+type alias ApiUrl = String
 
-type alias Flags =
-    -- FIXME: apiUrl should be an Url
-    { apiUrl : String }
+type alias Flags = ApiUrl
 
 
 type alias ProgramFlags =
     Decode.Value
 
 
-defaultFlags =
-    Flags ""
+defaultFlags : Flags
+defaultFlags = ""
 
 
 flagsDecoder : Decode.Decoder Flags
 flagsDecoder =
-    Decode.succeed Flags
-        |> optional "apiUrl" string ""
+    field "apiUrl" (map apiUrlDecoder (maybe string))
+
+
+apiUrlDecoder : Maybe String -> ApiUrl
+apiUrlDecoder optionalApiUrl =
+    case optionalApiUrl of
+       Just apiUrl -> apiUrl
+       _ -> ""
