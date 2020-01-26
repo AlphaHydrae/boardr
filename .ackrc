@@ -1,6 +1,8 @@
---ignore-dir=client/build
+--ignore-dir=client/dist
+--ignore-dir=client/elm-stuff
 --ignore-dir=client/node_modules
 --ignore-dir=server/_build
 --ignore-dir=server/cover
 --ignore-dir=server/doc
 --ignore-dir=server/deps
+--ignore-file=is:elm.js
