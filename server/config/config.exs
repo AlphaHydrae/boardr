@@ -50,6 +50,8 @@ config :boardr, Boardr.Telemetry, slow_query_time: 100
 
 # Configures the endpoint
 config :boardr, BoardrApi.Endpoint,
+  allowed_origins: [],
+  # FIXME: move to Boardr.Auth config
   jwt_issuer: "boardr.alphahydrae.io",
   render_errors: [view: BoardrApi.ErrorView, accepts: ~w(json)],
   pubsub: [name: Boardr.PubSub, adapter: Phoenix.PubSub.PG2]

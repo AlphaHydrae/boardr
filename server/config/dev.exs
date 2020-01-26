@@ -4,6 +4,7 @@ require Logger
 
 # For development, we disable any cache and enable debugging and code reloading.
 config :boardr, BoardrApi.Endpoint,
+  allowed_origins: ["http://localhost:8000"],
   check_origin: false,
   code_reloader: true,
   debug_errors: false,

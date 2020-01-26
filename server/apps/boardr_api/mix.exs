@@ -37,6 +37,7 @@ defmodule BoardrApi.MixProject do
     [
       {:boardr, in_umbrella: true},
       {:content_type, "~> 0.1.0"},
+      {:corsica, "~> 1.0"},
       {:inflex, "~> 2.0"},
       {:jason, "~> 1.0"},
       {:phoenix, "~> 1.4.11"},
