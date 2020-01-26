@@ -18,12 +18,12 @@ defmodule Asserter.Assertions do
         subject: subject
     end
 
-    use_raw_value = Keyword.get(opts, :value, false)
+    use_raw_value = Keyword.get(opts, :only_value, false)
     value = subject[key]
 
     effective_options = options
     |> Keyword.merge(opts)
-    |> Keyword.drop([:into, :value])
+    |> Keyword.drop([:into, :only_value])
     |> Keyword.put(:parent, asserter)
 
     callback_arg =
@@ -32,6 +32,9 @@ defmodule Asserter.Assertions do
     case callback.(callback_arg) do
       %Asserter{result: result} ->
         update_result(asserter, key, result, opts)
+
+      true ->
+        update_result(asserter, key, value, opts)
 
       {:ok, callback_result} ->
         update_result(asserter, key, callback_result, opts)
@@ -309,7 +312,11 @@ defmodule Asserter.Assertions do
     merge = Keyword.get(effective_options, :merge, false)
     # TODO: change callback to conversion from subject key to result key
     callback = Keyword.get(effective_options, :on_assert_key_result)
-    value = if from, do: Map.get(result, from, Map.get(subject, from)), else: value
+    value = if v = Keyword.get(effective_options, :value) do
+      v
+    else
+      if from, do: Map.get(result, from, Map.get(subject, from)), else: value
+    end
 
     cond do
       into == false ->

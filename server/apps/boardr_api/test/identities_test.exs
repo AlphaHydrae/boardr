@@ -42,10 +42,10 @@ defmodule BoardrApi.IdentitiesTest do
 
         # Properties
         |> assert_keys(@valid_properties)
-        |> assert_key("createdAt", &(&1 |> just_after(test_start)), value: true)
+        |> assert_key("createdAt", &(&1.subject |> just_after(test_start)))
         |> assert_key("emailVerified", false)
         |> assert_key_absent("emailVerifiedAt")
-        |> assert_key("lastAuthenticatedAt", &(&1 |> just_after(test_start)), value: true)
+        |> assert_key("lastAuthenticatedAt", &(&1.subject |> just_after(test_start)))
         |> assert_key_identical("lastSeenAt", "lastAuthenticatedAt")
         |> assert_key_identical("providerId", "email")
         |> assert_key_identical("updatedAt", "createdAt")
@@ -57,11 +57,11 @@ defmodule BoardrApi.IdentitiesTest do
 
       assert_map(claims)
       |> assert_key("aud", "boardr.alphahydrae.io")
-      |> assert_key("exp", &(&1 |> just_after(expected_expiration)), value: true)
+      |> assert_key("exp", &(&1.subject |> just_after(expected_expiration)))
       |> assert_key("jti", ~r/^\w+$/)
-      |> assert_key("iat", &(&1 |> just_after(truncated_test_start)), value: true)
+      |> assert_key("iat", &(&1.subject |> just_after(truncated_test_start)))
       |> assert_key("iss", "boardr.alphahydrae.io")
-      |> assert_key("nbf", &(&1 |> just_after(truncated_test_start)), value: true)
+      |> assert_key("nbf", &(&1.subject |> just_after(truncated_test_start)))
       |> assert_key("scope", "register")
       |> assert_key("sub", "i:#{identity_id}")
 

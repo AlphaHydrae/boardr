@@ -18,6 +18,7 @@ defmodule BoardrApi.ApiRootTest do
     |> assert_hal_links(fn links ->
       links
       |> assert_hal_curies()
+      |> assert_hal_link("boardr:game", test_api_url("/games/{id}"), %{"templated" => true})
       |> assert_hal_link("boardr:games", test_api_url("/games"))
       |> assert_hal_link("boardr:identities", test_api_url("/identities"))
       |> assert_hal_link("boardr:users", test_api_url("/users"))

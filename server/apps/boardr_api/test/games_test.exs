@@ -25,6 +25,15 @@ defmodule BoardrApi.GamesTest do
       %{result: %{id: game_id, player: %{id: player_id} = expected_player} = expected_game} =
         assert_api_map(body)
 
+        # Properties
+        |> assert_keys(@valid_properties)
+        |> assert_key("createdAt", &(&1.subject |> just_after(test_start)))
+        |> assert_key("id", &(is_binary(&1.subject)))
+        |> assert_key("settings", %{})
+        |> assert_key_absent("state", value: "waiting_for_players")
+        |> assert_key_absent("title")
+        |> assert_key_identical("updatedAt", "createdAt")
+
         # HAL links
         |> assert_hal_links(fn links ->
           links
@@ -32,9 +41,14 @@ defmodule BoardrApi.GamesTest do
           |> assert_hal_link("collection", test_api_url("/games"))
           |> assert_hal_link(
             "boardr:creator",
-            test_api_url_regex(["/users/", ~r/(?<creator_id>#{Regex.escape(user.id)})/])
+            test_api_url("/users/#{user.id}"),
+            %{},
+            into: :creator_id,
+            value: user.id
           )
-          |> assert_hal_link("self", test_api_url_regex(["/games/", ~r/(?<id>[\w-]+)/]))
+          |> assert_hal_link("self", fn %{id: game_id} ->
+            test_api_url("/games/#{game_id}")
+          end)
           |> assert_hal_link("boardr:actions", fn %{id: game_id} ->
             test_api_url("/games/#{game_id}/actions")
           end)
@@ -78,14 +92,6 @@ defmodule BoardrApi.GamesTest do
             into: :player
           )
         end)
-
-        # Properties
-        |> assert_keys(@valid_properties)
-        |> assert_key("createdAt", &(&1.subject |> just_after(test_start)))
-        |> assert_key("settings", %{})
-        |> assert_key_absent("state", value: "waiting_for_players")
-        |> assert_key_absent("title")
-        |> assert_key_identical("updatedAt", "createdAt")
 
       # Database changes
       assert_db_queries(insert: 2)

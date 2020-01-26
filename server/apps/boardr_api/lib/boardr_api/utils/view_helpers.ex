@@ -10,6 +10,13 @@ defmodule BoardrApi.ViewHelpers do
   end
 
   def put_boardr_link(doc, rel, href, link_properties \\ %{})
+
+  def put_boardr_link(doc, rel, href, :templated)
+      when is_map(doc) and is_binary(href) do
+    put_link(doc, String.to_atom("boardr:#{rel}"), href, :templated)
+  end
+
+  def put_boardr_link(doc, rel, href, link_properties)
       when is_map(doc) and is_binary(href) and is_map(link_properties) do
     put_link(doc, String.to_atom("boardr:#{rel}"), href, link_properties)
   end

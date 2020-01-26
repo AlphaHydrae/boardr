@@ -59,11 +59,11 @@ defmodule BoardrApi.UsersTest do
 
       assert_map(claims)
       |> assert_key("aud", "boardr.alphahydrae.io")
-      |> assert_key("exp", &(&1 |> just_after(expected_expiration)), value: true)
+      |> assert_key("exp", &(&1.subject |> just_after(expected_expiration)))
       |> assert_key("jti", ~r/^\w+$/)
-      |> assert_key("iat", &(&1 |> just_after(truncated_test_start)), value: true)
+      |> assert_key("iat", &(&1.subject |> just_after(truncated_test_start)))
       |> assert_key("iss", "boardr.alphahydrae.io")
-      |> assert_key("nbf", &(&1 |> just_after(truncated_test_start)), value: true)
+      |> assert_key("nbf", &(&1.subject |> just_after(truncated_test_start)))
       |> assert_key("scope", "api")
       |> assert_key("sub", "u:#{user_id}")
 

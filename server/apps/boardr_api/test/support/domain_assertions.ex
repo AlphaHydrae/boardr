@@ -23,6 +23,7 @@ defmodule BoardrApi.DomainAssertions do
 
       # Properties
       |> assert_key("createdAt", DateTime.to_iso8601(game.created_at))
+      |> assert_key("id", game.id)
       |> assert_key("rules", game.rules)
       |> assert_key("settings", game.settings)
       |> assert_key("state", game.state)

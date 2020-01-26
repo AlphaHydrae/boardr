@@ -5,6 +5,7 @@ defmodule BoardrApi.ApiRootView do
     api_document(%{
       version: List.to_string(Application.spec(:boardr, :vsn))
     })
+    |> put_boardr_link(:game, Routes.games_url(Endpoint, :show, "") <> "{id}", :templated)
     |> put_boardr_link(:games, Routes.games_url(Endpoint, :index))
     |> put_boardr_link(:identities, Routes.identities_url(Endpoint, :index))
     # TODO: implement users index

@@ -29,6 +29,11 @@ defmodule BoardrApi.HalDocument do
 
   def put_link(doc, rel, href, link_properties \\ %{})
 
+  def put_link(doc, rel, href, :templated)
+      when is_map(doc) and (is_atom(rel) or is_binary(rel)) and is_binary(href) do
+    put_link(doc, rel, href, %{"templated" => true})
+  end
+
   def put_link(doc, rel, href, link_properties)
       when is_map(doc) and is_atom(rel) and is_binary(href) and is_map(link_properties) do
     put_link(doc, Atom.to_string(rel), href, link_properties)

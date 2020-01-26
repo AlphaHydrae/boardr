@@ -20,6 +20,7 @@ defmodule BoardrApi.GamesView do
   def render("show.json", %{game: %Game{} = game} = assigns) do
     result = %{
       createdAt: game.created_at,
+      id: game.id,
       rules: game.rules,
       settings: game.settings,
       state: game.state,
