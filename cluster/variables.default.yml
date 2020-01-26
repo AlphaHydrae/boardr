@@ -1,3 +1,4 @@
 ---
 boardr_db_user_password: changeme
 boardr_release_cookie: changeme
+boardr_secret: changeme

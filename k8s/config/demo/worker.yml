@@ -36,23 +36,15 @@ spec:
               value: boardr
             - name: BOARDR_K8S_SELECTOR
               value: boardr.alphahydrae.io/cluster=main
-            - name: BOARDR_PRIVATE_KEY_FILE
-              value: /etc/boardr/private-key
             - name: BOARDR_RELEASE_NODE_NAME
               value: boardr
+            - name: BOARDR_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: boardr-secret
+                  key: secret
             - name: RELEASE_COOKIE
               valueFrom:
                 secretKeyRef:
                   name: boardr-release-cookie
                   key: cookie
-          volumeMounts:
-            - name: boardr-worker-private-key
-              mountPath: /etc/boardr
-              readOnly: true
-      volumes:
-        - name: boardr-worker-private-key
-          secret:
-            secretName: boardr-api-private-key
-            items:
-              - key: key
-                path: private-key

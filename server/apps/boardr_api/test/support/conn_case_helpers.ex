@@ -88,8 +88,12 @@ defmodule BoardrApi.ConnCaseHelpers do
   end
 
   def verify_jwt_token!(token) when is_binary(token) do
-    jwt_private_key = Application.get_env(:boardr, Boardr.Auth.Token)[:private_key]
-    signer = Joken.Signer.create("RS512", %{"pem" => jwt_private_key})
+    jwt_secret =
+      :boardr
+      |> Application.fetch_env!(Boardr.Auth)
+      |> Keyword.fetch!(:secret_key_base)
+
+    signer = Joken.Signer.create("HS512", jwt_secret)
     {:ok, claims} = Joken.verify(token, signer)
     claims
   end

@@ -18,8 +18,8 @@ services:
     environment:
       BOARDR_BASE_URL: http://api:5000
       BOARDR_DATABASE_URL: ecto://boardr:changeme@db/boardr
-      BOARDR_PRIVATE_KEY_FILE: /etc/boardr/id_rsa
       BOARDR_PORT: 5000
+      BOARDR_SECRET: changeme
     networks:
       - db
       - default

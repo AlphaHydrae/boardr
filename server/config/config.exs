@@ -16,8 +16,8 @@ config :boardr,
 config :boardr, Boardr,
   rules_factory: Boardr.Rules.DefaultFactory
 
-config :boardr, Boardr.Auth.Token,
-  private_key: nil
+config :boardr, Boardr.Auth,
+  secret_key_base: nil
 
 # Take the environment variable $USER or the Unix system username as the default
 # database username if the $BOARDR_DATABASE_USERNAME variable is not set.

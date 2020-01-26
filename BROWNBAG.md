@@ -4,16 +4,18 @@
 
 * Refactor code to spread computations across swarm
 * Test distribution on cluster
-* Set up /etc/hosts on master with node names
 * Fix FIXMEs & TODOs
 * Create script to quickly perform demo
 
 ## Important
 
-* Test playbook.yml
-* Add insecure registry to Docker config
 * Remove hardcoded secrets (including database)
 * Frontend
+  * Basic game interface
+  * Stats page
+    * REST operations executed by node
+    * Number of game servers running by node
+    * Number of swarm processes running by node
 * Generate documentation
 * Generate coverage
 * Doctests
@@ -28,15 +30,16 @@
   * First demo
   * Second demo
 * README
+  * `env.exs` file
+    * Mix task to set up `env.exs` file
+  * Helper scripts
 
 ## Nice-to-have
 
-* Landing page
+* Websocket REST API
 * Frontend style
 * More tests
 * HAL browser
-* Kubernetes dashboard
 * Travis CI
 * Coveralls
 * Read Erlang book
-* Teaser trailer

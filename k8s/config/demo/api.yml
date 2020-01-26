@@ -53,27 +53,19 @@ spec:
               value: boardr.alphahydrae.io/cluster=main
             - name: BOARDR_PORT
               value: "4000"
-            - name: BOARDR_PRIVATE_KEY_FILE
-              value: /etc/boardr/private-key
             - name: BOARDR_RELEASE_NODE_ADDRESS
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
             - name: BOARDR_RELEASE_NODE_NAME
               value: boardr
+            - name: BOARDR_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: boardr-secret
+                  key: secret
             - name: RELEASE_COOKIE
               valueFrom:
                 secretKeyRef:
                   name: boardr-release-cookie
                   key: cookie
-          volumeMounts:
-            - name: boardr-api-private-key
-              mountPath: /etc/boardr
-              readOnly: true
-      volumes:
-        - name: boardr-api-private-key
-          secret:
-            secretName: boardr-api-private-key
-            items:
-              - key: key
-                path: private-key

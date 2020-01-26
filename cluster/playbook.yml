@@ -48,6 +48,7 @@
       boardr_release_copy_user: boardr
     - role: boardr-release-config
       boardr_release_config_user: boardr
+      boardr_release_config_secret: "{{ boardr_secret }}"
     - role: boardr-release-deploy
       boardr_release_deploy_migrate: true
       boardr_release_deploy_serve: true
@@ -78,7 +79,7 @@
       boardr_release_copy_user: boardr
     - role: boardr-release-config
       boardr_release_config_user: boardr
-      boardr_release_config_server: api
+      boardr_release_config_secret: "{{ boardr_secret }}"
     - role: boardr-release-deploy
       boardr_release_deploy_name: boardr
       boardr_release_deploy_service_name: Boardr Worker

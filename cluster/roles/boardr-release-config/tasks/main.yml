@@ -9,15 +9,6 @@
     state: directory
   tags: [ boardr-release-config, config ]
 
-# FIXME: private key must be in PEM format
-- name: Generate boardr SSH key pair
-  command:
-    cmd: ssh-keygen -b {{ boardr_release_config_ssh_key_bits | quote }} -C boardr -f {{ boardr_release_config_ssh_key_file | quote }} -N '' -t rsa
-    creates: "{{ boardr_release_config_ssh_key_file }}"
-  become_user: "{{ boardr_release_config_user }}"
-  when: boardr_release_config_server is not defined
-  tags: [ boardr-release-config, config ]
-
 - name: Create boardr environment file
   template:
     src: .env
@@ -25,12 +16,4 @@
     owner: "{{ boardr_release_config_user }}"
     group: "{{ boardr_release_config_group }}"
     mode: 0600
-  tags: [ boardr-release-config, config ]
-
-- name: Copy config from {{ boardr_release_config_server }} server to {{ boardr_release_config_directory }}
-  command:
-    cmd: /usr/bin/rsync --delay-updates -F --compress --archive --delete-after --rsh={{ '/usr/bin/ssh -S none -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' | quote }} {{ boardr_release_config_ssh_key_file | quote }} {{ ansible_host | quote }}:{{ boardr_release_config_ssh_key_file | quote }}
-  become_user: "{{ boardr_release_config_user }}"
-  delegate_to: "{{ boardr_release_config_server }}"
-  when: boardr_release_config_server is defined
   tags: [ boardr-release-config, config ]

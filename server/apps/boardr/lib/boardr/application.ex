@@ -13,23 +13,23 @@ defmodule Boardr.Application do
 
   def start(_type, _args) do
     compiled_env =
-      case Application.fetch_env(:boardr, Boardr.Auth.Token) do
+      case Application.fetch_env(:boardr, Boardr.Auth) do
         {:ok, env} -> env
-        _ -> nil
+        _ -> []
       end
 
-    {:ok, private_key} =
+    {:ok, secret_key_base} =
       Config.get_required_env(
-        "BOARDR_PRIVATE_KEY",
-        :private_key_missing,
-        Keyword.get(compiled_env, :private_key)
+        "BOARDR_SECRET",
+        :secret_missing,
+        Keyword.get(compiled_env, :secret_key_base)
       )
 
     env = compiled_env
-    |> Keyword.put(:private_key, private_key)
+    |> Keyword.put(:secret_key_base, secret_key_base)
 
     if env != compiled_env,
-      do: Application.put_env(:boardr, Boardr.Auth.Token, env)
+      do: Application.put_env(:boardr, Boardr.Auth, env)
 
     :ok =
       :telemetry.attach(:boardr, [:boardr, :repo, :query], &Boardr.Telemetry.handle_event/4, %{})

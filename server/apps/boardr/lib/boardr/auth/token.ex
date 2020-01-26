@@ -14,13 +14,13 @@ defmodule Boardr.Auth.Token do
   end
 
   defp create_signer() do
-    Joken.Signer.create("RS512", %{ "pem" => jwt_private_key() })
+    Joken.Signer.create("HS512", jwt_secret())
   end
 
-  defp jwt_private_key() do
+  defp jwt_secret() do
     :boardr
-    |> Application.fetch_env!(__MODULE__)
-    |> Keyword.fetch!(:private_key)
+    |> Application.fetch_env!(Boardr.Auth)
+    |> Keyword.fetch!(:secret_key_base)
   end
 
   defmodule JWT do

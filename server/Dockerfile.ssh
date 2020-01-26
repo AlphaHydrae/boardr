@@ -43,7 +43,7 @@ COPY --from=builder /s6/ /
 COPY ./docker/ /
 
 RUN apk add --no-cache ncurses openssh shadow sudo && \
-    echo 'Defaults env_keep += "BOARDR_BASE_URL BOARDR_DATABASE_URL BOARDR_PRIVATE_KEY BOARDR_PRIVATE_KEY_FILE BOARDR_PORT"' >> /etc/sudoers && \
+    echo 'Defaults env_keep += "BOARDR_BASE_URL BOARDR_DATABASE_URL BOARDR_PORT BOARDR_SECRET"' >> /etc/sudoers && \
     visudo -c && \
     mkdir /root/.ssh && \
     chmod 700 /root/.ssh && \
