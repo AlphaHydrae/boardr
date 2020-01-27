@@ -1,11 +1,11 @@
 module Pages.Home.Model exposing (Model, ViewModel)
 
-import Utils.Api exposing (ApiGame)
+import Api exposing (ApiGame)
 
 
 type alias Model =
-    { displayedGameIds : List String }
+    List String
 
 
 type alias ViewModel =
-    { displayedGames : List ApiGame }
+    List ApiGame

@@ -1,16 +1,12 @@
-module Store.Model exposing (BusinessDataModel, LocationModel, Model, UiModel)
+module Store.Model exposing (LocationModel, Model, UiModel)
 
+import Api exposing (ApiGame)
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Flags exposing (Flags)
 import Pages.Home.Model as HomePage
 import Routes exposing (Route)
 import Url exposing (Url)
-import Utils.Api exposing (ApiGame)
-
-
-type alias BusinessDataModel =
-    { games : Dict String ApiGame }
 
 
 type alias LocationModel =
@@ -20,12 +16,11 @@ type alias LocationModel =
     }
 
 
-type alias UiModel =
-    { home : HomePage.Model }
+type alias UiModel = HomePage.Model
 
 
 type alias Model =
-    { data : BusinessDataModel
+    { data : Dict String ApiGame
     , flags : Flags
     , location : LocationModel
     , ui : UiModel

@@ -1,4 +1,4 @@
-module Pages.Game.Page exposing (selector, view)
+module Pages.Game.Page exposing (view, viewModel)
 
 import Dict
 import Html exposing (Html, p, text)
@@ -7,11 +7,11 @@ import Routes exposing (Route(..))
 import Store.Model
 
 
-selector : Store.Model.Model -> ViewModel
-selector model =
+viewModel : Store.Model.Model -> ViewModel
+viewModel model =
     case model.location.route of
         GameRoute id ->
-            Dict.get id model.data.games
+            Dict.get id model.data
 
         _ ->
             Nothing

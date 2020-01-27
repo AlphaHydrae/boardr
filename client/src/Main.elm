@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Api exposing (apiRootDecoder)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Flags exposing (defaultFlags, Flags, flagsDecoder, ProgramFlags)
@@ -9,21 +10,20 @@ import Http
 import Json.Decode as Decode
 import Store.Init
 import Store.Model exposing (Model)
+import Store.Msg exposing (Msg(..))
 import Store.Update exposing (update)
-import Msg exposing (Msg)
 import Pages.Game.Page as GamePage
 import Pages.Home.Page as HomePage
 import Routes exposing (Route (..))
 import Url
-import Utils.Api exposing (apiRootDecoder)
 
 
 main : Program ProgramFlags Model Msg
 main =
     Browser.application
         { init = init
-        , onUrlChange = Msg.UrlChanged
-        , onUrlRequest = Msg.RequestUrl
+        , onUrlChange = UrlChanged
+        , onUrlRequest = RequestUrl
         , update = update
         , subscriptions = subscriptions
         , view = view
@@ -40,7 +40,7 @@ initWithFlags flags url key =
     ( Store.Init.init flags url key
     , Http.get
         { url = flags
-        , expect = Http.expectJson Msg.ApiRootRetrieved apiRootDecoder
+        , expect = Http.expectJson ApiRootRetrieved apiRootDecoder
         }
     )
 
@@ -71,10 +71,10 @@ viewBody : Model -> Html msg
 viewBody model =
     case model.location.route of
         HomeRoute ->
-            lazy HomePage.view (HomePage.selector model)
+            lazy HomePage.view (HomePage.viewModel model)
 
         GameRoute _ ->
-            lazy GamePage.view (GamePage.selector model)
+            lazy GamePage.view (GamePage.viewModel model)
 
         StatsRoute ->
             p [] [ text "Stats" ]

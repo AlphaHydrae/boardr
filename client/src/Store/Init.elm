@@ -1,22 +1,23 @@
 module Store.Init exposing (init)
 
+import Api exposing (ApiGame)
 import Browser.Navigation as Nav
-import Dict
+import Dict exposing (Dict)
 import Flags exposing (Flags)
 import Pages.Home.Page as HomePage
 import Routes exposing (toRoute)
-import Store.Model exposing (BusinessDataModel, LocationModel, Model, UiModel)
+import Store.Model exposing (LocationModel, Model, UiModel)
 import Url exposing (Url)
 
 
 init : Flags -> Url -> Nav.Key -> Model
 init flags url key =
-    Model initBusinessDataModel flags (initLocationModel key url) (initUiModel flags)
+    Model (initBusinessData flags) flags (initLocationModel key url) (initUiModel flags)
 
 
-initBusinessDataModel : BusinessDataModel
-initBusinessDataModel =
-    BusinessDataModel Dict.empty
+initBusinessData : Flags -> Dict String ApiGame
+initBusinessData _ =
+    Dict.empty
 
 
 initLocationModel : Nav.Key -> Url -> LocationModel
@@ -26,4 +27,4 @@ initLocationModel key url =
 
 initUiModel : Flags -> UiModel
 initUiModel flags =
-    { home = HomePage.init flags }
+    HomePage.init flags
