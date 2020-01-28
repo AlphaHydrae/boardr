@@ -1,6 +1,6 @@
 module Pages.Home.Model exposing (Model, ViewModel)
 
-import Api exposing (ApiGame)
+import Api exposing (ApiGame, ApiUser)
 
 
 type alias Model =
@@ -8,4 +8,6 @@ type alias Model =
 
 
 type alias ViewModel =
-    List ApiGame
+    { currentUser : Maybe ApiUser
+    , displayedGames : List ApiGame
+    }

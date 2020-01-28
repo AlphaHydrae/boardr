@@ -21,18 +21,34 @@ selectDisplayedGames ids dict =
 
 viewModel : Store.Model.Model -> ViewModel
 viewModel model =
-    selectDisplayedGames model.ui model.data.games
+    { currentUser = model.session.user
+    , displayedGames = selectDisplayedGames model.ui model.data.games
+    }
 
 
 view : ViewModel -> Html msg
-view vm =
+view vmodel =
     div []
         [ h1 [] [ text "Boardr" ]
-        , p []
-            [ a [ href "/stats" ] [ text "Stats" ]
-            ]
-        , viewGamesList vm
+        , p [] (viewNavLinks vmodel)
+        , viewGamesList vmodel.displayedGames
         ]
+
+
+viewNavLinks : ViewModel -> List (Html msg)
+viewNavLinks vmodel =
+    [ a [ href "/stats" ] [ text "Stats" ] ] ++ viewAuthNavLinks vmodel
+
+
+viewAuthNavLinks : ViewModel -> List (Html msg)
+viewAuthNavLinks vmodel =
+    case vmodel.currentUser of
+        Just user ->
+            []
+
+        Nothing ->
+            [ a [ href "/login" ] [ text "Log in" ]
+            , a [ href "/register" ] [ text "Register" ] ]
 
 
 viewGamesList : List ApiGame -> Html msg

@@ -1,6 +1,6 @@
-module Store.Model exposing (DataModel, LocationModel, Model, UiModel)
+module Store.Model exposing (DataModel, LocationModel, Model, SessionModel, UiModel)
 
-import Api exposing (ApiGame, ApiRoot)
+import Api exposing (ApiGame, ApiRoot, ApiUser)
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Flags exposing (Flags)
@@ -10,8 +10,9 @@ import Url exposing (Url)
 
 
 type alias DataModel =
-    { games: Dict String ApiGame
-    , root: Maybe ApiRoot }
+    { games : Dict String ApiGame
+    , root : Maybe ApiRoot
+    }
 
 
 type alias LocationModel =
@@ -21,12 +22,19 @@ type alias LocationModel =
     }
 
 
-type alias UiModel = HomePage.Model
-
-
 type alias Model =
     { data : DataModel
     , flags : Flags
     , location : LocationModel
+    , session : SessionModel
     , ui : UiModel
     }
+
+
+type alias SessionModel =
+    { token : Maybe String
+    , user : Maybe ApiUser }
+
+
+type alias UiModel =
+    HomePage.Model

@@ -14,6 +14,8 @@ import Store.Msg exposing (Msg(..))
 import Store.Update exposing (update)
 import Pages.Game.Page as GamePage
 import Pages.Home.Page as HomePage
+import Pages.Login.Page as LoginPage
+import Pages.Register.Page as RegisterPage
 import Routes exposing (Route (..))
 import Url
 
@@ -75,6 +77,12 @@ viewBody model =
 
         GameRoute id ->
             lazy GamePage.view (GamePage.viewModel id model)
+
+        LoginRoute ->
+            LoginPage.view
+
+        RegisterRoute ->
+            RegisterPage.view
 
         StatsRoute ->
             p [] [ text "Stats" ]
