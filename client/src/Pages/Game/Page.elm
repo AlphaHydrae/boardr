@@ -7,14 +7,9 @@ import Routes exposing (Route(..))
 import Store.Model
 
 
-viewModel : Store.Model.Model -> ViewModel
-viewModel model =
-    case model.location.route of
-        GameRoute id ->
-            Dict.get id model.data
-
-        _ ->
-            Nothing
+viewModel : String -> Store.Model.Model -> ViewModel
+viewModel gameId model =
+    Dict.get gameId model.data.games
 
 
 view : ViewModel -> Html msg

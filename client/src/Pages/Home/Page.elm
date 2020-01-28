@@ -21,7 +21,7 @@ selectDisplayedGames ids dict =
 
 viewModel : Store.Model.Model -> ViewModel
 viewModel model =
-    selectDisplayedGames model.ui model.data
+    selectDisplayedGames model.ui model.data.games
 
 
 view : ViewModel -> Html msg

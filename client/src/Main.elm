@@ -73,8 +73,8 @@ viewBody model =
         HomeRoute ->
             lazy HomePage.view (HomePage.viewModel model)
 
-        GameRoute _ ->
-            lazy GamePage.view (GamePage.viewModel model)
+        GameRoute id ->
+            lazy GamePage.view (GamePage.viewModel id model)
 
         StatsRoute ->
             p [] [ text "Stats" ]
