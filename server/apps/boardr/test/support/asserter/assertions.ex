@@ -222,7 +222,69 @@ defmodule Asserter.Assertions do
         subject: subject
     end
 
-    update_result(asserter, value, opts)
+    update_result(asserter, value, value, opts)
+  end
+
+  def assert_next_member(
+        %Asserter{asserted_members: asserted_members, options: options, subject: subject} = asserter,
+        callback,
+        opts \\ []
+      )
+      when is_list(asserted_members) and is_list(subject) and is_function(callback, 1) and is_list(opts) do
+    # mark_asserted_keys!(asserter, [key])
+
+    remaining_members = subject -- asserted_members
+    unless length(remaining_members) >= 1 do
+      raise Error,
+        message: "list has no more members",
+        subject: subject
+    end
+
+    use_raw_value = Keyword.get(opts, :only_value, false)
+    value = List.first(remaining_members)
+
+    effective_options = options
+    |> Keyword.merge(opts)
+    |> Keyword.put(:parent, asserter)
+
+    callback_arg =
+      if use_raw_value, do: value, else: Asserter.new(value, effective_options)
+
+    case callback.(callback_arg) do
+      %Asserter{result: result} ->
+        update_result(asserter, result, value, opts)
+
+      true ->
+        update_result(asserter, value, value, opts)
+
+      {:ok, callback_result} ->
+        update_result(asserter, callback_result, value, opts)
+
+      {:nok, opts} ->
+        {callback_message, properties} = Keyword.pop(opts, :message)
+
+        raise Error,
+              Keyword.merge(properties,
+                message: "next list member #{callback_message}",
+                actual: value,
+                subject: subject
+              )
+    end
+  end
+
+  # FIXME: check this in server
+  def assert_no_more_members(%Asserter{asserted_members: asserted_members, subject: subject} = asserter, opts \\ []) when is_list(asserted_members) and is_list(subject) and is_list(opts) do
+    #mark_asserted_keys!(asserter, [key])
+
+    remaining_members = subject -- asserted_members
+    unless Enum.empty?(remaining_members) do
+      raise Error,
+        message: "list has more members",
+        actual: subject,
+        expected: asserted_members
+    end
+
+    asserter
   end
 
   def ignore_keys(
@@ -273,25 +335,27 @@ defmodule Asserter.Assertions do
 
   defp update_result(
          %Asserter{
+           asserted_members: asserted_members,
            options: options,
            result: result,
            subject: subject
          } = asserter,
-         value,
+         member_result,
+         asserted_member,
          opts
-       ) when is_list(result) and is_list(subject) and is_list(opts) do
+       ) when is_list(asserted_members) and is_list(result) and is_list(subject) and is_list(opts) do
     effective_options = Keyword.merge(options, opts)
     into = Keyword.get(effective_options, :into)
 
     cond do
       into == false ->
-        asserter
+        %Asserter{asserter | asserted_members: asserted_members ++ [asserted_member]}
 
       not is_nil(into) ->
         raise ":into option can only be nil or false for lists"
 
       true ->
-        %Asserter{asserter | result: result ++ [value]}
+        %Asserter{asserter | asserted_members: asserted_members ++ [asserted_member], result: result ++ [member_result]}
     end
   end
 

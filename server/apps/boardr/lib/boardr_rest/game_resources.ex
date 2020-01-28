@@ -6,10 +6,10 @@ defmodule BoardrRest.GameResources do
   @behaviour BoardrRest.Resources
 
   @impl true
-  def handle_operation(operation(type: :create, data: http_request(body: body)) = op) do
+  def handle_operation(operation(type: :create, data: http_request(body: body, query_string: query_string)) = op) do
     with {:ok, {:user, user_id, _}} <- authorize(op, :user, :"api:games:create"),
          {:ok, game_properties} <- parse_json_object(body) do
-      insert_game_and_player(user_id, game_properties)
+      insert_game_and_player(user_id, game_properties, query_string)
     end
   end
 
@@ -22,7 +22,7 @@ defmodule BoardrRest.GameResources do
     end
   end
 
-  defp insert_game_and_player(user_id, game_properties)
+  defp insert_game_and_player(user_id, game_properties, query_string)
        when is_binary(user_id) and is_map(game_properties) do
     game =
       %Game{creator_id: user_id, rules: "tic-tac-toe", settings: %{}}
@@ -38,7 +38,11 @@ defmodule BoardrRest.GameResources do
       |> Repo.transaction()
 
     with {:ok, %{game: %Game{} = game, player: %Player{} = player}} <- result do
-      {:ok, %Game{game | players: [player]}}
+      {
+        :ok,
+        %Game{game | players: [player]},
+        (query_string || "") |> URI.decode_query() |> Map.get("embed", []) |> Data.to_list() |> Enum.uniq()
+      }
     end
   end
 
@@ -70,14 +74,27 @@ defmodule BoardrRest.GameResources do
       end
 
     if query do
-      {
-        :ok,
+      games =
         query
         |> Repo.all()
         |> Repo.preload(:winners)
+
+      embed = filters |> Map.get("embed", []) |> Data.to_list() |> Enum.uniq()
+
+      games = if "boardr:players" in embed do
+        games
+        |> Repo.preload(players: from(p in Player, order_by: p.number))
+      else
+        games
+      end
+
+      {
+        :ok,
+        games,
+        embed
       }
     else
-      {:ok, []}
+      {:ok, [], []}
     end
   end
 

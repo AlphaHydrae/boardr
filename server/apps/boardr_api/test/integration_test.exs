@@ -122,7 +122,7 @@ defmodule BoardrApi.IntegrationTest do
   defp create_game(%Conn{} = conn, %TestPlayer{} = player) do
     assert %{
              "_embedded" => %{
-               "boardr:player" => %{"_links" => %{"self" => %{"href" => player_url}}},
+               "boardr:players" => [%{"_links" => %{"self" => %{"href" => player_url}}}],
              },
              "_links" => %{
                "boardr:actions" => %{"href" => game_actions_url},
@@ -133,7 +133,7 @@ defmodule BoardrApi.IntegrationTest do
            } =
              conn
              |> authenticate_as(player)
-             |> post_json("/api/games", %{"rules" => "tic-tac-toe"})
+             |> post_json("/api/games?embed=boardr:players", %{"rules" => "tic-tac-toe"})
              |> json_response(201)
 
     conn

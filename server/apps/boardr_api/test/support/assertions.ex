@@ -163,6 +163,10 @@ defmodule BoardrApi.Assertions do
     result
   end
 
+  defp get_parent_asserter_results(%Asserter{parent: parent, result: result}) when not is_map(result) do
+    get_parent_asserter_results(parent)
+  end
+
   defp get_parent_asserter_results(%Asserter{parent: parent, result: result}) do
     Map.merge(get_parent_asserter_results(parent), result)
   end

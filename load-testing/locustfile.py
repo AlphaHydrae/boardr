@@ -46,12 +46,14 @@ class CreateAndPlayGame(TaskSequence):
       "rules": "tic-tac-toe"
     }, headers = {
       "Authorization": "Bearer " + self.locust.data["token"]
+    }, params = {
+      "embed": "boardr:players"
     }).json()
 
     self.locust.data["game_actions_url"] = game_body["_links"]["boardr:actions"]["href"]
     self.locust.data["game_url"] = game_body["_links"]["self"]["href"]
     self.locust.data["game_possible_actions_url"] = game_body["_links"]["boardr:possible-actions"]["href"]
-    self.locust.data["player_url"] = game_body["_embedded"]["boardr:player"]["_links"]["self"]["href"]
+    self.locust.data["player_url"] = game_body["_embedded"]["boardr:players"][0]["_links"]["self"]["href"]
 
   @seq_task(2)
   def play_game(self):

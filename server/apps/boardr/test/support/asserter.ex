@@ -6,6 +6,7 @@ defmodule Asserter do
   end
 
   defstruct asserted_keys: nil,
+            asserted_members: nil,
             options: [],
             parent: nil,
             ref: nil,
@@ -21,23 +22,24 @@ defmodule Asserter do
 
     ref = make_ref()
 
-    {asserted_keys, result} =
+    {asserted_keys, asserted_members, result} =
       cond do
         is_list(subject) ->
-          {nil, []}
+          {nil, [], []}
 
         is_map(subject) ->
           :ok = Asserter.Server.register_map(self(), ref, subject)
-          {[], %{}}
+          {[], nil, %{}}
 
         true ->
-          {nil, subject}
+          {nil, nil, subject}
       end
 
     {parent, remaining_options} = Keyword.pop(options, :parent)
 
     %Asserter{
       asserted_keys: asserted_keys,
+      asserted_members: asserted_members,
       options: remaining_options,
       parent: parent,
       ref: ref,
