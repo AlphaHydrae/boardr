@@ -1,6 +1,6 @@
 module Api exposing (ApiGame, ApiGameList, ApiRoot, apiGameDecoder, apiGameListDecoder, apiRootDecoder)
 
-import Json.Decode as Decode exposing (Decoder, bool, field, list, maybe, string)
+import Json.Decode as Decode exposing (Decoder, bool, field, int, list, maybe, string)
 import Json.Decode.Pipeline exposing (optional, required)
 
 
@@ -20,7 +20,14 @@ type alias ApiGameLinks =
 
 
 type alias ApiGameList =
-    List ApiGame
+    { games : List ApiGame
+    , players : Maybe (List ApiPlayer) }
+
+
+type alias ApiPlayer =
+    { createdAt : String
+    , number : Int
+    , userLink : HalLink }
 
 
 type alias ApiRoot =
@@ -37,7 +44,9 @@ type alias HalLink =
 
 apiGameListDecoder : Decoder ApiGameList
 apiGameListDecoder =
-    field "_embedded" (field "boardr:games" (list apiGameDecoder))
+    Decode.succeed ApiGameList
+        |> required "_embedded" (field "boardr:games" (list apiGameDecoder))
+        |> required "_embedded" (maybe (field "boardr:players" (list apiPlayerDecoder)))
 
 
 apiGameDecoder : Decoder ApiGame
@@ -55,6 +64,14 @@ apiGameLinksDecoder =
     Decode.succeed ApiGameLinks
         |> required "collection" halLinkDecoder
         |> required "self" halLinkDecoder
+
+
+apiPlayerDecoder : Decoder ApiPlayer
+apiPlayerDecoder =
+    Decode.succeed ApiPlayer
+        |> required "createdAt" string
+        |> required "number" int
+        |> required "_links" (field "boardr:user" halLinkDecoder)
 
 
 apiRootDecoder : Decoder ApiRoot

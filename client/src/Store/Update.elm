@@ -17,6 +17,7 @@ update msg model =
     case msg of
         ApiGameListRetrieved res ->
             case res of
+                -- Store game list data from the API.
                 Ok apiGameList ->
                     ( { model
                         | data = storeApiGameListData apiGameList model.data
@@ -31,6 +32,7 @@ update msg model =
 
         ApiGameRetrieved res ->
             case res of
+                -- Store game data from the API.
                 Ok apiGame ->
                     ( { model | data = storeApiGameData apiGame model.data }
                     , Cmd.none
@@ -44,12 +46,16 @@ update msg model =
             case res of
                 Ok apiRoot ->
                     let
-                        newModel = { model | data = storeApiRoot apiRoot model.data }
+                        -- Store API root data (HAL links).
+                        newModel =
+                            { model | data = storeApiRoot apiRoot model.data }
                     in
                     case model.location.route of
+                        -- Retrieve the game list from the API on the home page.
                         HomeRoute ->
                             ( newModel, retrieveGameList apiRoot )
 
+                        -- Retrieve the current game from the API on the game page.
                         GameRoute id ->
                             ( newModel
                             , Http.get
@@ -59,10 +65,7 @@ update msg model =
                                 }
                             )
 
-                        StatsRoute ->
-                            ( newModel, Cmd.none )
-
-                        NotFound ->
+                        _ ->
                             ( newModel, Cmd.none )
 
                 -- FIXME: handle ApiRootRetrieved Err
@@ -71,9 +74,11 @@ update msg model =
 
         RequestUrl urlRequest ->
             case urlRequest of
+                -- Request an update of the current location.
                 Browser.Internal url ->
                     ( model, Nav.pushUrl model.location.key (Url.toString url) )
 
+                -- Go to an external page.
                 Browser.External href ->
                     ( model, Nav.load href )
 
@@ -82,10 +87,12 @@ update msg model =
                 route =
                     toRoute url
             in
+            -- Update the current location.
             ( { model | location = updateLocation url route model.location }
             , case model.data.root of
                 Just root ->
                     case route of
+                        -- Retrieve the game list from the API when returning to the home page.
                         HomeRoute ->
                             retrieveGameList root
 
@@ -100,7 +107,7 @@ update msg model =
 retrieveGameList : ApiRoot -> Cmd Msg
 retrieveGameList apiRoot =
     Http.get
-        { url = apiRoot.gamesLink.href
+        { url = apiRoot.gamesLink.href ++ "?embed=boardr:players"
         , expect = Http.expectJson ApiGameListRetrieved apiGameListDecoder
         }
 
@@ -112,7 +119,7 @@ storeApiGameData apiGame data =
 
 storeApiGameListData : ApiGameList -> DataModel -> DataModel
 storeApiGameListData apiGameList data =
-    { data | games = List.foldl (\g d -> Dict.insert g.id g d) data.games apiGameList }
+    { data | games = List.foldl (\g d -> Dict.insert g.id g d) data.games apiGameList.games }
 
 
 storeApiRoot : ApiRoot -> DataModel -> DataModel
@@ -122,7 +129,7 @@ storeApiRoot apiRoot data =
 
 setVisibleHomeGames : ApiGameList -> List String
 setVisibleHomeGames apiGameList =
-    List.map (\g -> g.id) apiGameList
+    List.map (\g -> g.id) apiGameList.games
 
 
 updateLocation : Url -> Route -> LocationModel -> LocationModel
