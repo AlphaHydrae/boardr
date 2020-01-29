@@ -5,6 +5,7 @@ import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Flags exposing (Flags)
 import Pages.Home.Page as HomePage
+import Pages.Register.Page as RegisterPage
 import Routes exposing (toRoute)
 import Store.Model exposing (DataModel, LocationModel, Model, SessionModel, UiModel)
 import Url exposing (Url)
@@ -18,7 +19,8 @@ init flags url key =
 initDataModel : Flags -> DataModel
 initDataModel _ =
     { games = Dict.empty
-    , root = Nothing }
+    , root = Nothing
+    }
 
 
 initLocationModel : Nav.Key -> Url -> LocationModel
@@ -33,4 +35,6 @@ initSessionModel _ =
 
 initUiModel : Flags -> UiModel
 initUiModel flags =
-    HomePage.init flags
+    { home = HomePage.init flags
+    , register = RegisterPage.init flags
+    }

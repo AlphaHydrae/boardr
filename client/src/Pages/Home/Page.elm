@@ -22,7 +22,7 @@ selectDisplayedGames ids dict =
 viewModel : Store.Model.Model -> ViewModel
 viewModel model =
     { currentUser = model.session.user
-    , displayedGames = selectDisplayedGames model.ui model.data.games
+    , displayedGames = selectDisplayedGames model.ui.home model.data.games
     }
 
 

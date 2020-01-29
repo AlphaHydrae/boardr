@@ -62,14 +62,14 @@ subscriptions _ =
     Sub.none
 
 
-view : Model -> Document msg
+view : Model -> Document Msg
 view model =
     { title = "Boardr"
     , body = [ viewBody model ]
     }
 
 
-viewBody : Model -> Html msg
+viewBody : Model -> Html Msg
 viewBody model =
     case model.location.route of
         HomeRoute ->
