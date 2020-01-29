@@ -37,6 +37,16 @@ defmodule BoardrApi.Endpoint do
   plug(Plug.RequestId)
   plug(Plug.Telemetry, event_prefix: [:phoenix, :endpoint])
   plug(Plug.Head)
+  plug(Corsica, allow_headers: ["content-type"], origins: {__MODULE__, :allow_origin})
 
   plug(BoardrApi.Router)
+
+  def allow_origin(origin) do
+    allowed_origins =
+      :boardr
+      |> Application.fetch_env!(__MODULE__)
+      |> Keyword.fetch!(:allowed_origins)
+
+    origin in allowed_origins
+  end
 end

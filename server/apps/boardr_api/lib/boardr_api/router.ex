@@ -4,7 +4,6 @@ defmodule BoardrApi.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug Corsica, origins: {__MODULE__, :allow_origin}
     plug :require_json
   end
 
@@ -58,15 +57,6 @@ defmodule BoardrApi.Router do
       |> merge_assigns(error_title: title, error_type: type)
       |> put_view(BoardrApi.ErrorView)
       |> render("error.json")
-  end
-
-  def allow_origin(origin) do
-    allowed_origins =
-      :boardr
-      |> Application.fetch_env!(BoardrApi.Endpoint)
-      |> Keyword.fetch!(:allowed_origins)
-
-    origin in allowed_origins
   end
 
   defp require_json(%{halted: true} = conn, _) do
