@@ -37,7 +37,7 @@ defmodule BoardrApi.Endpoint do
   plug(Plug.RequestId)
   plug(Plug.Telemetry, event_prefix: [:phoenix, :endpoint])
   plug(Plug.Head)
-  plug(Corsica, allow_headers: ["content-type"], origins: {__MODULE__, :allow_origin})
+  plug(Corsica, allow_headers: ["authorization", "content-type"], origins: {__MODULE__, :allow_origin})
 
   plug(BoardrApi.Router)
 
