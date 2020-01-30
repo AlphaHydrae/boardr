@@ -33,6 +33,7 @@ defmodule BoardrApi.IdentitiesView do
       email: identity.email,
       emailVerified: identity.email_verified,
       emailVerifiedAt: identity.email_verified_at,
+      id: identity.id,
       lastAuthenticatedAt: identity.last_authenticated_at,
       lastSeenAt: identity.last_seen_at,
       provider: identity.provider,

@@ -15,6 +15,7 @@ defmodule BoardrApi.IdentitiesController do
     end
   end
 
+  # FIXME: require authorization
   def index(%Conn{} = conn, _) do
     identities = Repo.all(from(i in Identity, order_by: [desc: i.created_at]))
 
@@ -22,6 +23,7 @@ defmodule BoardrApi.IdentitiesController do
     |> render_hal(%{identities: identities})
   end
 
+  # FIXME: require authorization
   def show(%Conn{} = conn, %{"id" => id}) when is_binary(id) do
     identity = Repo.get!(Identity, id)
 
