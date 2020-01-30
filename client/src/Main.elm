@@ -1,22 +1,21 @@
 module Main exposing (main)
 
-import Api.Model exposing (apiRootDecoder)
+import Api.Req exposing (retrieveRoot)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
-import Flags exposing (defaultFlags, Flags, flagsDecoder, ProgramFlags)
+import Flags exposing (Flags, ProgramFlags, defaultFlags, flagsDecoder)
 import Html exposing (Html, p, text)
 import Html.Lazy exposing (lazy)
-import Http
 import Json.Decode as Decode
-import Store.Init
-import Store.Model exposing (Model)
-import Store.Msg exposing (Msg(..))
-import Store.Update exposing (update)
 import Pages.Game.Page as GamePage
 import Pages.Home.Page as HomePage
 import Pages.Login.Page as LoginPage
 import Pages.Register.Page as RegisterPage
-import Routes exposing (Route (..))
+import Routes exposing (Route(..))
+import Store.Init
+import Store.Model exposing (Model)
+import Store.Msg exposing (Msg(..))
+import Store.Update exposing (update)
 import Url
 
 
@@ -40,10 +39,7 @@ init flags url key =
 initWithFlags : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 initWithFlags flags url key =
     ( Store.Init.init flags url key
-    , Http.get
-        { url = flags
-        , expect = Http.expectJson ApiRootRetrieved apiRootDecoder
-        }
+    , retrieveRoot flags.apiUrl
     )
 
 

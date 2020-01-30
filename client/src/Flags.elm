@@ -1,11 +1,15 @@
-module Flags exposing (defaultFlags, Flags, flagsDecoder, ProgramFlags)
+module Flags exposing (Flags, ProgramFlags, defaultFlags, flagsDecoder)
 
-import Json.Decode as Decode exposing (field, map, maybe, string)
+import Json.Decode as Decode exposing (string)
+import Json.Decode.Pipeline exposing (optional)
+import Store.Session exposing (SessionModel, sessionDecoder)
 
--- FIXME: apiUrl should be an Url
-type alias ApiUrl = String
 
-type alias Flags = ApiUrl
+type alias Flags =
+    -- FIXME: apiUrl should be an Url
+    { apiUrl : String
+    , session : SessionModel
+    }
 
 
 type alias ProgramFlags =
@@ -13,16 +17,14 @@ type alias ProgramFlags =
 
 
 defaultFlags : Flags
-defaultFlags = ""
+defaultFlags =
+    { apiUrl = ""
+    , session = Nothing
+    }
 
 
 flagsDecoder : Decode.Decoder Flags
 flagsDecoder =
-    field "apiUrl" (map apiUrlDecoder (maybe string))
-
-
-apiUrlDecoder : Maybe String -> ApiUrl
-apiUrlDecoder optionalApiUrl =
-    case optionalApiUrl of
-       Just apiUrl -> apiUrl
-       _ -> ""
+    Decode.succeed Flags
+        |> optional "apiUrl" string ""
+        |> optional "session" sessionDecoder Nothing

@@ -1,6 +1,6 @@
 module Store.Update exposing (update)
 
-import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot, ApiUser)
+import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot, ApiUserWithToken, apiUserWithoutToken)
 import Api.Req exposing (createLocalIdentity, createUser, retrieveGame, retrieveGameList)
 import Browser
 import Browser.Navigation as Nav
@@ -8,9 +8,11 @@ import Dict
 import Pages.Register.Msg exposing (Msg(..))
 import Pages.Register.Page as RegisterPage
 import Platform.Cmd exposing (Cmd)
+import Ports exposing (saveSession)
 import Routes exposing (Route(..), toRoute)
-import Store.Model exposing (DataModel, LocationModel, Model, SessionModel, UiModel)
+import Store.Model exposing (DataModel, LocationModel, Model, UiModel)
 import Store.Msg exposing (Msg(..))
+import Store.Session exposing (AuthModel, SessionModel, sessionEncoder)
 import Url exposing (Url)
 import Url.Builder
 
@@ -40,9 +42,16 @@ update msg model =
 
         ApiCreateUserResponseReceived res ->
             case res of
-                Ok apiUser ->
-                    ( apiUser |> storeCreatedUser model.session |> storeSession model
-                    , Nav.pushUrl model.location.key (Url.Builder.absolute [] [])
+                Ok apiUserWithToken ->
+                    let
+                        newSession =
+                            apiUserWithToken |> storeCreatedUser model.session
+                    in
+                    ( newSession |> storeSession model
+                    , Cmd.batch
+                        [ Nav.pushUrl model.location.key (Url.Builder.absolute [] [])
+                        , saveSession (sessionEncoder newSession)
+                        ]
                     )
 
                 -- FIXME: handle ApiCreateUserResponseReceived Err
@@ -144,12 +153,9 @@ update msg model =
             )
 
 
-storeCreatedUser : SessionModel -> ApiUser -> SessionModel
-storeCreatedUser session apiUser =
-    { session
-        | token = Just apiUser.token
-        , user = Just apiUser
-    }
+storeCreatedUser : SessionModel -> ApiUserWithToken -> SessionModel
+storeCreatedUser _ apiUser =
+    Just (AuthModel apiUser.token (apiUserWithoutToken apiUser))
 
 
 storeData : Model -> DataModel -> Model

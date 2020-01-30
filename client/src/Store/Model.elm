@@ -1,12 +1,13 @@
-module Store.Model exposing (DataModel, LocationModel, Model, SessionModel, UiModel)
+module Store.Model exposing (DataModel, LocationModel, Model, UiModel)
 
-import Api.Model exposing (ApiGame, ApiIdentity, ApiRoot, ApiUser)
+import Api.Model exposing (ApiGame, ApiIdentity, ApiRoot)
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Flags exposing (Flags)
 import Pages.Home.Model as HomePage
 import Pages.Register.Model as RegisterPage
 import Routes exposing (Route)
+import Store.Session exposing (SessionModel)
 import Url exposing (Url)
 
 
@@ -30,12 +31,6 @@ type alias Model =
     , location : LocationModel
     , session : SessionModel
     , ui : UiModel
-    }
-
-
-type alias SessionModel =
-    { token : Maybe String
-    , user : Maybe ApiUser
     }
 
 

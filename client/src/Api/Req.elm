@@ -1,6 +1,6 @@
-module Api.Req exposing (createLocalIdentity, createUser, retrieveGame, retrieveGameList)
+module Api.Req exposing (createLocalIdentity, createUser, retrieveGame, retrieveGameList, retrieveRoot)
 
-import Api.Model exposing (ApiIdentity, ApiRoot, apiGameDecoder, apiGameListDecoder, apiIdentityDecoder, apiUserDecoder)
+import Api.Model exposing (ApiIdentity, ApiRoot, apiGameDecoder, apiGameListDecoder, apiIdentityDecoder, apiRootDecoder, apiUserWithTokenDecoder)
 import Dict
 import Http exposing (header)
 import Json.Encode as E
@@ -27,7 +27,15 @@ createUser name apiIdentity apiRoot =
         , headers = [ header "Authorization" ("Bearer " ++ apiIdentity.token) ]
         , timeout = Nothing
         , tracker = Nothing
-        , expect = Http.expectJson ApiCreateUserResponseReceived apiUserDecoder
+        , expect = Http.expectJson ApiCreateUserResponseReceived apiUserWithTokenDecoder
+        }
+
+
+retrieveRoot : String -> Cmd Msg
+retrieveRoot apiUrl =
+    Http.get
+        { url = apiUrl
+        , expect = Http.expectJson ApiRootRetrieved apiRootDecoder
         }
 
 

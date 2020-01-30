@@ -1,20 +1,33 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <meta charset="UTF-8">
+  <meta charset='UTF-8'>
   <title>Boardr</title>
-  <script src="/elm.js"></script>
+  <script src='/elm.js'></script>
 </head>
 
 <body>
-  <div id="elm"></div>
+  <div id='elm'></div>
   <script>
+    var flags = {
+      apiUrl: 'http://localhost:4000/api',
+    };
+
+    var session = localStorage.getItem('boardr');
+    if (session) {
+      flags.session = JSON.parse(session);
+    }
+
     var app = Elm.Main.init({
-      node: document.getElementById('elm'),
-      flags: {
-        apiUrl: "http://localhost:4000/api"
-      }
+      flags: flags,
+      node: document.getElementById('elm')
+    });
+
+    app.ports.saveSession.subscribe(function(session) {
+      localStorage.setItem('boardr', JSON.stringify(session));
     });
   </script>
+
+
 </body>
 </html>

@@ -6,7 +6,8 @@ import Flags exposing (Flags)
 import Pages.Home.Page as HomePage
 import Pages.Register.Page as RegisterPage
 import Routes exposing (toRoute)
-import Store.Model exposing (DataModel, LocationModel, Model, SessionModel, UiModel)
+import Store.Model exposing (DataModel, LocationModel, Model, UiModel)
+import Store.Session exposing (SessionModel)
 import Url exposing (Url)
 
 
@@ -29,8 +30,8 @@ initLocationModel key url =
 
 
 initSessionModel : Flags -> SessionModel
-initSessionModel _ =
-    SessionModel Nothing Nothing
+initSessionModel flags =
+    flags.session
 
 
 initUiModel : Flags -> UiModel

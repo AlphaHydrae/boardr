@@ -21,7 +21,7 @@ selectDisplayedGames ids dict =
 
 viewModel : Store.Model.Model -> ViewModel
 viewModel model =
-    { currentUser = model.session.user
+    { currentUser = Maybe.map .user model.session
     , displayedGames = selectDisplayedGames model.ui.home model.data.games
     }
 

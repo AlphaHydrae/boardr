@@ -1,7 +1,23 @@
-module Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot, ApiUser, apiGameDecoder, apiGameListDecoder, apiIdentityDecoder, apiRootDecoder, apiUserDecoder)
+module Api.Model exposing
+    ( ApiGame
+    , ApiGameList
+    , ApiIdentity
+    , ApiRoot
+    , ApiUser
+    , ApiUserWithToken
+    , apiGameDecoder
+    , apiGameListDecoder
+    , apiIdentityDecoder
+    , apiRootDecoder
+    , apiUserDecoder
+    , apiUserEncoder
+    , apiUserWithTokenDecoder
+    , apiUserWithoutToken
+    )
 
 import Json.Decode as Decode exposing (Decoder, bool, field, int, list, maybe, string)
 import Json.Decode.Pipeline exposing (optional, required)
+import Json.Encode as Encode
 
 
 type alias ApiGame =
@@ -51,14 +67,21 @@ type alias ApiRoot =
 type alias ApiUser =
     { createdAt : String
     , name : String
-    , token : String
     }
+
+
+type alias ApiUserWithToken =
+    WithToken ApiUser
 
 
 type alias HalLink =
     { href : String
     , templated : Bool
     }
+
+
+type alias WithToken a =
+    { a | token : String }
 
 
 apiGameListDecoder : Decoder ApiGameList
@@ -114,6 +137,31 @@ apiRootDecoder =
 apiUserDecoder : Decoder ApiUser
 apiUserDecoder =
     Decode.succeed ApiUser
+        |> required "createdAt" string
+        |> required "name" string
+
+
+apiUserEncoder : ApiUser -> Encode.Value
+apiUserEncoder apiUser =
+    Encode.object
+        [ ( "createdAt", Encode.string apiUser.createdAt )
+        , ( "name", Encode.string apiUser.name )
+        ]
+
+
+apiUserWithoutToken : ApiUserWithToken -> ApiUser
+apiUserWithoutToken user =
+    { createdAt = user.createdAt, name = user.name }
+
+
+apiUserWithToken : String -> String -> String -> ApiUserWithToken
+apiUserWithToken createdAt name token =
+    { createdAt = createdAt, name = name, token = token }
+
+
+apiUserWithTokenDecoder : Decoder ApiUserWithToken
+apiUserWithTokenDecoder =
+    Decode.succeed apiUserWithToken
         |> required "createdAt" string
         |> required "name" string
         |> required "_embedded" (field "boardr:token" (field "value" string))
