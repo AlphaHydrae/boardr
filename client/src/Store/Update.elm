@@ -40,44 +40,6 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
-        ApiCreateLocalIdentityResponseReceived res ->
-            case ( res, model.data.root ) of
-                ( Ok apiIdentity, Just apiRoot ) ->
-                    ( apiIdentity
-                        |> storeApiIdentity model.data
-                        |> storeData model
-                    , createUser model.ui.register.name apiIdentity apiRoot
-                    )
-
-                ( Ok apiIdentity, Nothing ) ->
-                    ( apiIdentity
-                        |> storeApiIdentity model.data
-                        |> storeData model
-                    , Cmd.none
-                    )
-
-                -- FIXME: handle ApiCreateLocalIdentityResponseReceived Err
-                ( Err _, _ ) ->
-                    ( model, Cmd.none )
-
-        ApiCreateUserResponseReceived res ->
-            case res of
-                Ok apiUserWithToken ->
-                    let
-                        newSession =
-                            apiUserWithToken |> storeCreatedUser model.session
-                    in
-                    ( newSession |> storeSession model
-                    , Cmd.batch
-                        [ Nav.pushUrl model.location.key (Url.Builder.absolute [] [])
-                        , saveSession (sessionEncoder newSession)
-                        ]
-                    )
-
-                -- FIXME: handle ApiCreateUserResponseReceived Err
-                Err _ ->
-                    ( model, Cmd.none )
-
         ApiGameListRetrieved res ->
             case res of
                 -- Store game list data from the API.
@@ -105,6 +67,26 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
+        ApiLocalIdentityCreated res ->
+            case ( res, model.data.root ) of
+                ( Ok apiIdentity, Just apiRoot ) ->
+                    ( apiIdentity
+                        |> storeApiIdentity model.data
+                        |> storeData model
+                    , createUser model.ui.register.name apiIdentity apiRoot
+                    )
+
+                ( Ok apiIdentity, Nothing ) ->
+                    ( apiIdentity
+                        |> storeApiIdentity model.data
+                        |> storeData model
+                    , Cmd.none
+                    )
+
+                -- FIXME: handle ApiCreateLocalIdentityResponseReceived Err
+                ( Err _, _ ) ->
+                    ( model, Cmd.none )
+
         ApiRootRetrieved res ->
             case res of
                 Ok apiRoot ->
@@ -128,6 +110,24 @@ update msg model =
                             ( newModel, Cmd.none )
 
                 -- FIXME: handle ApiRootRetrieved Err
+                Err _ ->
+                    ( model, Cmd.none )
+
+        ApiUserCreated res ->
+            case res of
+                Ok apiUserWithToken ->
+                    let
+                        newSession =
+                            apiUserWithToken |> storeCreatedUser model.session
+                    in
+                    ( newSession |> storeSession model
+                    , Cmd.batch
+                        [ Nav.pushUrl model.location.key (Url.Builder.absolute [] [])
+                        , saveSession (sessionEncoder newSession)
+                        ]
+                    )
+
+                -- FIXME: handle ApiCreateUserResponseReceived Err
                 Err _ ->
                     ( model, Cmd.none )
 

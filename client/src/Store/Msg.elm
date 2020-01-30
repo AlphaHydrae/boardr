@@ -13,11 +13,11 @@ type
     -- API
     -- TODO: rename to OperationResourceResponseReceived (e.g. RetrieveApiGameResponseReceived)
     = ApiAuthenticatedLocally (Result Http.Error ApiLocalAuthentication)
-    | ApiCreateLocalIdentityResponseReceived (Result Http.Error ApiIdentity)
-    | ApiCreateUserResponseReceived (Result Http.Error ApiUserWithToken)
     | ApiGameRetrieved (Result Http.Error ApiGame)
     | ApiGameListRetrieved (Result Http.Error ApiGameList)
+    | ApiLocalIdentityCreated (Result Http.Error ApiIdentity)
     | ApiRootRetrieved (Result Http.Error ApiRoot)
+    | ApiUserCreated (Result Http.Error ApiUserWithToken)
       -- Authentication
     | LogOut
       -- Pages

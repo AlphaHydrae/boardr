@@ -24,7 +24,7 @@ createLocalIdentity model apiRoot =
     Http.post
         { url = apiRoot.identitiesLink.href
         , body = Http.jsonBody (E.object [ ( "email", E.string model.email ), ( "provider", E.string "local" ) ])
-        , expect = Http.expectJson ApiCreateLocalIdentityResponseReceived apiIdentityDecoder
+        , expect = Http.expectJson ApiLocalIdentityCreated apiIdentityDecoder
         }
 
 
@@ -37,7 +37,7 @@ createUser name apiIdentity apiRoot =
         , headers = [ header "Authorization" ("Bearer " ++ apiIdentity.token) ]
         , timeout = Nothing
         , tracker = Nothing
-        , expect = Http.expectJson ApiCreateUserResponseReceived apiUserWithTokenDecoder
+        , expect = Http.expectJson ApiUserCreated apiUserWithTokenDecoder
         }
 
 
