@@ -37,13 +37,13 @@ view vmodel =
 
 viewNavLinks : ViewModel -> List (Html msg)
 viewNavLinks vmodel =
-    [ a [ href "/stats" ] [ text "Stats" ] ] ++ viewAuthNavLinks vmodel
+    a [ href "/stats" ] [ text "Stats" ] :: viewAuthNavLinks vmodel
 
 
 viewAuthNavLinks : ViewModel -> List (Html msg)
 viewAuthNavLinks vmodel =
     case vmodel.currentUser of
-        Just user ->
+        Just _ ->
             []
 
         Nothing ->

@@ -1,27 +1,42 @@
 module Store.Update exposing (update)
 
-import Api exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot, apiGameDecoder, apiIdentityDecoder, apiGameListDecoder, apiUserDecoder)
+import Api exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot)
+import Api.Req exposing (createLocalIdentity, createUser, retrieveGame, retrieveGameList)
 import Browser
 import Browser.Navigation as Nav
-import Dict exposing (Dict)
-import Http
-import Json.Encode as E
+import Dict
 import Pages.Register.Page as RegisterPage
 import Platform.Cmd exposing (Cmd)
 import Routes exposing (Route(..), toRoute)
 import Store.Model exposing (DataModel, LocationModel, Model, UiModel)
 import Store.Msg exposing (Msg(..))
 import Url exposing (Url)
-import Url.Interpolate exposing (interpolate)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ApiCreateIdentityResponseReceived res ->
-            ( model, Cmd.none )
+        ApiCreateLocalIdentityResponseReceived res ->
+            case ( res, model.data.root ) of
+                ( Ok apiIdentity, Just apiRoot ) ->
+                    ( apiIdentity
+                        |> storeApiIdentity model.data
+                        |> storeData model
+                    , createUser model.ui.register.name apiIdentity apiRoot
+                    )
 
-        ApiCreateUserResponseReceived res ->
+                ( Ok apiIdentity, Nothing ) ->
+                    ( apiIdentity
+                        |> storeApiIdentity model.data
+                        |> storeData model
+                    , Cmd.none
+                    )
+
+                -- FIXME: handle ApiCreateLocalIdentityResponseReceived Err
+                ( Err _, _ ) ->
+                    ( model, Cmd.none )
+
+        ApiCreateUserResponseReceived _ ->
             ( model, Cmd.none )
 
         ApiGameListRetrieved res ->
@@ -57,7 +72,9 @@ update msg model =
                     let
                         -- Store API root data (HAL links).
                         newModel =
-                            { model | data = storeApiRoot apiRoot model.data }
+                            apiRoot
+                                |> storeApiRoot model.data
+                                |> storeData model
                     in
                     case model.location.route of
                         -- Retrieve the game list from the API on the home page.
@@ -66,12 +83,7 @@ update msg model =
 
                         -- Retrieve the current game from the API on the game page.
                         GameRoute id ->
-                            ( newModel
-                            , Http.get
-                                { url = interpolate apiRoot.gameLink.href (Dict.fromList [ ( "{id}", id ) ])
-                                , expect = Http.expectJson ApiGameRetrieved apiGameDecoder
-                                }
-                            )
+                            ( newModel, retrieveGame id apiRoot )
 
                         _ ->
                             ( newModel, Cmd.none )
@@ -80,18 +92,17 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
-        EditRegisterEmail value ->
-            ( updateUi (RegisterPage.updateUi msg model.ui) model, Cmd.none )
+        EditRegisterEmail _ ->
+            ( msg |> RegisterPage.store model.ui |> storeUi model, Cmd.none )
+
+        EditRegisterUsername _ ->
+            ( msg |> RegisterPage.store model.ui |> storeUi model, Cmd.none )
 
         SubmitRegisterForm ->
             ( model
             , case model.data.root of
                 Just apiRoot ->
-                    Http.post
-                        { url = apiRoot.identitiesLink.href
-                        , body = Http.jsonBody (E.object [ ( "email", E.string model.ui.register.email ), ( "provider", E.string "local" ) ])
-                        , expect = Http.expectJson ApiCreateIdentityResponseReceived apiIdentityDecoder
-                        }
+                    createLocalIdentity model.ui.register apiRoot
 
                 _ ->
                     Cmd.none
@@ -129,12 +140,9 @@ update msg model =
             )
 
 
-retrieveGameList : ApiRoot -> Cmd Msg
-retrieveGameList apiRoot =
-    Http.get
-        { url = apiRoot.gamesLink.href ++ "?embed=boardr:players"
-        , expect = Http.expectJson ApiGameListRetrieved apiGameListDecoder
-        }
+storeData : Model -> DataModel -> Model
+storeData model data =
+    { model | data = data }
 
 
 storeApiGameData : ApiGame -> DataModel -> DataModel
@@ -147,9 +155,19 @@ storeApiGameListData apiGameList data =
     { data | games = List.foldl (\g d -> Dict.insert g.id g d) data.games apiGameList.games }
 
 
-storeApiRoot : ApiRoot -> DataModel -> DataModel
-storeApiRoot apiRoot data =
+storeApiIdentity : DataModel -> ApiIdentity -> DataModel
+storeApiIdentity data apiIdentity =
+    { data | identities = Dict.insert apiIdentity.id apiIdentity data.identities }
+
+
+storeApiRoot : DataModel -> ApiRoot -> DataModel
+storeApiRoot data apiRoot =
     { data | root = Just apiRoot }
+
+
+storeUi : Model -> UiModel -> Model
+storeUi model ui =
+    { model | ui = ui }
 
 
 setVisibleHomeGames : ApiGameList -> UiModel -> UiModel
@@ -160,8 +178,3 @@ setVisibleHomeGames apiGameList ui =
 updateLocation : Url -> Route -> LocationModel -> LocationModel
 updateLocation url route location =
     { location | url = url, route = route }
-
-
-updateUi : UiModel -> Model -> Model
-updateUi ui model =
-    { model | ui = ui }

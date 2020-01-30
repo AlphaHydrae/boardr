@@ -1,7 +1,7 @@
-module Pages.Register.Page exposing (init, updateUi, view)
+module Pages.Register.Page exposing (init, store, view)
 
 import Flags exposing (Flags)
-import Html exposing (Html, div, form, h2, input, label, p, text)
+import Html exposing (Html, button, div, form, h2, input, label, p, text)
 import Html.Attributes exposing (for, type_)
 import Html.Events exposing (onInput, onSubmit)
 import Pages.Register.Model exposing (Model)
@@ -11,7 +11,13 @@ import Store.Msg exposing (Msg(..))
 
 init : Flags -> Model
 init _ =
-    { email = "" }
+    { email = ""
+    , name = "" }
+
+
+store : UiModel -> Msg -> UiModel
+store model msg =
+    { model | register = update msg model.register }
 
 
 update : Msg -> Model -> Model
@@ -19,15 +25,12 @@ update msg model =
     case msg of
         EditRegisterEmail value ->
             { model | email = value }
+        EditRegisterUsername value ->
+            { model | name = value }
         SubmitRegisterForm ->
             model
         _ ->
             model
-
-
-updateUi : Msg -> UiModel -> UiModel
-updateUi msg model =
-    { model | register = update msg model.register }
 
 
 view : Html Msg
@@ -37,5 +40,8 @@ view =
         , form [ onSubmit SubmitRegisterForm ]
             [ label [ for "register-email" ] [ text "Email" ]
             , input [ type_ "text", onInput EditRegisterEmail ] []
+            , label [ for "register-name" ] [ text "Username" ]
+            , input [ type_ "text", onInput EditRegisterUsername ] []
+            , button [ type_ "submit" ] [ text "Submit" ]
             ]
         ]

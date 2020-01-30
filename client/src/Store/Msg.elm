@@ -10,13 +10,14 @@ type
     Msg
     -- API
     -- TODO: rename to OperationResourceResponseReceived (e.g. RetrieveApiGameResponseReceived)
-    = ApiCreateIdentityResponseReceived (Result Http.Error ApiIdentity)
+    = ApiCreateLocalIdentityResponseReceived (Result Http.Error ApiIdentity)
     | ApiCreateUserResponseReceived (Result Http.Error ApiUser)
     | ApiGameRetrieved (Result Http.Error ApiGame)
     | ApiGameListRetrieved (Result Http.Error ApiGameList)
     | ApiRootRetrieved (Result Http.Error ApiRoot)
       -- Register form
     | EditRegisterEmail String
+    | EditRegisterUsername String
     | SubmitRegisterForm
       -- Navigation
     | RequestUrl UrlRequest

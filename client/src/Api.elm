@@ -28,6 +28,8 @@ type alias ApiGameList =
 type alias ApiIdentity =
     { createdAt : String
     , email : String
+    , id : String
+    , token : String
     }
 
 
@@ -42,6 +44,7 @@ type alias ApiRoot =
     { gameLink : HalLink
     , gamesLink : HalLink
     , identitiesLink : HalLink
+    , usersLink : HalLink
     }
 
 
@@ -86,6 +89,8 @@ apiIdentityDecoder =
     Decode.succeed ApiIdentity
         |> required "createdAt" string
         |> required "email" string
+        |> required "id" string
+        |> required "_embedded" (field "boardr:token" (field "value" string))
 
 
 apiPlayerDecoder : Decoder ApiPlayer
@@ -102,6 +107,7 @@ apiRootDecoder =
         |> required "_links" (field "boardr:game" halLinkDecoder)
         |> required "_links" (field "boardr:games" halLinkDecoder)
         |> required "_links" (field "boardr:identities" halLinkDecoder)
+        |> required "_links" (field "boardr:users" halLinkDecoder)
 
 
 apiUserDecoder : Decoder ApiUser

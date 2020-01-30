@@ -1,8 +1,7 @@
 module Store.Init exposing (init)
 
-import Api exposing (ApiGame)
 import Browser.Navigation as Nav
-import Dict exposing (Dict)
+import Dict
 import Flags exposing (Flags)
 import Pages.Home.Page as HomePage
 import Pages.Register.Page as RegisterPage
@@ -19,6 +18,7 @@ init flags url key =
 initDataModel : Flags -> DataModel
 initDataModel _ =
     { games = Dict.empty
+    , identities = Dict.empty
     , root = Nothing
     }
 
