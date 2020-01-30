@@ -1,6 +1,6 @@
 module Pages.Home.Model exposing (Model, ViewModel)
 
-import Api exposing (ApiGame, ApiUser)
+import Api.Model exposing (ApiGame, ApiUser)
 
 
 type alias Model =

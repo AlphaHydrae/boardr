@@ -1,6 +1,6 @@
 module Store.Model exposing (DataModel, LocationModel, Model, SessionModel, UiModel)
 
-import Api exposing (ApiGame, ApiIdentity, ApiRoot, ApiUser)
+import Api.Model exposing (ApiGame, ApiIdentity, ApiRoot, ApiUser)
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Flags exposing (Flags)

@@ -1,6 +1,6 @@
 module Pages.Home.Page exposing (init, view, viewModel)
 
-import Api exposing (ApiGame)
+import Api.Model exposing (ApiGame)
 import Dict exposing (Dict)
 import Flags exposing (Flags)
 import Html exposing (Html, a, div, h1, li, p, text, ul)

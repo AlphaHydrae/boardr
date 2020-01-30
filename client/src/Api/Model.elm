@@ -1,4 +1,4 @@
-module Api exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot, ApiUser, apiGameDecoder, apiGameListDecoder, apiIdentityDecoder, apiRootDecoder, apiUserDecoder)
+module Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot, ApiUser, apiGameDecoder, apiGameListDecoder, apiIdentityDecoder, apiRootDecoder, apiUserDecoder)
 
 import Json.Decode as Decode exposing (Decoder, bool, field, int, list, maybe, string)
 import Json.Decode.Pipeline exposing (optional, required)

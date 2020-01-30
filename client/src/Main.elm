@@ -1,6 +1,6 @@
 module Main exposing (main)
 
-import Api exposing (apiRootDecoder)
+import Api.Model exposing (apiRootDecoder)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Flags exposing (defaultFlags, Flags, flagsDecoder, ProgramFlags)

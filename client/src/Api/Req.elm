@@ -1,6 +1,6 @@
 module Api.Req exposing (createLocalIdentity, createUser, retrieveGame, retrieveGameList)
 
-import Api exposing (ApiIdentity, ApiRoot, apiGameDecoder, apiGameListDecoder, apiIdentityDecoder, apiUserDecoder)
+import Api.Model exposing (ApiIdentity, ApiRoot, apiGameDecoder, apiGameListDecoder, apiIdentityDecoder, apiUserDecoder)
 import Dict
 import Http exposing (header)
 import Json.Encode as E

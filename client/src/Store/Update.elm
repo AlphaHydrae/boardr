@@ -1,6 +1,6 @@
 module Store.Update exposing (update)
 
-import Api exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot)
+import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot)
 import Api.Req exposing (createLocalIdentity, createUser, retrieveGame, retrieveGameList)
 import Browser
 import Browser.Navigation as Nav

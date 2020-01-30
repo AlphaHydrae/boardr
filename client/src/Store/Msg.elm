@@ -1,6 +1,6 @@
 module Store.Msg exposing (Msg(..))
 
-import Api exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot, ApiUser)
+import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot, ApiUser)
 import Browser exposing (UrlRequest)
 import Http
 import Url exposing (Url)
