@@ -70,4 +70,42 @@ defmodule BoardrApi.IdentitiesTest do
       assert_in_db(Identity, identity_id, expected_identity)
     end
   end
+
+  describe "POST /api/identities with an existing identity" do
+    setup [:clean_database, :create_identity, :count_queries]
+
+    test "a duplicate local entity cannot be created", %{
+      conn: %Conn{} = conn
+    } do
+      body =
+        conn
+        |> post_json(@api_path, @valid_properties)
+        |> json_response(422)
+
+      # Response
+      assert_api_map(body)
+      |> assert_key("errors", fn errors ->
+        assert_list(errors)
+        |> assert_member(%{"message" => "has already been taken", "property" => "/provider_id"})
+        |> assert_no_more_members()
+      end)
+      |> assert_key("status", 422)
+      |> assert_key("title", "The request body contains invalid properties.")
+      |> assert_key("type", test_api_url("/problems/validation-error"))
+
+      # Database changes
+      assert_db_queries(insert: 0, select: 0)
+    end
+  end
+
+  defp create_identity(context) when is_map(context) do
+    Map.put(
+      context,
+      :identity,
+      Fixtures.identity(
+        email: @valid_properties["email"],
+        provider: @valid_properties["local"]
+      )
+    )
+  end
 end

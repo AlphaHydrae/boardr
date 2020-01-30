@@ -45,5 +45,6 @@ defmodule Boardr.Auth.Identity do
       :provider,
       :provider_id
     ])
+    |> unique_constraint(:provider_id, name: :identities_provider_and_id_unique)
   end
 end
