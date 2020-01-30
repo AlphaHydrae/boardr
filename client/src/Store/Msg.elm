@@ -3,6 +3,7 @@ module Store.Msg exposing (Msg(..))
 import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot, ApiUser)
 import Browser exposing (UrlRequest)
 import Http
+import Pages.Register.Msg as RegisterPage
 import Url exposing (Url)
 
 
@@ -16,9 +17,7 @@ type
     | ApiGameListRetrieved (Result Http.Error ApiGameList)
     | ApiRootRetrieved (Result Http.Error ApiRoot)
       -- Register form
-    | EditRegisterEmail String
-    | EditRegisterUsername String
-    | SubmitRegisterForm
+    | RegisterPage RegisterPage.Msg
       -- Navigation
     | RequestUrl UrlRequest
     | UrlChanged Url

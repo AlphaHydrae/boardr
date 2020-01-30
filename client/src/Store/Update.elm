@@ -1,16 +1,18 @@
 module Store.Update exposing (update)
 
-import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot)
+import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot, ApiUser)
 import Api.Req exposing (createLocalIdentity, createUser, retrieveGame, retrieveGameList)
 import Browser
 import Browser.Navigation as Nav
 import Dict
+import Pages.Register.Msg exposing (Msg(..))
 import Pages.Register.Page as RegisterPage
 import Platform.Cmd exposing (Cmd)
 import Routes exposing (Route(..), toRoute)
-import Store.Model exposing (DataModel, LocationModel, Model, UiModel)
+import Store.Model exposing (DataModel, LocationModel, Model, SessionModel, UiModel)
 import Store.Msg exposing (Msg(..))
 import Url exposing (Url)
+import Url.Builder
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -36,16 +38,24 @@ update msg model =
                 ( Err _, _ ) ->
                     ( model, Cmd.none )
 
-        ApiCreateUserResponseReceived _ ->
-            ( model, Cmd.none )
+        ApiCreateUserResponseReceived res ->
+            case res of
+                Ok apiUser ->
+                    ( apiUser |> storeCreatedUser model.session |> storeSession model
+                    , Nav.pushUrl model.location.key (Url.Builder.absolute [] [])
+                    )
+
+                -- FIXME: handle ApiCreateUserResponseReceived Err
+                Err _ ->
+                    ( model, Cmd.none )
 
         ApiGameListRetrieved res ->
             case res of
                 -- Store game list data from the API.
                 Ok apiGameList ->
                     ( { model
-                        | data = storeApiGameListData apiGameList model.data
-                        , ui = setVisibleHomeGames apiGameList model.ui
+                        | data = apiGameList |> storeApiGameList model.data
+                        , ui = apiGameList |> storeVisibleHomeGames model.ui
                       }
                     , Cmd.none
                     )
@@ -58,7 +68,7 @@ update msg model =
             case res of
                 -- Store game data from the API.
                 Ok apiGame ->
-                    ( { model | data = storeApiGameData apiGame model.data }
+                    ( apiGame |> storeApiGame model.data |> storeData model
                     , Cmd.none
                     )
 
@@ -92,16 +102,10 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
-        EditRegisterEmail _ ->
-            ( msg |> RegisterPage.store model.ui |> storeUi model, Cmd.none )
-
-        EditRegisterUsername _ ->
-            ( msg |> RegisterPage.store model.ui |> storeUi model, Cmd.none )
-
-        SubmitRegisterForm ->
-            ( model
-            , case model.data.root of
-                Just apiRoot ->
+        RegisterPage sub ->
+            ( sub |> RegisterPage.store model.ui |> storeUi model
+            , case ( sub, model.data.root ) of
+                ( SubmitRegisterForm, Just apiRoot ) ->
                     createLocalIdentity model.ui.register apiRoot
 
                 _ ->
@@ -140,18 +144,26 @@ update msg model =
             )
 
 
+storeCreatedUser : SessionModel -> ApiUser -> SessionModel
+storeCreatedUser session apiUser =
+    { session
+        | token = Just apiUser.token
+        , user = Just apiUser
+    }
+
+
 storeData : Model -> DataModel -> Model
 storeData model data =
     { model | data = data }
 
 
-storeApiGameData : ApiGame -> DataModel -> DataModel
-storeApiGameData apiGame data =
+storeApiGame : DataModel -> ApiGame -> DataModel
+storeApiGame data apiGame =
     { data | games = Dict.insert apiGame.id apiGame data.games }
 
 
-storeApiGameListData : ApiGameList -> DataModel -> DataModel
-storeApiGameListData apiGameList data =
+storeApiGameList : DataModel -> ApiGameList -> DataModel
+storeApiGameList data apiGameList =
     { data | games = List.foldl (\g d -> Dict.insert g.id g d) data.games apiGameList.games }
 
 
@@ -165,13 +177,18 @@ storeApiRoot data apiRoot =
     { data | root = Just apiRoot }
 
 
+storeSession : Model -> SessionModel -> Model
+storeSession model session =
+    { model | session = session }
+
+
 storeUi : Model -> UiModel -> Model
 storeUi model ui =
     { model | ui = ui }
 
 
-setVisibleHomeGames : ApiGameList -> UiModel -> UiModel
-setVisibleHomeGames apiGameList ui =
+storeVisibleHomeGames : UiModel -> ApiGameList -> UiModel
+storeVisibleHomeGames ui apiGameList =
     { ui | home = List.map (\g -> g.id) apiGameList.games }
 
 

@@ -1,18 +1,19 @@
 module Pages.Register.Page exposing (init, store, view)
 
 import Flags exposing (Flags)
-import Html exposing (Html, button, div, form, h2, input, label, p, text)
+import Html exposing (Html, button, div, form, h2, input, label, text)
 import Html.Attributes exposing (for, type_)
 import Html.Events exposing (onInput, onSubmit)
 import Pages.Register.Model exposing (Model)
+import Pages.Register.Msg exposing (Msg(..))
 import Store.Model exposing (UiModel)
-import Store.Msg exposing (Msg(..))
 
 
 init : Flags -> Model
 init _ =
     { email = ""
-    , name = "" }
+    , name = ""
+    }
 
 
 store : UiModel -> Msg -> UiModel
@@ -25,11 +26,11 @@ update msg model =
     case msg of
         EditRegisterEmail value ->
             { model | email = value }
+
         EditRegisterUsername value ->
             { model | name = value }
+
         SubmitRegisterForm ->
-            model
-        _ ->
             model
 
 

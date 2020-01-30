@@ -51,6 +51,7 @@ type alias ApiRoot =
 type alias ApiUser =
     { createdAt : String
     , name : String
+    , token : String
     }
 
 
@@ -115,6 +116,7 @@ apiUserDecoder =
     Decode.succeed ApiUser
         |> required "createdAt" string
         |> required "name" string
+        |> required "_embedded" (field "boardr:token" (field "value" string))
 
 
 halLinkDecoder : Decoder HalLink

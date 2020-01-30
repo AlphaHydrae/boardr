@@ -82,7 +82,7 @@ viewBody model =
             LoginPage.view
 
         RegisterRoute ->
-            RegisterPage.view
+            Html.map RegisterPage RegisterPage.view
 
         StatsRoute ->
             p [] [ text "Stats" ]
