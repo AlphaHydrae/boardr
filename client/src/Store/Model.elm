@@ -5,6 +5,7 @@ import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Flags exposing (Flags)
 import Pages.Home.Model as HomePage
+import Pages.Login.Model as LoginPage
 import Pages.Register.Model as RegisterPage
 import Routes exposing (Route)
 import Store.Session exposing (SessionModel)
@@ -36,5 +37,6 @@ type alias Model =
 
 type alias UiModel =
     { home : HomePage.Model
+    , login : LoginPage.Model
     , register : RegisterPage.Model
     }

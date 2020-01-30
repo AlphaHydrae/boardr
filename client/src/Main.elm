@@ -61,27 +61,27 @@ subscriptions _ =
 view : Model -> Document Msg
 view model =
     { title = "Boardr"
-    , body = [ viewBody model ]
+    , body = viewBody model
     }
 
 
-viewBody : Model -> Html Msg
+viewBody : Model -> List (Html Msg)
 viewBody model =
     case model.location.route of
         HomeRoute ->
-            lazy HomePage.view (HomePage.viewModel model)
+            [ lazy HomePage.view (HomePage.viewModel model) ]
 
         GameRoute id ->
-            lazy GamePage.view (GamePage.viewModel id model)
+            [ lazy GamePage.view (GamePage.viewModel id model) ]
 
         LoginRoute ->
-            LoginPage.view
+            List.map (Html.map LoginPage) LoginPage.view
 
         RegisterRoute ->
-            Html.map RegisterPage RegisterPage.view
+            [ Html.map RegisterPage RegisterPage.view ]
 
         StatsRoute ->
-            p [] [ text "Stats" ]
+            [ p [] [ text "Stats" ] ]
 
         NotFound ->
-            p [] [ text "Page not found" ]
+            [ p [] [ text "Page not found" ] ]

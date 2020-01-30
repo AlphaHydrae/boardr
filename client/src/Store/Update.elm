@@ -1,10 +1,12 @@
 module Store.Update exposing (update)
 
-import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiRoot, ApiUserWithToken, apiUserWithoutToken)
-import Api.Req exposing (createLocalIdentity, createUser, retrieveGame, retrieveGameList)
+import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken, apiUserWithoutToken)
+import Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveGame, retrieveGameList)
 import Browser
 import Browser.Navigation as Nav
 import Dict
+import Pages.Login.Msg exposing (Msg(..))
+import Pages.Login.Page as LoginPage
 import Pages.Register.Msg exposing (Msg(..))
 import Pages.Register.Page as RegisterPage
 import Platform.Cmd exposing (Cmd)
@@ -20,6 +22,24 @@ import Url.Builder
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        ApiAuthenticatedLocally res ->
+            case res of
+                Ok localAuth ->
+                    let
+                        newSession =
+                            localAuth |> storeLocalAuthentication model.session
+                    in
+                    ( newSession |> storeSession model
+                    , Cmd.batch
+                        [ Nav.pushUrl model.location.key (Url.Builder.absolute [] [])
+                        , saveSession (sessionEncoder newSession)
+                        ]
+                    )
+
+                -- FIXME: handle ApiAuthenticatedLocally Err
+                Err _ ->
+                    ( model, Cmd.none )
+
         ApiCreateLocalIdentityResponseReceived res ->
             case ( res, model.data.root ) of
                 ( Ok apiIdentity, Just apiRoot ) ->
@@ -111,9 +131,20 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
+        LoginPage sub ->
+            ( sub |> LoginPage.store model.ui |> storeUi model
+            , case ( sub, model.data.root ) of
+                ( SubmitLoginForm, Just apiRoot ) ->
+                    authenticateLocally model.ui.login apiRoot
+
+                _ ->
+                    Cmd.none
+            )
+
         LogOut ->
             let
-                newSession = forgetAuth model.session
+                newSession =
+                    forgetAuth model.session
             in
             ( newSession |> storeSession model, saveSession (sessionEncoder newSession) )
 
@@ -164,16 +195,6 @@ forgetAuth _ =
     Nothing
 
 
-storeCreatedUser : SessionModel -> ApiUserWithToken -> SessionModel
-storeCreatedUser _ apiUser =
-    Just (AuthModel apiUser.token (apiUserWithoutToken apiUser))
-
-
-storeData : Model -> DataModel -> Model
-storeData model data =
-    { model | data = data }
-
-
 storeApiGame : DataModel -> ApiGame -> DataModel
 storeApiGame data apiGame =
     { data | games = Dict.insert apiGame.id apiGame data.games }
@@ -192,6 +213,21 @@ storeApiIdentity data apiIdentity =
 storeApiRoot : DataModel -> ApiRoot -> DataModel
 storeApiRoot data apiRoot =
     { data | root = Just apiRoot }
+
+
+storeCreatedUser : SessionModel -> ApiUserWithToken -> SessionModel
+storeCreatedUser _ apiUser =
+    Just (AuthModel apiUser.token (apiUserWithoutToken apiUser))
+
+
+storeData : Model -> DataModel -> Model
+storeData model data =
+    { model | data = data }
+
+
+storeLocalAuthentication : SessionModel -> ApiLocalAuthentication -> SessionModel
+storeLocalAuthentication session localAuth =
+    Just (AuthModel localAuth.token localAuth.user)
 
 
 storeSession : Model -> SessionModel -> Model

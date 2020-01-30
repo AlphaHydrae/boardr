@@ -1,12 +1,22 @@
-module Api.Req exposing (createLocalIdentity, createUser, retrieveGame, retrieveGameList, retrieveRoot)
+module Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveGame, retrieveGameList, retrieveRoot)
 
-import Api.Model exposing (ApiIdentity, ApiRoot, apiGameDecoder, apiGameListDecoder, apiIdentityDecoder, apiRootDecoder, apiUserWithTokenDecoder)
+import Api.Model exposing (ApiIdentity, ApiRoot, apiGameDecoder, apiGameListDecoder, apiIdentityDecoder, apiLocalAuthenticationDecoder, apiRootDecoder, apiUserWithTokenDecoder)
 import Dict
 import Http exposing (header)
 import Json.Encode as E
+import Pages.Login.Model as LoginPage
 import Pages.Register.Model as RegisterPage
 import Store.Msg exposing (Msg(..))
 import Url.Interpolate exposing (interpolate)
+
+
+authenticateLocally : LoginPage.Model -> ApiRoot -> Cmd Msg
+authenticateLocally model apiRoot =
+    Http.post
+        { url = apiRoot.localAuthLink.href
+        , body = Http.jsonBody (E.object [ ( "email", E.string model ) ])
+        , expect = Http.expectJson ApiAuthenticatedLocally apiLocalAuthenticationDecoder
+        }
 
 
 createLocalIdentity : RegisterPage.Model -> ApiRoot -> Cmd Msg

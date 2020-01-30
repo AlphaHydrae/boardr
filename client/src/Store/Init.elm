@@ -4,6 +4,7 @@ import Browser.Navigation as Nav
 import Dict
 import Flags exposing (Flags)
 import Pages.Home.Page as HomePage
+import Pages.Login.Page as LoginPage
 import Pages.Register.Page as RegisterPage
 import Routes exposing (toRoute)
 import Store.Model exposing (DataModel, LocationModel, Model, UiModel)
@@ -37,5 +38,6 @@ initSessionModel flags =
 initUiModel : Flags -> UiModel
 initUiModel flags =
     { home = HomePage.init flags
+    , login = LoginPage.init flags
     , register = RegisterPage.init flags
     }

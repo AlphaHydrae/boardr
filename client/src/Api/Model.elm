@@ -2,12 +2,14 @@ module Api.Model exposing
     ( ApiGame
     , ApiGameList
     , ApiIdentity
+    , ApiLocalAuthentication
     , ApiRoot
     , ApiUser
     , ApiUserWithToken
     , apiGameDecoder
     , apiGameListDecoder
     , apiIdentityDecoder
+    , apiLocalAuthenticationDecoder
     , apiRootDecoder
     , apiUserDecoder
     , apiUserEncoder
@@ -49,6 +51,11 @@ type alias ApiIdentity =
     }
 
 
+type alias ApiLocalAuthentication =
+    { token : String
+    , user : ApiUser }
+
+
 type alias ApiPlayer =
     { createdAt : String
     , number : Int
@@ -60,6 +67,7 @@ type alias ApiRoot =
     { gameLink : HalLink
     , gamesLink : HalLink
     , identitiesLink : HalLink
+    , localAuthLink : HalLink
     , usersLink : HalLink
     }
 
@@ -117,6 +125,13 @@ apiIdentityDecoder =
         |> required "_embedded" (field "boardr:token" (field "value" string))
 
 
+apiLocalAuthenticationDecoder : Decoder ApiLocalAuthentication
+apiLocalAuthenticationDecoder =
+    Decode.succeed ApiLocalAuthentication
+        |> required "_embedded" (field "boardr:token" (field "value" string))
+        |> required "_embedded" (field "boardr:user" apiUserDecoder)
+
+
 apiPlayerDecoder : Decoder ApiPlayer
 apiPlayerDecoder =
     Decode.succeed ApiPlayer
@@ -131,6 +146,7 @@ apiRootDecoder =
         |> required "_links" (field "boardr:game" halLinkDecoder)
         |> required "_links" (field "boardr:games" halLinkDecoder)
         |> required "_links" (field "boardr:identities" halLinkDecoder)
+        |> required "_links" (field "boardr:local-auth" halLinkDecoder)
         |> required "_links" (field "boardr:users" halLinkDecoder)
 
 

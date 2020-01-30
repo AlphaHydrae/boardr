@@ -23,7 +23,7 @@ defmodule BoardrApi.AuthController do
     user = Repo.one!(from(u in User, join: i in assoc(u, :identities), where: i.email == ^email, group_by: u.id))
     with {:ok, token} <- Token.generate(user) do
       conn
-      |> render(%{token: token})
+      |> render(%{token: token, user: user})
     end
   end
 end

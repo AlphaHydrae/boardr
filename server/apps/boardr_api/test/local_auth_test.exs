@@ -1,7 +1,7 @@
 defmodule BoardrApi.LocalAuthTest do
   use BoardrApi.ConnCase
 
-  alias Boardr.Auth.Identity
+  alias Boardr.Auth.{Identity, User}
 
   @api_path "/api/auth/local"
   @valid_properties %{"email" => "jdoe@boardr.local"}
@@ -19,7 +19,7 @@ defmodule BoardrApi.LocalAuthTest do
 
   test "POST /api/auth/local produces a valid JWT", %{
     conn: %Conn{} = conn,
-    identity: %Identity{user_id: user_id},
+    identity: %Identity{user: %User{id: user_id} = user},
     test_start: %DateTime{} = test_start
   } do
     body =
@@ -38,6 +38,7 @@ defmodule BoardrApi.LocalAuthTest do
           assert_map(token)
           |> assert_key("value", ~r/^[^.]+\.[^.]+\.[^.]+$/, into: :token)
         end)
+        |> assert_key("boardr:user", &assert_user_resource(&1, user))
       end)
 
     # JWT token
