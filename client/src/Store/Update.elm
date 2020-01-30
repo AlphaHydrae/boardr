@@ -226,7 +226,7 @@ storeData model data =
 
 
 storeLocalAuthentication : SessionModel -> ApiLocalAuthentication -> SessionModel
-storeLocalAuthentication session localAuth =
+storeLocalAuthentication _ localAuth =
     Just (AuthModel localAuth.token localAuth.user)
 
 
