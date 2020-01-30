@@ -111,6 +111,12 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
+        LogOut ->
+            let
+                newSession = forgetAuth model.session
+            in
+            ( newSession |> storeSession model, saveSession (sessionEncoder newSession) )
+
         RegisterPage sub ->
             ( sub |> RegisterPage.store model.ui |> storeUi model
             , case ( sub, model.data.root ) of
@@ -151,6 +157,11 @@ update msg model =
                 Nothing ->
                     Cmd.none
             )
+
+
+forgetAuth : SessionModel -> SessionModel
+forgetAuth _ =
+    Nothing
 
 
 storeCreatedUser : SessionModel -> ApiUserWithToken -> SessionModel

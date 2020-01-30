@@ -1,5 +1,6 @@
-port module Ports exposing(saveSession)
+port module Ports exposing (saveSession)
 
-import Json.Encode as E
+import Json.Encode as Encode
 
-port saveSession : E.Value -> Cmd msg
+
+port saveSession : Encode.Value -> Cmd msg

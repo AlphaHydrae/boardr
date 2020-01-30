@@ -16,6 +16,8 @@ type
     | ApiGameRetrieved (Result Http.Error ApiGame)
     | ApiGameListRetrieved (Result Http.Error ApiGameList)
     | ApiRootRetrieved (Result Http.Error ApiRoot)
+      -- Authentication
+    | LogOut
       -- Register form
     | RegisterPage RegisterPage.Msg
       -- Navigation

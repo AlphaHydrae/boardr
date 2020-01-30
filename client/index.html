@@ -24,7 +24,11 @@
     });
 
     app.ports.saveSession.subscribe(function(session) {
-      localStorage.setItem('boardr', JSON.stringify(session));
+      if (session) {
+        localStorage.setItem('boardr', JSON.stringify(session));
+      } else {
+        localStorage.removeItem('boardr');
+      }
     });
   </script>
 

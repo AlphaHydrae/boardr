@@ -5,8 +5,10 @@ import Dict exposing (Dict)
 import Flags exposing (Flags)
 import Html exposing (Html, a, div, h1, li, p, text, ul)
 import Html.Attributes exposing (href)
+import Html.Events exposing (onClick)
 import Pages.Home.Model exposing (Model, ViewModel)
 import Store.Model
+import Store.Msg exposing (Msg(..))
 
 
 init : Flags -> Model
@@ -26,7 +28,7 @@ viewModel model =
     }
 
 
-view : ViewModel -> Html msg
+view : ViewModel -> Html Msg
 view vmodel =
     div []
         [ h1 [] [ text "Boardr" ]
@@ -35,16 +37,16 @@ view vmodel =
         ]
 
 
-viewNavLinks : ViewModel -> List (Html msg)
+viewNavLinks : ViewModel -> List (Html Msg)
 viewNavLinks vmodel =
     a [ href "/stats" ] [ text "Stats" ] :: viewAuthNavLinks vmodel
 
 
-viewAuthNavLinks : ViewModel -> List (Html msg)
+viewAuthNavLinks : ViewModel -> List (Html Msg)
 viewAuthNavLinks vmodel =
     case vmodel.currentUser of
         Just _ ->
-            []
+            [ a [ href "#", onClick LogOut ] [ text "Log out" ] ]
 
         Nothing ->
             [ a [ href "/login" ] [ text "Log in" ]
