@@ -2,7 +2,6 @@
 
 ## Critical
 
-* Refactor code to spread computations across swarm
 * Test distribution on cluster
 * Fix FIXMEs & TODOs
 * Create script to quickly perform demo
@@ -36,6 +35,8 @@
 
 ## Nice-to-have
 
+* bcrypt
+* Google auth
 * Websocket REST API
 * Frontend style
 * More tests

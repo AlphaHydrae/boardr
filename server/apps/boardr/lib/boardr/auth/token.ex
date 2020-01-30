@@ -1,7 +1,16 @@
 defmodule Boardr.Auth.Token do
   alias Boardr.Auth.Token.JWT
+  alias Boardr.Auth.{Identity, User}
 
-  def generate(claims) do
+  def generate(%Identity{id: identity_id}) when is_binary(identity_id) do
+    generate(%{scope: "register", sub: "i:#{identity_id}"})
+  end
+
+  def generate(%User{id: user_id}) when is_binary(user_id) do
+    generate(%{scope: "api", sub: "u:#{user_id}"})
+  end
+
+  def generate(claims) when is_map(claims) do
     case JWT.generate_and_sign(claims, create_signer()) do
       {:ok, jwt, _} -> {:ok, jwt}
       {:error, reason} -> {:error, reason}

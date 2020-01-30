@@ -53,15 +53,22 @@ defmodule Boardr.Fixtures do
     email = Keyword.get_lazy(properties, :email, fn -> "#{Faker.Name.En.first_name()}@example.com" end)
     now = DateTime.utc_now()
 
+    user_id = Keyword.get_lazy(properties, :user_id, fn ->
+      user = Keyword.get(properties, :user)
+      unless is_nil(user), do: user.id, else: nil
+    end)
+
     %Identity{
       email: email,
       email_verified: false,
       last_authenticated_at: now,
       last_seen_at: now,
       provider: "local",
-      provider_id: String.downcase(email)
+      provider_id: String.downcase(email),
+      user_id: user_id
     }
     |> Repo.insert!(returning: [:id])
+    |> Repo.preload(:user)
   end
 
   def player(properties \\ []) when is_list(properties) do

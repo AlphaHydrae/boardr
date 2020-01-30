@@ -14,6 +14,7 @@ defmodule BoardrApi.Router do
 
     scope "/auth" do
       post "/google", AuthController, :google
+      post "/local", AuthController, :local
     end
 
     resources "/games", GamesController, as: :games, name: :game, only: [:create, :index, :show] do

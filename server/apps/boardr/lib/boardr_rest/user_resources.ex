@@ -25,7 +25,7 @@ defmodule BoardrRest.UserResources do
     |> Auth.register_user(user_properties)
   end
 
-  defp generate_token(%Identity{user: %User{id: user_id}}) do
-    Token.generate(%{scope: "api", sub: "u:#{user_id}"})
+  defp generate_token(%Identity{user: %User{} = user}) do
+    Token.generate(user)
   end
 end

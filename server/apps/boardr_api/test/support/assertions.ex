@@ -65,6 +65,10 @@ defmodule BoardrApi.Assertions do
     assert remaining_queries == remaining_expected
   end
 
+  def assert_no_db_queries() do
+    assert_db_queries(begin: 0, delete: 0, insert: 0, rollback: 0, select: 0, update: 0)
+  end
+
   def assert_hal_curies(%Asserter{subject: subject} = asserter, extra_curies \\ [], opts \\ [])
       when is_map(subject) and is_list(extra_curies) and is_list(opts) do
     asserter

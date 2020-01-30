@@ -17,8 +17,7 @@ defmodule BoardrRest.IdentityResources do
     with {:ok, identity_properties} <- parse_json_object(body),
          {:ok, bearer_token} <- get_bearer_token(authorization),
          {:ok, identity} <- Auth.ensure_identity(identity_properties, bearer_token),
-         claims = create_identity_claims(identity),
-         {:ok, jwt} <- Token.generate(claims) do
+         {:ok, jwt} <- generate_token(identity) do
       {
         :ok,
         %Identity{identity | token: jwt}
@@ -26,12 +25,12 @@ defmodule BoardrRest.IdentityResources do
     end
   end
 
-  defp create_identity_claims(%Identity{id: id, user: %User{}}) do
-    %{scope: "api", sub: "u:#{id}"}
+  defp generate_token(%Identity{user: %User{} = user}) do
+    Token.generate(user)
   end
 
-  defp create_identity_claims(%Identity{id: id, user: nil}) do
-    %{scope: "register", sub: "i:#{id}"}
+  defp generate_token(%Identity{} = identity) do
+    Token.generate(identity)
   end
 
   @spec get_bearer_token(BoardrRest.authorization | nil) :: {:ok, binary | nil}
