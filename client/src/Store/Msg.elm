@@ -1,6 +1,6 @@
 module Store.Msg exposing (Msg(..))
 
-import Api.Model exposing (ApiGame, ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken)
+import Api.Model exposing (ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken)
 import Browser exposing (UrlRequest)
 import Http
 import Pages.Game.Msg as GamePage
