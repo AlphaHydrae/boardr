@@ -1,19 +1,20 @@
-module Pages.Home.Page exposing (init, view, viewModel)
+module Pages.Home.Page exposing (init, updateUi, view, viewModel)
 
-import Api.Model exposing (ApiGame)
+import Api.Model exposing (ApiGame, ApiGameList)
 import Dict exposing (Dict)
 import Flags exposing (Flags)
 import Html exposing (Html, a, div, h1, li, p, text, ul)
 import Html.Attributes exposing (href)
 import Html.Events exposing (onClick)
 import Pages.Home.Model exposing (Model, ViewModel)
-import Store.Model
-import Store.Msg exposing (Msg(..))
+import Pages.Home.Msg exposing (Msg(..))
+import Store.Model exposing (UiModel)
+import Types exposing (RemoteData(..))
 
 
 init : Flags -> Model
 init _ =
-    []
+    Loading
 
 
 selectDisplayedGames : List String -> Dict String ApiGame -> List ApiGame
@@ -21,10 +22,47 @@ selectDisplayedGames ids dict =
     List.filterMap (\id -> Dict.get id dict) ids
 
 
+storeDisplayedGames : Model -> ApiGameList -> Model
+storeDisplayedGames _ apiGameList =
+    Loaded (List.map .id apiGameList.games)
+
+
+update : Model -> Msg -> Model
+update model msg =
+    case msg of
+        ApiHomePageGamesRetrieved res ->
+            case res of
+                Ok apiGameList ->
+                    storeDisplayedGames model apiGameList
+
+                Err err ->
+                    Error err
+
+        LogOut ->
+            model
+
+        RefreshDisplayedGames _ ->
+            model
+
+
+updateUi : UiModel -> Msg -> UiModel
+updateUi ui msg =
+    { ui | home = update ui.home msg }
+
+
 viewModel : Store.Model.Model -> ViewModel
 viewModel model =
     { currentUser = Maybe.map .user model.session
-    , displayedGames = selectDisplayedGames model.ui.home model.data.games
+    , displayedGames =
+        case model.ui.home of
+            Loaded ids ->
+                Loaded (selectDisplayedGames ids model.data.games)
+
+            Loading ->
+                Loading
+
+            Error err ->
+                Error err
     }
 
 
@@ -33,7 +71,7 @@ view vmodel =
     div []
         [ h1 [] [ text "Boardr" ]
         , p [] (viewNavLinks vmodel)
-        , viewGamesList vmodel.displayedGames
+        , viewGameList vmodel.displayedGames
         ]
 
 
@@ -50,13 +88,22 @@ viewAuthNavLinks vmodel =
 
         Nothing ->
             [ a [ href "/login" ] [ text "Log in" ]
-            , a [ href "/register" ] [ text "Register" ] ]
+            , a [ href "/register" ] [ text "Register" ]
+            ]
 
 
-viewGamesList : List ApiGame -> Html msg
-viewGamesList games =
-    ul []
-        (List.map viewGame games)
+viewGameList : RemoteData (List ApiGame) -> Html msg
+viewGameList displayedGames =
+    case displayedGames of
+        Loading ->
+            p [] [ text "Loading..." ]
+
+        Loaded games ->
+            ul []
+                (List.map viewGame games)
+
+        Error _ ->
+            p [] [ text "Could not load games..." ]
 
 
 viewGame : ApiGame -> Html msg

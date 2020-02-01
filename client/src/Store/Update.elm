@@ -1,10 +1,13 @@
 module Store.Update exposing (update)
 
 import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken, apiUserWithoutToken)
-import Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveGame, retrieveGameList)
+import Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveHomePageGames, retrieveGame)
 import Browser
 import Browser.Navigation as Nav
 import Dict
+import Http
+import Pages.Home.Page as HomePage
+import Pages.Home.Msg exposing (Msg(..))
 import Pages.Login.Msg exposing (Msg(..))
 import Pages.Login.Page as LoginPage
 import Pages.Register.Msg exposing (Msg(..))
@@ -40,21 +43,6 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
-        ApiGameListRetrieved res ->
-            case res of
-                -- Store game list data from the API.
-                Ok apiGameList ->
-                    ( { model
-                        | data = apiGameList |> storeApiGameList model.data
-                        , ui = apiGameList |> storeVisibleHomeGames model.ui
-                      }
-                    , Cmd.none
-                    )
-
-                -- FIXME: handle ApiGameListRetrieved Err
-                Err _ ->
-                    ( model, Cmd.none )
-
         ApiGameRetrieved res ->
             case res of
                 -- Store game data from the API.
@@ -83,7 +71,7 @@ update msg model =
                     , Cmd.none
                     )
 
-                -- FIXME: handle ApiCreateLocalIdentityResponseReceived Err
+                -- FIXME: handle ApiLocalIdentityCreated Err
                 ( Err _, _ ) ->
                     ( model, Cmd.none )
 
@@ -100,7 +88,7 @@ update msg model =
                     case model.location.route of
                         -- Retrieve the game list from the API on the home page.
                         HomeRoute ->
-                            ( newModel, retrieveGameList apiRoot )
+                            ( newModel, retrieveHomePageGames apiRoot )
 
                         -- Retrieve the current game from the API on the game page.
                         GameRoute id ->
@@ -127,9 +115,37 @@ update msg model =
                         ]
                     )
 
-                -- FIXME: handle ApiCreateUserResponseReceived Err
+                -- FIXME: handle ApiUserCreated Err
                 Err _ ->
                     ( model, Cmd.none )
+
+        HomePage sub ->
+            (
+                case sub of
+                    ApiHomePageGamesRetrieved res ->
+                        { model
+                          | data = res |> storeApiHomePageGames model.data
+                          , ui = sub |> HomePage.updateUi model.ui
+                        }
+
+                    LogOut ->
+                        { model
+                          | session = forgetAuth model.session
+                          , ui = LogOut |> HomePage.updateUi model.ui
+                        }
+
+                    _ ->
+                        sub |> HomePage.updateUi model.ui |> storeUi model
+                , case ( sub, model.data.root ) of
+                    ( LogOut, _ ) ->
+                        saveSession (sessionEncoder (forgetAuth model.session))
+
+                    ( RefreshDisplayedGames _, Just apiRoot ) ->
+                        retrieveHomePageGames apiRoot
+
+                    _ ->
+                        Cmd.none
+            )
 
         LoginPage sub ->
             ( sub |> LoginPage.store model.ui |> storeUi model
@@ -140,13 +156,6 @@ update msg model =
                 _ ->
                     Cmd.none
             )
-
-        LogOut ->
-            let
-                newSession =
-                    forgetAuth model.session
-            in
-            ( newSession |> storeSession model, saveSession (sessionEncoder newSession) )
 
         RegisterPage sub ->
             ( sub |> RegisterPage.store model.ui |> storeUi model
@@ -180,7 +189,7 @@ update msg model =
                     case route of
                         -- Retrieve the game list from the API when returning to the home page.
                         HomeRoute ->
-                            retrieveGameList root
+                            retrieveHomePageGames root
 
                         _ ->
                             Cmd.none
@@ -200,9 +209,14 @@ storeApiGame data apiGame =
     { data | games = Dict.insert apiGame.id apiGame data.games }
 
 
-storeApiGameList : DataModel -> ApiGameList -> DataModel
-storeApiGameList data apiGameList =
-    { data | games = List.foldl (\g d -> Dict.insert g.id g d) data.games apiGameList.games }
+storeApiHomePageGames : DataModel -> Result Http.Error ApiGameList -> DataModel
+storeApiHomePageGames data res =
+    case res of
+        Ok apiGameList ->
+            { data | games = List.foldl (\g d -> Dict.insert g.id g d) data.games apiGameList.games }
+
+        Err _ ->
+            data
 
 
 storeApiIdentity : DataModel -> ApiIdentity -> DataModel
@@ -238,11 +252,6 @@ storeSession model session =
 storeUi : Model -> UiModel -> Model
 storeUi model ui =
     { model | ui = ui }
-
-
-storeVisibleHomeGames : UiModel -> ApiGameList -> UiModel
-storeVisibleHomeGames ui apiGameList =
-    { ui | home = List.map (\g -> g.id) apiGameList.games }
 
 
 updateLocation : Url -> Route -> LocationModel -> LocationModel
