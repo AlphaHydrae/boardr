@@ -5,5 +5,6 @@ import Http
 
 type RemoteData a
     = Loading
-    | Loaded (a)
+    | Loaded a
+    | Refreshing a
     | Error Http.Error

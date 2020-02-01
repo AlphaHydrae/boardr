@@ -1,8 +1,9 @@
 module Store.Msg exposing (Msg(..))
 
-import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken)
+import Api.Model exposing (ApiGame, ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken)
 import Browser exposing (UrlRequest)
 import Http
+import Pages.Game.Msg as GamePage
 import Pages.Home.Msg as HomePage
 import Pages.Login.Msg as LoginPage
 import Pages.Register.Msg as RegisterPage
@@ -14,11 +15,11 @@ type
     -- API
     -- TODO: rename to OperationResourceResponseReceived (e.g. RetrieveApiGameResponseReceived)
     = ApiAuthenticatedLocally (Result Http.Error ApiLocalAuthentication)
-    | ApiGameRetrieved (Result Http.Error ApiGame)
     | ApiLocalIdentityCreated (Result Http.Error ApiIdentity)
     | ApiRootRetrieved (Result Http.Error ApiRoot)
     | ApiUserCreated (Result Http.Error ApiUserWithToken)
       -- Pages
+    | GamePage GamePage.Msg
     | HomePage HomePage.Msg
     | LoginPage LoginPage.Msg
     | RegisterPage RegisterPage.Msg

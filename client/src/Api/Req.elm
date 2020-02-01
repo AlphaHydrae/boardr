@@ -1,9 +1,10 @@
-module Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveHomePageGames, retrieveGame, retrieveRoot)
+module Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveHomePageGames, retrieveGamePageGame, retrieveRoot)
 
 import Api.Model exposing (ApiIdentity, ApiRoot, apiGameDecoder, apiGameListDecoder, apiIdentityDecoder, apiLocalAuthenticationDecoder, apiRootDecoder, apiUserWithTokenDecoder)
 import Dict
 import Http exposing (header)
 import Json.Encode as E
+import Pages.Game.Msg exposing (Msg(..))
 import Pages.Home.Msg exposing (Msg(..))
 import Pages.Login.Model as LoginPage
 import Pages.Register.Model as RegisterPage
@@ -50,11 +51,11 @@ retrieveRoot apiUrl =
         }
 
 
-retrieveGame : String -> ApiRoot -> Cmd Msg
-retrieveGame gameId apiRoot =
+retrieveGamePageGame : String -> ApiRoot -> Cmd Msg
+retrieveGamePageGame gameId apiRoot =
     Http.get
-        { url = interpolate apiRoot.gameLink.href (Dict.fromList [ ( "{id}", gameId ) ])
-        , expect = Http.expectJson ApiGameRetrieved apiGameDecoder
+        { url = interpolate apiRoot.gameLink.href (Dict.fromList [ ( "id", gameId ) ]) ++ "?embed=boardr:players"
+        , expect = Http.expectJson (\d -> GamePage (ApiGamePageGameRetrieved d)) apiGameDecoder
         }
 
 

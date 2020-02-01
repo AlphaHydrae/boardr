@@ -1,11 +1,12 @@
 module Store.Update exposing (update)
 
 import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken, apiUserWithoutToken)
-import Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveHomePageGames, retrieveGame)
+import Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveHomePageGames, retrieveGamePageGame)
 import Browser
 import Browser.Navigation as Nav
 import Dict
 import Http
+import Pages.Game.Msg exposing (Msg(..))
 import Pages.Home.Page as HomePage
 import Pages.Home.Msg exposing (Msg(..))
 import Pages.Login.Msg exposing (Msg(..))
@@ -40,18 +41,6 @@ update msg model =
                     )
 
                 -- FIXME: handle ApiAuthenticatedLocally Err
-                Err _ ->
-                    ( model, Cmd.none )
-
-        ApiGameRetrieved res ->
-            case res of
-                -- Store game data from the API.
-                Ok apiGame ->
-                    ( apiGame |> storeApiGame model.data |> storeData model
-                    , Cmd.none
-                    )
-
-                -- FIXME: handle ApiGameRetrieved Err
                 Err _ ->
                     ( model, Cmd.none )
 
@@ -92,7 +81,7 @@ update msg model =
 
                         -- Retrieve the current game from the API on the game page.
                         GameRoute id ->
-                            ( newModel, retrieveGame id apiRoot )
+                            ( newModel, retrieveGamePageGame id apiRoot )
 
                         _ ->
                             ( newModel, Cmd.none )
@@ -117,6 +106,23 @@ update msg model =
 
                 -- FIXME: handle ApiUserCreated Err
                 Err _ ->
+                    ( model, Cmd.none )
+
+        GamePage sub ->
+            case sub of
+                ApiGamePageGameRetrieved res ->
+                    case res of
+                        -- Store game data from the API.
+                        Ok apiGame ->
+                            ( apiGame |> storeApiGame model.data |> storeData model
+                            , Cmd.none
+                            )
+
+                        -- FIXME: handle ApiGamePageGameRetrieved Err
+                        Err _ ->
+                            ( model, Cmd.none )
+
+                RefreshGameState _ ->
                     ( model, Cmd.none )
 
         HomePage sub ->

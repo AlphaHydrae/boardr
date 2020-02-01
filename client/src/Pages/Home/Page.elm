@@ -55,11 +55,14 @@ viewModel model =
     { currentUser = Maybe.map .user model.session
     , displayedGames =
         case model.ui.home of
+            Loading ->
+                Loading
+
             Loaded ids ->
                 Loaded (selectDisplayedGames ids model.data.games)
 
-            Loading ->
-                Loading
+            Refreshing ids ->
+                Loaded (selectDisplayedGames ids model.data.games)
 
             Error err ->
                 Error err
@@ -99,6 +102,10 @@ viewGameList displayedGames =
             p [] [ text "Loading..." ]
 
         Loaded games ->
+            ul []
+                (List.map viewGame games)
+
+        Refreshing games ->
             ul []
                 (List.map viewGame games)
 
