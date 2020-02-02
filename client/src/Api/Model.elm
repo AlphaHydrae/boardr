@@ -133,7 +133,7 @@ apiGameDecoder =
         |> required "_links" (field "boardr:possible-actions" halLinkDecoder)
         |> required "rules" string
         |> required "state" apiGameStateDecoder
-        |> required "title" (maybe string)
+        |> optional "title" (maybe string) Nothing
 
 
 apiGameDetailedDecoder : Decoder ApiGameDetailed
@@ -145,7 +145,7 @@ apiGameDetailedDecoder =
         |> required "_links" (field "boardr:possible-actions" halLinkDecoder)
         |> required "rules" string
         |> required "state" apiGameStateDecoder
-        |> required "title" (maybe string)
+        |> optional "title" (maybe string) Nothing
 
 
 apiGameListDecoder : Decoder ApiGameList

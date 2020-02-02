@@ -1,7 +1,7 @@
 module Store.Update exposing (update)
 
-import Api.Model exposing (ApiGame, ApiGameDetailed, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken, apiGameWithoutDetails, apiUserWithoutToken)
-import Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames)
+import Api.Model exposing (ApiGameDetailed, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken, apiGameWithoutDetails, apiUserWithoutToken)
+import Api.Req exposing (authenticateLocally, createGame, createLocalIdentity, createUser, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames)
 import Browser
 import Browser.Navigation as Nav
 import Dict
@@ -150,6 +150,9 @@ update msg model =
 
         HomePage sub ->
             ( case sub of
+                ApiHomePageGameCreated res ->
+                    { model | data = res |> storeApiHomePageCreatedGame model.data }
+
                 ApiHomePageGamesRetrieved res ->
                     { model
                         | data = res |> storeApiHomePageGames model.data
@@ -164,11 +167,17 @@ update msg model =
 
                 _ ->
                     sub |> HomePage.updateUi model.ui |> storeUi model
-            , case ( sub, model.data.root ) of
-                ( LogOut, _ ) ->
+            , case ( sub, model.data.root, model.session ) of
+                ( ApiHomePageGameCreated (Ok apiGame), _, _ ) ->
+                    Nav.pushUrl model.location.key (Url.Builder.absolute [ "games", apiGame.id ] [])
+
+                ( CreateGame, Just apiRoot, Just auth ) ->
+                    createGame auth apiRoot
+
+                ( LogOut, _, _ ) ->
                     saveSession (sessionEncoder (forgetAuth model.session))
 
-                ( RefreshDisplayedGames _, Just apiRoot ) ->
+                ( RefreshDisplayedGames _, Just apiRoot, _ ) ->
                     retrieveHomePageGames apiRoot
 
                 _ ->
@@ -235,9 +244,19 @@ forgetAuth _ =
 storeApiGame : DataModel -> ApiGameDetailed -> DataModel
 storeApiGame data apiGame =
     { data
-      | games = Dict.insert apiGame.id (apiGameWithoutDetails apiGame) data.games
-      , players = List.foldl (\p d -> Dict.insert p.id p d) data.players apiGame.players
+        | games = Dict.insert apiGame.id (apiGameWithoutDetails apiGame) data.games
+        , players = List.foldl (\p d -> Dict.insert p.id p d) data.players apiGame.players
     }
+
+
+storeApiHomePageCreatedGame : DataModel -> Result Http.Error ApiGameDetailed -> DataModel
+storeApiHomePageCreatedGame data res =
+    case res of
+        Ok apiGame ->
+            storeApiGame data apiGame
+
+        Err _ ->
+            data
 
 
 storeApiHomePageGames : DataModel -> Result Http.Error ApiGameList -> DataModel
@@ -245,8 +264,8 @@ storeApiHomePageGames data res =
     case res of
         Ok apiGameList ->
             { data
-              | games = List.foldl (\g d -> Dict.insert g.id g d) data.games apiGameList.games
-              , players = List.foldl (\p d -> Dict.insert p.id p d) data.players apiGameList.players
+                | games = List.foldl (\g d -> Dict.insert g.id g d) data.games apiGameList.games
+                , players = List.foldl (\p d -> Dict.insert p.id p d) data.players apiGameList.players
             }
 
         Err _ ->

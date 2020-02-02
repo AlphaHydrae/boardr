@@ -1,10 +1,10 @@
 module Pages.Home.Page exposing (init, updateUi, view, viewModel)
 
-import Api.Model exposing (ApiGame, ApiGameList)
+import Api.Model exposing (ApiGame, ApiGameList, ApiUser)
 import Dict exposing (Dict)
 import Flags exposing (Flags)
-import Html exposing (Html, a, div, h1, li, p, text, ul)
-import Html.Attributes exposing (href)
+import Html exposing (Html, a, button, div, h1, li, p, text, ul)
+import Html.Attributes exposing (href, type_)
 import Html.Events exposing (onClick)
 import Pages.Home.Model exposing (Model, ViewModel)
 import Pages.Home.Msg exposing (Msg(..))
@@ -30,6 +30,9 @@ storeDisplayedGames _ apiGameList =
 update : Model -> Msg -> Model
 update model msg =
     case msg of
+        ApiHomePageGameCreated _ ->
+            model
+
         ApiHomePageGamesRetrieved res ->
             case res of
                 Ok apiGameList ->
@@ -37,6 +40,9 @@ update model msg =
 
                 Err err ->
                     Error err
+
+        CreateGame ->
+            model
 
         LogOut ->
             model
@@ -77,6 +83,7 @@ view vmodel =
     div []
         [ h1 [] [ text "Boardr" ]
         , p [] (viewNavLinks vmodel)
+        , viewGameCreationControls vmodel.currentUser
         , viewGameList vmodel.displayedGames
         ]
 
@@ -96,6 +103,16 @@ viewAuthNavLinks vmodel =
             [ a [ href "/login" ] [ text "Log in" ]
             , a [ href "/register" ] [ text "Register" ]
             ]
+
+
+viewGameCreationControls : Maybe ApiUser -> Html Msg
+viewGameCreationControls currentUser =
+    case currentUser of
+        Just _ ->
+            button [ onClick CreateGame, type_ "button" ] [ text "Create a game" ]
+
+        Nothing ->
+            a [ href "/login" ] [ text "Join the fun" ]
 
 
 viewGameList : RemoteData (List ApiGame) -> Html msg

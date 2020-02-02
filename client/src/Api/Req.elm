@@ -1,4 +1,4 @@
-module Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames, retrieveRoot)
+module Api.Req exposing (authenticateLocally, createGame, createLocalIdentity, createUser, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames, retrieveRoot)
 
 import Api.Model exposing (ApiGame, ApiIdentity, ApiRoot, apiGameDetailedDecoder, apiGameListDecoder, apiIdentityDecoder, apiLocalAuthenticationDecoder, apiPossibleActionListDecoder, apiRootDecoder, apiUserWithTokenDecoder)
 import Dict
@@ -9,6 +9,7 @@ import Pages.Home.Msg exposing (Msg(..))
 import Pages.Login.Model as LoginPage
 import Pages.Register.Model as RegisterPage
 import Store.Msg exposing (Msg(..))
+import Store.Session exposing (AuthModel)
 import Url.Interpolate exposing (interpolate)
 
 
@@ -27,6 +28,19 @@ createLocalIdentity model apiRoot =
         { url = apiRoot.identitiesLink.href
         , body = Http.jsonBody (E.object [ ( "email", E.string model.email ), ( "provider", E.string "local" ) ])
         , expect = Http.expectJson ApiLocalIdentityCreated apiIdentityDecoder
+        }
+
+
+createGame : AuthModel -> ApiRoot -> Cmd Msg
+createGame auth apiRoot =
+    Http.request
+        { method = "POST"
+        , url = apiRoot.gamesLink.href ++ "?embed=boardr:players"
+        , body = Http.jsonBody (E.object [ ( "rules", E.string "tic-tac-toe" ) ])
+        , headers = [ header "Authorization" ("Bearer " ++ auth.token) ]
+        , timeout = Nothing
+        , tracker = Nothing
+        , expect = Http.expectJson (\d -> HomePage (ApiHomePageGameCreated d)) apiGameDetailedDecoder
         }
 
 
