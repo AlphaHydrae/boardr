@@ -1,4 +1,4 @@
-module Pages.Game.Page exposing (init, view, viewModel)
+module Pages.Game.Page exposing (init, updateUi, view, viewModel)
 
 import Dict
 import Flags exposing (Flags)
@@ -6,7 +6,7 @@ import Html exposing (Html, p, text)
 import Pages.Game.Model exposing (Model, ViewModel)
 import Pages.Game.Msg exposing (Msg(..))
 import Routes exposing (Route(..))
-import Store.Model
+import Store.Model exposing (UiModel)
 import Types exposing (RemoteData(..))
 
 
@@ -35,23 +35,29 @@ update model msg =
                     model
 
 
+updateUi : UiModel -> Msg -> UiModel
+updateUi model msg =
+    { model | game = update model.game msg }
+
+
 viewModel : String -> Store.Model.Model -> ViewModel
 viewModel id model =
     case ( model.ui.game, Dict.get id model.data.games ) of
-        ( Loading, _ ) ->
-            Loading
-
-        ( _, Nothing ) ->
-            Loading
-
-        ( Loaded _, Just apiGame ) ->
-            Loaded apiGame
-
         ( Refreshing _, Just apiGame ) ->
             Refreshing apiGame
 
+        -- TODO: introduce Cached variant of RemoteData
+        ( _, Just apiGame ) ->
+            Loaded apiGame
+
+        ( Loading, _ ) ->
+            Loading
+
         ( Error err, _ ) ->
             Error err
+
+        ( _, Nothing ) ->
+            Loading
 
 
 view : ViewModel -> Html msg

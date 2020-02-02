@@ -7,8 +7,9 @@ import Browser.Navigation as Nav
 import Dict
 import Http
 import Pages.Game.Msg exposing (Msg(..))
-import Pages.Home.Page as HomePage
+import Pages.Game.Page as GamePage
 import Pages.Home.Msg exposing (Msg(..))
+import Pages.Home.Page as HomePage
 import Pages.Login.Msg exposing (Msg(..))
 import Pages.Login.Page as LoginPage
 import Pages.Register.Msg exposing (Msg(..))
@@ -114,7 +115,10 @@ update msg model =
                     case res of
                         -- Store game data from the API.
                         Ok apiGame ->
-                            ( apiGame |> storeApiGame model.data |> storeData model
+                            ( { model
+                                | data = apiGame |> storeApiGame model.data
+                                , ui = sub |> GamePage.updateUi model.ui
+                              }
                             , Cmd.none
                             )
 
