@@ -1,6 +1,7 @@
 module Api.Model exposing
     ( ApiGame
     , ApiGameList
+    , ApiGameState(..)
     , ApiIdentity
     , ApiLocalAuthentication
     , ApiRoot
@@ -27,8 +28,16 @@ type alias ApiGame =
     , createdAt : String
     , id : String
     , rules : String
+    , state : ApiGameState
     , title : Maybe String
     }
+
+
+type ApiGameState
+    = WaitingForPlayers
+    | Playing
+    | Draw
+    | Win
 
 
 type alias ApiGameLinks =
@@ -106,7 +115,25 @@ apiGameDecoder =
         |> required "createdAt" string
         |> required "id" string
         |> required "rules" string
+        |> required "state" apiGameStateDecoder
         |> required "title" (maybe string)
+
+
+apiGameStateDecoder : Decoder ApiGameState
+apiGameStateDecoder =
+    Decode.string |> Decode.andThen (\s ->
+        case s of
+            "waiting_for_players" ->
+                Decode.succeed WaitingForPlayers
+            "playing" ->
+                Decode.succeed Playing
+            "draw" ->
+                Decode.succeed Draw
+            "win" ->
+                Decode.succeed Win
+            _ ->
+                Decode.fail ("Unknown game state " ++ s)
+    )
 
 
 apiGameLinksDecoder : Decoder ApiGameLinks

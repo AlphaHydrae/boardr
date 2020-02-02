@@ -1,8 +1,9 @@
 module Pages.Game.Page exposing (init, updateUi, view, viewModel)
 
+import Api.Model exposing (ApiGame, ApiGameState(..))
 import Dict
 import Flags exposing (Flags)
-import Html exposing (Html, p, text)
+import Html exposing (Html, li, p, strong, text, ul)
 import Pages.Game.Model exposing (Model, ViewModel)
 import Pages.Game.Msg exposing (Msg(..))
 import Routes exposing (Route(..))
@@ -63,18 +64,40 @@ viewModel id model =
 view : ViewModel -> Html msg
 view model =
     p []
-        [ text
-            (case model of
-                Loading ->
-                    "Loading..."
+        [ case model of
+            Loading ->
+                text "Loading..."
 
-                Loaded game ->
-                    game.rules
+            Loaded game ->
+                viewGame game
 
-                Refreshing game ->
-                    game.rules
+            Refreshing game ->
+                viewGame game
 
-                Error _ ->
-                    "Could not load game."
-            )
+            Error _ ->
+                text "Could not load game."
+        ]
+
+
+viewGame : ApiGame -> Html msg
+viewGame apiGame =
+    ul []
+        [ li []
+            [ strong [] [ text "State:" ]
+            , text " "
+            , text
+                (case apiGame.state of
+                    WaitingForPlayers ->
+                        "Waiting for players..."
+
+                    Playing ->
+                        "Playing"
+
+                    Draw ->
+                        "Draw"
+
+                    Win ->
+                        "Win!"
+                )
+            ]
         ]
