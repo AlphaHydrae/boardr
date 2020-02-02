@@ -1,5 +1,7 @@
 module Store.Sub exposing (subscriptions)
 
+import Api.Model exposing (ApiGameState(..))
+import Dict
 import Pages.Game.Msg exposing (Msg(..))
 import Pages.Home.Msg exposing (Msg(..))
 import Routes exposing (Route(..))
@@ -20,8 +22,16 @@ subscriptions model =
                 _ ->
                     Sub.none
 
-        GameRoute _ ->
-            Time.every 1000 (\t -> GamePage (RefreshGameState t))
+        GameRoute id ->
+            case Maybe.map .state (Dict.get id model.data.games) of
+                Just WaitingForPlayers ->
+                    Time.every 1000 (\t -> GamePage (RefreshGameState t))
+
+                Just Playing ->
+                    Time.every 1000 (\t -> GamePage (RefreshGamePossibleActions t))
+
+                _ ->
+                    Sub.none
 
         LoginRoute ->
             Sub.none

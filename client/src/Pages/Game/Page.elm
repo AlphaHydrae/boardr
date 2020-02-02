@@ -13,7 +13,9 @@ import Types exposing (RemoteData(..))
 
 init : Flags -> Model
 init _ =
-    Loading
+    { gameId = Loading
+    , possibleActions = NotAsked
+    }
 
 
 update : Model -> Msg -> Model
@@ -22,15 +24,37 @@ update model msg =
         ApiGamePageGameRetrieved res ->
             case res of
                 Ok apiGame ->
-                    Loaded apiGame.id
+                    { model | gameId = Loaded apiGame.id }
 
                 Err err ->
-                    Error err
+                    { model | gameId = Error err }
+
+        ApiGamePagePossibleActionsRetrieved res ->
+            case res of
+                Ok apiPossibleActionList ->
+                    { model
+                      | gameId = Loaded apiPossibleActionList.game.id
+                      , possibleActions = Loaded apiPossibleActionList
+                    }
+
+                Err err ->
+                    { model | possibleActions = Error err }
+
+        RefreshGamePossibleActions _ ->
+            case model.possibleActions of
+                NotAsked ->
+                    { model | possibleActions = Loading }
+
+                Loaded possibleActions ->
+                    { model | possibleActions = Refreshing possibleActions }
+
+                _ ->
+                    model
 
         RefreshGameState _ ->
-            case model of
-                Loaded apiGame ->
-                    Refreshing apiGame
+            case model.gameId of
+                Loaded gameId ->
+                    { model | gameId = Refreshing gameId }
 
                 _ ->
                     model
@@ -43,28 +67,34 @@ updateUi model msg =
 
 viewModel : String -> Store.Model.Model -> ViewModel
 viewModel id model =
-    case ( model.ui.game, Dict.get id model.data.games ) of
-        ( Refreshing _, Just apiGame ) ->
-            Refreshing apiGame
+    { game =
+        case ( model.ui.game.gameId, Dict.get id model.data.games ) of
+            ( Refreshing _, Just apiGame ) ->
+                Refreshing apiGame
 
-        -- TODO: introduce Cached variant of RemoteData
-        ( _, Just apiGame ) ->
-            Loaded apiGame
+            -- TODO: introduce Cached variant of RemoteData
+            ( _, Just apiGame ) ->
+                Loaded apiGame
 
-        ( Loading, _ ) ->
-            Loading
+            ( Loading, _ ) ->
+                Loading
 
-        ( Error err, _ ) ->
-            Error err
+            ( Error err, _ ) ->
+                Error err
 
-        ( _, Nothing ) ->
-            Loading
+            ( _, Nothing ) ->
+                Loading
+    , possibleActions = model.ui.game.possibleActions
+    }
 
 
 view : ViewModel -> Html msg
 view model =
     p []
-        [ case model of
+        [ case model.game of
+            NotAsked ->
+                text "Loading..."
+
             Loading ->
                 text "Loading..."
 

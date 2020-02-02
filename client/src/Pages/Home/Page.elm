@@ -55,6 +55,9 @@ viewModel model =
     { currentUser = Maybe.map .user model.session
     , displayedGames =
         case model.ui.home of
+            NotAsked ->
+                Loading
+
             Loading ->
                 Loading
 
@@ -98,6 +101,9 @@ viewAuthNavLinks vmodel =
 viewGameList : RemoteData (List ApiGame) -> Html msg
 viewGameList displayedGames =
     case displayedGames of
+        NotAsked ->
+            p [] [ text "Loading..." ]
+
         Loading ->
             p [] [ text "Loading..." ]
 

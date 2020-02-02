@@ -1,7 +1,7 @@
 module Store.Update exposing (update)
 
 import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken, apiUserWithoutToken)
-import Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveGamePageGame, retrieveHomePageGames)
+import Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames)
 import Browser
 import Browser.Navigation as Nav
 import Dict
@@ -124,11 +124,25 @@ update msg model =
                         Err _ ->
                             model
 
+                ApiGamePagePossibleActionsRetrieved _ ->
+                    model
+
+                RefreshGamePossibleActions _ ->
+                    model
+
                 RefreshGameState _ ->
                     model
             , case ( sub, model.location.route, model.data.root ) of
                 ( RefreshGameState _, GameRoute id, Just apiRoot ) ->
                     retrieveGamePageGame id apiRoot
+
+                ( RefreshGamePossibleActions _, GameRoute id, _ ) ->
+                    case Dict.get id model.data.games of
+                        Just apiGame ->
+                            retrieveGamePossibleActions apiGame
+
+                        _ ->
+                            Cmd.none
 
                 _ ->
                     Cmd.none

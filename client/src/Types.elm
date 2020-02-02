@@ -4,7 +4,8 @@ import Http
 
 
 type RemoteData a
-    = Loading
+    = NotAsked
+    | Loading
     | Loaded a
     | Refreshing a
     | Error Http.Error
