@@ -10,6 +10,7 @@ defmodule BoardrApi.Games.PlayersView do
   def render("show.json", %{player: %Player{} = player}) do
     %{
       createdAt: player.created_at,
+      id: player.id,
       number: player.number
     }
     |> put_hal_curies_link()

@@ -1,7 +1,7 @@
 defmodule BoardrApi.GamesPlayersTest do
   use BoardrApi.ConnCase
 
-  alias Boardr.{Game,Player}
+  alias Boardr.{Game, Player}
 
   require EEx
   EEx.function_from_string(:def, :api_path, "/api/games/<%= game.id %>/players", [:game])
@@ -34,6 +34,12 @@ defmodule BoardrApi.GamesPlayersTest do
       %{result: %{id: player_id} = expected_player} =
         assert_api_map(body)
 
+        # Properties
+        |> assert_key("createdAt", &(&1.subject |> just_after(test_start)))
+        |> assert_key("id", &is_binary(&1.subject))
+        |> assert_key("number", 1)
+        |> assert_key_absent("settings")
+
         # HAL links
         |> assert_hal_links(fn links ->
           links
@@ -48,14 +54,9 @@ defmodule BoardrApi.GamesPlayersTest do
           )
           |> assert_hal_link(
             "self",
-            test_api_url_regex(["/games/#{game.id}/players/", ~r/(?<id>[\w-]+)/])
+            fn %{id: player_id} -> test_api_url("/games/#{game.id}/players/#{player_id}") end
           )
         end)
-
-        # Properties
-        |> assert_key("createdAt", &(&1.subject |> just_after(test_start)))
-        |> assert_key("number", 1)
-        |> assert_key_absent("settings")
 
       # Database changes
       assert_db_queries(insert: 1, max_transactions: 2, select: 4)
@@ -87,6 +88,12 @@ defmodule BoardrApi.GamesPlayersTest do
       %{result: %{id: player_id} = expected_player} =
         assert_api_map(body)
 
+        # Properties
+        |> assert_key("createdAt", &(&1.subject |> just_after(test_start)))
+        |> assert_key("id", &is_binary(&1.subject))
+        |> assert_key("number", 2)
+        |> assert_key_absent("settings")
+
         # HAL links
         |> assert_hal_links(fn links ->
           links
@@ -101,14 +108,9 @@ defmodule BoardrApi.GamesPlayersTest do
           )
           |> assert_hal_link(
             "self",
-            test_api_url_regex(["/games/#{game.id}/players/", ~r/(?<id>[\w-]+)/])
+            fn %{id: player_id} -> test_api_url("/games/#{game.id}/players/#{player_id}") end
           )
         end)
-
-        # Properties
-        |> assert_key("createdAt", &(&1.subject |> just_after(test_start)))
-        |> assert_key("number", 2)
-        |> assert_key_absent("settings")
 
       # Database changes
       assert_db_queries(insert: 1, max_transactions: 2, select: 4, update: 1)
@@ -118,7 +120,9 @@ defmodule BoardrApi.GamesPlayersTest do
       updated_game = Repo.get!(Game, game.id)
       assert {:ok, _} = just_after(updated_game.updated_at, expected_player.created_at)
       assert updated_game.state == "playing"
-      assert Map.drop(game, [:creator, :state, :updated_at]) == Map.drop(updated_game, [:creator, :state, :updated_at])
+
+      assert Map.drop(game, [:creator, :state, :updated_at]) ==
+               Map.drop(updated_game, [:creator, :state, :updated_at])
     end
 
     test "a tic-tac-toe game that has already started cannot be joined", %{
@@ -131,9 +135,10 @@ defmodule BoardrApi.GamesPlayersTest do
       Fixtures.player(game: game, user: user)
       Fixtures.player(game: game, number: 2, user: Fixtures.user())
 
-      game = game
-      |> Game.changeset(%{state: "playing"})
-      |> Repo.update!()
+      game =
+        game
+        |> Game.changeset(%{state: "playing"})
+        |> Repo.update!()
 
       # Create the user who will attempt to join the game.
       other_user = Fixtures.user()
@@ -150,7 +155,10 @@ defmodule BoardrApi.GamesPlayersTest do
       assert_api_map(body)
       |> assert_key("gameError", "game_already_started")
       |> assert_key("status", 409)
-      |> assert_key("title", "The request cannot be completed due to a conflict with the current state of the resource.")
+      |> assert_key(
+        "title",
+        "The request cannot be completed due to a conflict with the current state of the resource."
+      )
       |> assert_key("type", test_api_url("/problems/game-error"))
 
       # Database changes

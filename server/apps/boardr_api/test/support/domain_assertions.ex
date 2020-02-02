@@ -76,6 +76,7 @@ defmodule BoardrApi.DomainAssertions do
 
     # Properties
     |> assert_key("createdAt", DateTime.to_iso8601(player.created_at))
+    |> assert_key("id", player.id)
     |> assert_key("number", player.number)
   end
 

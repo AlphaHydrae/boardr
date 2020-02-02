@@ -147,6 +147,16 @@ defmodule BoardrApi.GamesTest do
               assert_list(players)
               |> assert_next_member(fn player ->
                 assert_map(player)
+
+                # Properties
+                |> assert_key("createdAt", &(&1.subject |> just_after(test_start)),
+                  into: :created_at
+                )
+                |> assert_key("id", &is_binary(&1.subject), into: false)
+                |> assert_key("number", 1)
+                |> assert_key_absent("settings")
+
+                # HAL links
                 |> assert_hal_links(fn links ->
                   links
                   |> assert_hal_curies()
@@ -160,11 +170,6 @@ defmodule BoardrApi.GamesTest do
                     test_api_url_regex(["/games/#{game_id}/players/", ~r/(?<id>[\w-]+)/])
                   end)
                 end)
-                |> assert_key("createdAt", &(&1.subject |> just_after(test_start)),
-                  into: :created_at
-                )
-                |> assert_key("number", 1)
-                |> assert_key_absent("settings")
               end)
               |> assert_no_more_members()
             end,
