@@ -1,15 +1,19 @@
 module Api.Model exposing
     ( ApiGame
+    , ApiGameDetailed
     , ApiGameList
     , ApiGameState(..)
     , ApiIdentity
     , ApiLocalAuthentication
+    , ApiPlayer
     , ApiPossibleActionList
     , ApiRoot
     , ApiUser
     , ApiUserWithToken
     , apiGameDecoder
+    , apiGameDetailedDecoder
     , apiGameListDecoder
+    , apiGameWithoutDetails
     , apiIdentityDecoder
     , apiLocalAuthenticationDecoder
     , apiPossibleActionListDecoder
@@ -35,6 +39,17 @@ type alias ApiGame =
     }
 
 
+type alias ApiGameDetailed =
+    { createdAt : String
+    , id : String
+    , players : List ApiPlayer
+    , possibleActionsLink : HalLink
+    , rules : String
+    , state : ApiGameState
+    , title : Maybe String
+    }
+
+
 type ApiGameState
     = WaitingForPlayers
     | Playing
@@ -44,7 +59,7 @@ type ApiGameState
 
 type alias ApiGameList =
     { games : List ApiGame
-    , players : Maybe (List ApiPlayer)
+    , players : List ApiPlayer
     }
 
 
@@ -63,6 +78,7 @@ type alias ApiLocalAuthentication =
 
 type alias ApiPlayer =
     { createdAt : String
+    , id : String
     , number : Int
     , userLink : HalLink
     }
@@ -120,11 +136,23 @@ apiGameDecoder =
         |> required "title" (maybe string)
 
 
+apiGameDetailedDecoder : Decoder ApiGameDetailed
+apiGameDetailedDecoder =
+    Decode.succeed ApiGameDetailed
+        |> required "createdAt" string
+        |> required "id" string
+        |> required "_embedded" (field "boardr:players" (list apiPlayerDecoder))
+        |> required "_links" (field "boardr:possible-actions" halLinkDecoder)
+        |> required "rules" string
+        |> required "state" apiGameStateDecoder
+        |> required "title" (maybe string)
+
+
 apiGameListDecoder : Decoder ApiGameList
 apiGameListDecoder =
     Decode.succeed ApiGameList
         |> required "_embedded" (field "boardr:games" (list apiGameDecoder))
-        |> required "_embedded" (maybe (field "boardr:players" (list apiPlayerDecoder)))
+        |> required "_embedded" (field "boardr:players" (list apiPlayerDecoder))
 
 
 apiGameStateDecoder : Decoder ApiGameState
@@ -142,6 +170,17 @@ apiGameStateDecoder =
             _ ->
                 Decode.fail ("Unknown game state " ++ s)
     )
+
+
+apiGameWithoutDetails : ApiGameDetailed -> ApiGame
+apiGameWithoutDetails apiGame =
+    { createdAt = apiGame.createdAt
+    , id = apiGame.id
+    , possibleActionsLink = apiGame.possibleActionsLink
+    , rules = apiGame.rules
+    , state = apiGame.state
+    , title = apiGame.title
+    }
 
 
 apiIdentityDecoder : Decoder ApiIdentity
@@ -164,6 +203,7 @@ apiPlayerDecoder : Decoder ApiPlayer
 apiPlayerDecoder =
     Decode.succeed ApiPlayer
         |> required "createdAt" string
+        |> required "id" string
         |> required "number" int
         |> required "_links" (field "boardr:user" halLinkDecoder)
 

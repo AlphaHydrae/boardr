@@ -22,6 +22,7 @@ initDataModel : Flags -> DataModel
 initDataModel _ =
     { games = Dict.empty
     , identities = Dict.empty
+    , players = Dict.empty
     , root = Nothing
     }
 

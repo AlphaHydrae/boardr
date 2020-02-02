@@ -1,6 +1,6 @@
 module Store.Model exposing (DataModel, LocationModel, Model, UiModel)
 
-import Api.Model exposing (ApiGame, ApiIdentity, ApiRoot)
+import Api.Model exposing (ApiGame, ApiIdentity, ApiPlayer, ApiRoot)
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Flags exposing (Flags)
@@ -16,6 +16,7 @@ import Url exposing (Url)
 type alias DataModel =
     { games : Dict String ApiGame
     , identities : Dict String ApiIdentity
+    , players : Dict String ApiPlayer
     , root : Maybe ApiRoot
     }
 

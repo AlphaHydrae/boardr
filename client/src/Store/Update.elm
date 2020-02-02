@@ -1,6 +1,6 @@
 module Store.Update exposing (update)
 
-import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken, apiUserWithoutToken)
+import Api.Model exposing (ApiGame, ApiGameDetailed, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken, apiGameWithoutDetails, apiUserWithoutToken)
 import Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames)
 import Browser
 import Browser.Navigation as Nav
@@ -232,16 +232,22 @@ forgetAuth _ =
     Nothing
 
 
-storeApiGame : DataModel -> ApiGame -> DataModel
+storeApiGame : DataModel -> ApiGameDetailed -> DataModel
 storeApiGame data apiGame =
-    { data | games = Dict.insert apiGame.id apiGame data.games }
+    { data
+      | games = Dict.insert apiGame.id (apiGameWithoutDetails apiGame) data.games
+      , players = List.foldl (\p d -> Dict.insert p.id p d) data.players apiGame.players
+    }
 
 
 storeApiHomePageGames : DataModel -> Result Http.Error ApiGameList -> DataModel
 storeApiHomePageGames data res =
     case res of
         Ok apiGameList ->
-            { data | games = List.foldl (\g d -> Dict.insert g.id g d) data.games apiGameList.games }
+            { data
+              | games = List.foldl (\g d -> Dict.insert g.id g d) data.games apiGameList.games
+              , players = List.foldl (\p d -> Dict.insert p.id p d) data.players apiGameList.players
+            }
 
         Err _ ->
             data

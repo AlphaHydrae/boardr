@@ -3,7 +3,8 @@ module Pages.Game.Page exposing (init, updateUi, view, viewModel)
 import Api.Model exposing (ApiGame, ApiGameState(..))
 import Dict
 import Flags exposing (Flags)
-import Html exposing (Html, li, p, strong, text, ul)
+import Html exposing (Html, a, div, li, p, strong, text, ul)
+import Html.Attributes exposing (href)
 import Pages.Game.Model exposing (Model, ViewModel)
 import Pages.Game.Msg exposing (Msg(..))
 import Routes exposing (Route(..))
@@ -33,8 +34,8 @@ update model msg =
             case res of
                 Ok apiPossibleActionList ->
                     { model
-                      | gameId = Loaded apiPossibleActionList.game.id
-                      , possibleActions = Loaded apiPossibleActionList
+                        | gameId = Loaded apiPossibleActionList.game.id
+                        , possibleActions = Loaded apiPossibleActionList
                     }
 
                 Err err ->
@@ -90,22 +91,27 @@ viewModel id model =
 
 view : ViewModel -> Html msg
 view model =
-    p []
-        [ case model.game of
-            NotAsked ->
-                text "Loading..."
+    div []
+        [ p [] [
+            a [ href "/" ] [ text "Home" ]
+        ]
+        , p [] [
+            case model.game of
+                NotAsked ->
+                    text "Loading..."
 
-            Loading ->
-                text "Loading..."
+                Loading ->
+                    text "Loading..."
 
-            Loaded game ->
-                viewGame game
+                Loaded game ->
+                    viewGame game
 
-            Refreshing game ->
-                viewGame game
+                Refreshing game ->
+                    viewGame game
 
-            Error _ ->
-                text "Could not load game."
+                Error _ ->
+                    text "Could not load game."
+        ]
         ]
 
 
