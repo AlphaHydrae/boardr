@@ -12,5 +12,6 @@ type alias Model =
 
 type alias ViewModel =
     { game : RemoteData ApiGame
+    , joinable : Bool
     , possibleActions : RemoteData ApiPossibleActionList
     }

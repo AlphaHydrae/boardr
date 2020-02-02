@@ -34,6 +34,7 @@ type alias ApiGame =
     , id : String
     , possibleActionsLink : HalLink
     , rules : String
+    , selfLink : HalLink
     , state : ApiGameState
     , title : Maybe String
     }
@@ -45,6 +46,7 @@ type alias ApiGameDetailed =
     , players : List ApiPlayer
     , possibleActionsLink : HalLink
     , rules : String
+    , selfLink : HalLink
     , state : ApiGameState
     , title : Maybe String
     }
@@ -73,13 +75,15 @@ type alias ApiIdentity =
 
 type alias ApiLocalAuthentication =
     { token : String
-    , user : ApiUser }
+    , user : ApiUser
+    }
 
 
 type alias ApiPlayer =
     { createdAt : String
     , id : String
     , number : Int
+    , gameLink : HalLink
     , userLink : HalLink
     }
 
@@ -108,6 +112,7 @@ type alias ApiRoot =
 type alias ApiUser =
     { createdAt : String
     , name : String
+    , selfLink : HalLink
     }
 
 
@@ -132,6 +137,7 @@ apiGameDecoder =
         |> required "id" string
         |> required "_links" (field "boardr:possible-actions" halLinkDecoder)
         |> required "rules" string
+        |> required "_links" (field "self" halLinkDecoder)
         |> required "state" apiGameStateDecoder
         |> optional "title" (maybe string) Nothing
 
@@ -144,6 +150,7 @@ apiGameDetailedDecoder =
         |> required "_embedded" (field "boardr:players" (list apiPlayerDecoder))
         |> required "_links" (field "boardr:possible-actions" halLinkDecoder)
         |> required "rules" string
+        |> required "_links" (field "self" halLinkDecoder)
         |> required "state" apiGameStateDecoder
         |> optional "title" (maybe string) Nothing
 
@@ -157,19 +164,25 @@ apiGameListDecoder =
 
 apiGameStateDecoder : Decoder ApiGameState
 apiGameStateDecoder =
-    Decode.string |> Decode.andThen (\s ->
-        case s of
-            "waiting_for_players" ->
-                Decode.succeed WaitingForPlayers
-            "playing" ->
-                Decode.succeed Playing
-            "draw" ->
-                Decode.succeed Draw
-            "win" ->
-                Decode.succeed Win
-            _ ->
-                Decode.fail ("Unknown game state " ++ s)
-    )
+    Decode.string
+        |> Decode.andThen
+            (\s ->
+                case s of
+                    "waiting_for_players" ->
+                        Decode.succeed WaitingForPlayers
+
+                    "playing" ->
+                        Decode.succeed Playing
+
+                    "draw" ->
+                        Decode.succeed Draw
+
+                    "win" ->
+                        Decode.succeed Win
+
+                    _ ->
+                        Decode.fail ("Unknown game state " ++ s)
+            )
 
 
 apiGameWithoutDetails : ApiGameDetailed -> ApiGame
@@ -178,6 +191,7 @@ apiGameWithoutDetails apiGame =
     , id = apiGame.id
     , possibleActionsLink = apiGame.possibleActionsLink
     , rules = apiGame.rules
+    , selfLink = apiGame.selfLink
     , state = apiGame.state
     , title = apiGame.title
     }
@@ -205,6 +219,7 @@ apiPlayerDecoder =
         |> required "createdAt" string
         |> required "id" string
         |> required "number" int
+        |> required "_links" (field "boardr:game" halLinkDecoder)
         |> required "_links" (field "boardr:user" halLinkDecoder)
 
 
@@ -244,6 +259,7 @@ apiUserDecoder =
     Decode.succeed ApiUser
         |> required "createdAt" string
         |> required "name" string
+        |> required "_links" (field "self" halLinkDecoder)
 
 
 apiUserEncoder : ApiUser -> Encode.Value
@@ -251,17 +267,22 @@ apiUserEncoder apiUser =
     Encode.object
         [ ( "createdAt", Encode.string apiUser.createdAt )
         , ( "name", Encode.string apiUser.name )
+        , ( "_links"
+          , Encode.object
+                [ ( "self", halLinkEncoder apiUser.selfLink )
+                ]
+          )
         ]
 
 
 apiUserWithoutToken : ApiUserWithToken -> ApiUser
 apiUserWithoutToken user =
-    { createdAt = user.createdAt, name = user.name }
+    { createdAt = user.createdAt, name = user.name, selfLink = user.selfLink }
 
 
-apiUserWithToken : String -> String -> String -> ApiUserWithToken
-apiUserWithToken createdAt name token =
-    { createdAt = createdAt, name = name, token = token }
+apiUserWithToken : String -> String -> HalLink -> String -> ApiUserWithToken
+apiUserWithToken createdAt name selfLink token =
+    { createdAt = createdAt, name = name, selfLink = selfLink, token = token }
 
 
 apiUserWithTokenDecoder : Decoder ApiUserWithToken
@@ -269,6 +290,7 @@ apiUserWithTokenDecoder =
     Decode.succeed apiUserWithToken
         |> required "createdAt" string
         |> required "name" string
+        |> required "_links" (field "self" halLinkDecoder)
         |> required "_embedded" (field "boardr:token" (field "value" string))
 
 
@@ -277,3 +299,11 @@ halLinkDecoder =
     Decode.succeed HalLink
         |> required "href" string
         |> optional "templated" bool False
+
+
+halLinkEncoder : HalLink -> Encode.Value
+halLinkEncoder link =
+    Encode.object
+        [ ( "href", Encode.string link.href )
+        , ( "templated", Encode.bool link.templated )
+        ]

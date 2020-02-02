@@ -3,8 +3,8 @@ module Pages.Game.Page exposing (init, updateUi, view, viewModel)
 import Api.Model exposing (ApiGame, ApiGameState(..))
 import Dict
 import Flags exposing (Flags)
-import Html exposing (Html, a, div, li, p, strong, text, ul)
-import Html.Attributes exposing (href)
+import Html exposing (Html, a, button, div, li, p, strong, text, ul)
+import Html.Attributes exposing (href, type_)
 import Pages.Game.Model exposing (Model, ViewModel)
 import Pages.Game.Msg exposing (Msg(..))
 import Routes exposing (Route(..))
@@ -85,6 +85,15 @@ viewModel id model =
 
             ( _, Nothing ) ->
                 Loading
+    , joinable =
+        case ( Dict.get id model.data.games, model.session ) of
+            ( Just apiGame, Just auth ) ->
+                List.all
+                    (\p -> p.gameLink.href /= apiGame.selfLink.href || p.userLink.href /= auth.user.selfLink.href)
+                    (Dict.values model.data.players)
+
+            _ ->
+                False
     , possibleActions = model.ui.game.possibleActions
     }
 
@@ -92,37 +101,37 @@ viewModel id model =
 view : ViewModel -> Html msg
 view model =
     div []
-        [ p [] [
-            a [ href "/" ] [ text "Home" ]
-        ]
-        , p [] [
-            case model.game of
+        [ p []
+            [ a [ href "/" ] [ text "Home" ]
+            ]
+        , p []
+            (case model.game of
                 NotAsked ->
-                    text "Loading..."
+                    [ text "Loading..." ]
 
                 Loading ->
-                    text "Loading..."
+                    [ text "Loading..." ]
 
                 Loaded game ->
-                    viewGame game
+                    viewGame game model.joinable
 
                 Refreshing game ->
-                    viewGame game
+                    viewGame game model.joinable
 
                 Error _ ->
-                    text "Could not load game."
-        ]
+                    [ text "Could not load game." ]
+            )
         ]
 
 
-viewGame : ApiGame -> Html msg
-viewGame apiGame =
+viewGame : ApiGame -> Bool -> List (Html msg)
+viewGame game joinable =
     ul []
         [ li []
             [ strong [] [ text "State:" ]
             , text " "
             , text
-                (case apiGame.state of
+                (case game.state of
                     WaitingForPlayers ->
                         "Waiting for players..."
 
@@ -137,3 +146,14 @@ viewGame apiGame =
                 )
             ]
         ]
+        :: viewGameControls joinable
+
+
+viewGameControls : Bool -> List (Html msg)
+viewGameControls joinable =
+    if joinable then
+        [ button [ type_ "button" ] [ text "Join" ]
+        ]
+
+    else
+        []
