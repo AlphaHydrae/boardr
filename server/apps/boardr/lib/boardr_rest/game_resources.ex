@@ -30,7 +30,7 @@ defmodule BoardrRest.GameResources do
 
     result =
       Multi.new()
-      |> Multi.insert(:game, game, returning: [:id])
+      |> Multi.insert(:game, game, returning: [:id, :state])
       |> Multi.run(:player, fn repo, %{game: inserted_game} ->
         %Player{game_id: inserted_game.id, number: 1, user_id: user_id}
         |> repo.insert(returning: [:id])

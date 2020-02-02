@@ -33,7 +33,7 @@ defmodule BoardrApi.GamesTest do
         |> assert_key("createdAt", &(&1.subject |> just_after(test_start)))
         |> assert_key("id", &is_binary(&1.subject))
         |> assert_key("settings", %{})
-        |> assert_key_absent("state", value: "waiting_for_players")
+        |> assert_key("state", "waiting_for_players")
         |> assert_key_absent("title")
         |> assert_key_identical("updatedAt", "createdAt")
 
@@ -105,7 +105,7 @@ defmodule BoardrApi.GamesTest do
         |> assert_key("createdAt", &(&1.subject |> just_after(test_start)))
         |> assert_key("id", &is_binary(&1.subject))
         |> assert_key("settings", %{})
-        |> assert_key_absent("state", value: "waiting_for_players")
+        |> assert_key("state", "waiting_for_players")
         |> assert_key_absent("title")
         |> assert_key_identical("updatedAt", "createdAt")
 
