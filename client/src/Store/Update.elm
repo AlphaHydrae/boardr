@@ -1,7 +1,7 @@
 module Store.Update exposing (update)
 
 import Api.Model exposing (ApiGame, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken, apiUserWithoutToken)
-import Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveHomePageGames, retrieveGamePageGame)
+import Api.Req exposing (authenticateLocally, createLocalIdentity, createUser, retrieveGamePageGame, retrieveHomePageGames)
 import Browser
 import Browser.Navigation as Nav
 import Dict
@@ -110,51 +110,55 @@ update msg model =
                     ( model, Cmd.none )
 
         GamePage sub ->
-            case sub of
+            ( case sub of
                 ApiGamePageGameRetrieved res ->
                     case res of
                         -- Store game data from the API.
                         Ok apiGame ->
-                            ( { model
+                            { model
                                 | data = apiGame |> storeApiGame model.data
                                 , ui = sub |> GamePage.updateUi model.ui
-                              }
-                            , Cmd.none
-                            )
+                            }
 
                         -- FIXME: handle ApiGamePageGameRetrieved Err
                         Err _ ->
-                            ( model, Cmd.none )
+                            model
 
                 RefreshGameState _ ->
-                    ( model, Cmd.none )
+                    model
+            , case ( sub, model.location.route, model.data.root ) of
+                ( RefreshGameState _, GameRoute id, Just apiRoot ) ->
+                    retrieveGamePageGame id apiRoot
+
+                _ ->
+                    Cmd.none
+            )
 
         HomePage sub ->
-            (
-                case sub of
-                    ApiHomePageGamesRetrieved res ->
-                        { model
-                          | data = res |> storeApiHomePageGames model.data
-                          , ui = sub |> HomePage.updateUi model.ui
-                        }
+            ( case sub of
+                ApiHomePageGamesRetrieved res ->
+                    { model
+                        | data = res |> storeApiHomePageGames model.data
+                        , ui = sub |> HomePage.updateUi model.ui
+                    }
 
-                    LogOut ->
-                        { model
-                          | session = forgetAuth model.session
-                          , ui = LogOut |> HomePage.updateUi model.ui
-                        }
+                LogOut ->
+                    { model
+                        | session = forgetAuth model.session
+                        , ui = LogOut |> HomePage.updateUi model.ui
+                    }
 
-                    _ ->
-                        sub |> HomePage.updateUi model.ui |> storeUi model
-                , case ( sub, model.data.root ) of
-                    ( LogOut, _ ) ->
-                        saveSession (sessionEncoder (forgetAuth model.session))
+                _ ->
+                    sub |> HomePage.updateUi model.ui |> storeUi model
+            , case ( sub, model.data.root ) of
+                ( LogOut, _ ) ->
+                    saveSession (sessionEncoder (forgetAuth model.session))
 
-                    ( RefreshDisplayedGames _, Just apiRoot ) ->
-                        retrieveHomePageGames apiRoot
+                ( RefreshDisplayedGames _, Just apiRoot ) ->
+                    retrieveHomePageGames apiRoot
 
-                    _ ->
-                        Cmd.none
+                _ ->
+                    Cmd.none
             )
 
         LoginPage sub ->
