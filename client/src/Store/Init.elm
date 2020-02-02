@@ -3,6 +3,7 @@ module Store.Init exposing (init)
 import Browser.Navigation as Nav
 import Dict
 import Flags exposing (Flags)
+import Pages.Game.Page as GamePage
 import Pages.Home.Page as HomePage
 import Pages.Login.Page as LoginPage
 import Pages.Register.Page as RegisterPage
@@ -37,7 +38,8 @@ initSessionModel flags =
 
 initUiModel : Flags -> UiModel
 initUiModel flags =
-    { home = HomePage.init flags
+    { game = GamePage.init flags
+    , home = HomePage.init flags
     , login = LoginPage.init flags
     , register = RegisterPage.init flags
     }

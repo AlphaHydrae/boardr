@@ -4,6 +4,7 @@ import Api.Model exposing (ApiGame, ApiIdentity, ApiRoot)
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Flags exposing (Flags)
+import Pages.Game.Model as GamePage
 import Pages.Home.Model as HomePage
 import Pages.Login.Model as LoginPage
 import Pages.Register.Model as RegisterPage
@@ -36,7 +37,8 @@ type alias Model =
 
 
 type alias UiModel =
-    { home : HomePage.Model
+    { game : GamePage.Model
+    , home : HomePage.Model
     , login : LoginPage.Model
     , register : RegisterPage.Model
     }

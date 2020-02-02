@@ -110,7 +110,7 @@ viewGameList displayedGames =
                 (List.map viewGame games)
 
         Error _ ->
-            p [] [ text "Could not load games..." ]
+            p [] [ text "Could not load games." ]
 
 
 viewGame : ApiGame -> Html msg
