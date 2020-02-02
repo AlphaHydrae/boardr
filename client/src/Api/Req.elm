@@ -1,6 +1,6 @@
-module Api.Req exposing (authenticateLocally, createGame, createLocalIdentity, createUser, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames, retrieveRoot)
+module Api.Req exposing (authenticateLocally, createGame, createLocalIdentity, createPlayer, createUser, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames, retrieveRoot)
 
-import Api.Model exposing (ApiGame, ApiIdentity, ApiRoot, apiGameDetailedDecoder, apiGameListDecoder, apiIdentityDecoder, apiLocalAuthenticationDecoder, apiPossibleActionListDecoder, apiRootDecoder, apiUserWithTokenDecoder)
+import Api.Model exposing (ApiGame, ApiIdentity, ApiRoot, apiGameDetailedDecoder, apiGameListDecoder, apiIdentityDecoder, apiLocalAuthenticationDecoder, apiPlayerDecoder, apiPossibleActionListDecoder, apiRootDecoder, apiUserWithTokenDecoder)
 import Dict
 import Http exposing (header)
 import Json.Encode as E
@@ -28,6 +28,19 @@ createLocalIdentity model apiRoot =
         { url = apiRoot.identitiesLink.href
         , body = Http.jsonBody (E.object [ ( "email", E.string model.email ), ( "provider", E.string "local" ) ])
         , expect = Http.expectJson ApiLocalIdentityCreated apiIdentityDecoder
+        }
+
+
+createPlayer : AuthModel -> ApiGame -> Cmd Msg
+createPlayer auth apiGame =
+    Http.request
+        { method = "POST"
+        , url = apiGame.playersLink.href
+        , body = Http.jsonBody (E.object [])
+        , headers = [ header "Authorization" ("Bearer " ++ auth.token) ]
+        , timeout = Nothing
+        , tracker = Nothing
+        , expect = Http.expectJson (\d -> GamePage (ApiGamePagePlayerCreated d)) apiPlayerDecoder
         }
 
 

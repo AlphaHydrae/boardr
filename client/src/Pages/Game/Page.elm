@@ -5,6 +5,7 @@ import Dict
 import Flags exposing (Flags)
 import Html exposing (Html, a, button, div, li, p, strong, text, ul)
 import Html.Attributes exposing (href, type_)
+import Html.Events exposing (onClick)
 import Pages.Game.Model exposing (Model, ViewModel)
 import Pages.Game.Msg exposing (Msg(..))
 import Routes exposing (Route(..))
@@ -30,6 +31,9 @@ update model msg =
                 Err err ->
                     { model | gameId = Error err }
 
+        ApiGamePagePlayerCreated _ ->
+            model
+
         ApiGamePagePossibleActionsRetrieved res ->
             case res of
                 Ok apiPossibleActionList ->
@@ -40,6 +44,9 @@ update model msg =
 
                 Err err ->
                     { model | possibleActions = Error err }
+
+        JoinGame _ ->
+            model
 
         RefreshGamePossibleActions _ ->
             case model.possibleActions of
@@ -98,7 +105,7 @@ viewModel id model =
     }
 
 
-view : ViewModel -> Html msg
+view : ViewModel -> Html Msg
 view model =
     div []
         [ p []
@@ -124,7 +131,7 @@ view model =
         ]
 
 
-viewGame : ApiGame -> Bool -> List (Html msg)
+viewGame : ApiGame -> Bool -> List (Html Msg)
 viewGame game joinable =
     ul []
         [ li []
@@ -146,13 +153,13 @@ viewGame game joinable =
                 )
             ]
         ]
-        :: viewGameControls joinable
+        :: viewGameControls game joinable
 
 
-viewGameControls : Bool -> List (Html msg)
-viewGameControls joinable =
+viewGameControls : ApiGame -> Bool -> List (Html Msg)
+viewGameControls game joinable =
     if joinable then
-        [ button [ type_ "button" ] [ text "Join" ]
+        [ button [ onClick (JoinGame game), type_ "button" ] [ text "Join" ]
         ]
 
     else

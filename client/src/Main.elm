@@ -68,7 +68,7 @@ viewBody model =
             [ Html.map HomePage (lazy HomePage.view (HomePage.viewModel model)) ]
 
         GameRoute id ->
-            [ lazy GamePage.view (GamePage.viewModel id model) ]
+            [ Html.map GamePage (lazy GamePage.view (GamePage.viewModel id model)) ]
 
         LoginRoute ->
             List.map (Html.map LoginPage) LoginPage.view

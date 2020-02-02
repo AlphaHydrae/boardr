@@ -16,6 +16,7 @@ module Api.Model exposing
     , apiGameWithoutDetails
     , apiIdentityDecoder
     , apiLocalAuthenticationDecoder
+    , apiPlayerDecoder
     , apiPossibleActionListDecoder
     , apiRootDecoder
     , apiUserDecoder
@@ -32,6 +33,7 @@ import Json.Encode as Encode
 type alias ApiGame =
     { createdAt : String
     , id : String
+    , playersLink : HalLink
     , possibleActionsLink : HalLink
     , rules : String
     , selfLink : HalLink
@@ -44,6 +46,7 @@ type alias ApiGameDetailed =
     { createdAt : String
     , id : String
     , players : List ApiPlayer
+    , playersLink : HalLink
     , possibleActionsLink : HalLink
     , rules : String
     , selfLink : HalLink
@@ -135,6 +138,7 @@ apiGameDecoder =
     Decode.succeed ApiGame
         |> required "createdAt" string
         |> required "id" string
+        |> required "_links" (field "boardr:players" halLinkDecoder)
         |> required "_links" (field "boardr:possible-actions" halLinkDecoder)
         |> required "rules" string
         |> required "_links" (field "self" halLinkDecoder)
@@ -148,6 +152,7 @@ apiGameDetailedDecoder =
         |> required "createdAt" string
         |> required "id" string
         |> required "_embedded" (field "boardr:players" (list apiPlayerDecoder))
+        |> required "_links" (field "boardr:players" halLinkDecoder)
         |> required "_links" (field "boardr:possible-actions" halLinkDecoder)
         |> required "rules" string
         |> required "_links" (field "self" halLinkDecoder)
@@ -189,6 +194,7 @@ apiGameWithoutDetails : ApiGameDetailed -> ApiGame
 apiGameWithoutDetails apiGame =
     { createdAt = apiGame.createdAt
     , id = apiGame.id
+    , playersLink = apiGame.playersLink
     , possibleActionsLink = apiGame.possibleActionsLink
     , rules = apiGame.rules
     , selfLink = apiGame.selfLink

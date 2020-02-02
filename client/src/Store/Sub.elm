@@ -22,6 +22,7 @@ subscriptions model =
                 _ ->
                     Sub.none
 
+        -- FIXME: do not refresh game state while joining
         GameRoute id ->
             case Maybe.map .state (Dict.get id model.data.games) of
                 Just WaitingForPlayers ->

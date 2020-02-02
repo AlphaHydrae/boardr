@@ -1,7 +1,7 @@
 module Store.Update exposing (update)
 
-import Api.Model exposing (ApiGameDetailed, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiRoot, ApiUserWithToken, apiGameWithoutDetails, apiUserWithoutToken)
-import Api.Req exposing (authenticateLocally, createGame, createLocalIdentity, createUser, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames)
+import Api.Model exposing (ApiGameDetailed, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiPlayer, ApiRoot, ApiUserWithToken, apiGameWithoutDetails, apiUserWithoutToken)
+import Api.Req exposing (authenticateLocally, createGame, createLocalIdentity, createPlayer, createUser, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames)
 import Browser
 import Browser.Navigation as Nav
 import Dict
@@ -124,7 +124,19 @@ update msg model =
                         Err _ ->
                             model
 
+                ApiGamePagePlayerCreated res ->
+                    case res of
+                        Ok apiPlayer ->
+                            apiPlayer |> storeApiPlayer model.data |> storeData model
+
+                        -- FIXME: handle ApiGamePagePlayerCreated Err
+                        Err _ ->
+                            model
+
                 ApiGamePagePossibleActionsRetrieved _ ->
+                    model
+
+                JoinGame _ ->
                     model
 
                 RefreshGamePossibleActions _ ->
@@ -133,6 +145,14 @@ update msg model =
                 RefreshGameState _ ->
                     model
             , case ( sub, model.location.route, model.data.root ) of
+                ( JoinGame game, _, _ ) ->
+                    case model.session of
+                        Just auth ->
+                            createPlayer auth game
+
+                        _ ->
+                            Cmd.none
+
                 ( RefreshGameState _, GameRoute id, Just apiRoot ) ->
                     retrieveGamePageGame id apiRoot
 
@@ -275,6 +295,11 @@ storeApiHomePageGames data res =
 storeApiIdentity : DataModel -> ApiIdentity -> DataModel
 storeApiIdentity data apiIdentity =
     { data | identities = Dict.insert apiIdentity.id apiIdentity data.identities }
+
+
+storeApiPlayer : DataModel -> ApiPlayer -> DataModel
+storeApiPlayer data apiPlayer =
+    { data | players = Dict.insert apiPlayer.id apiPlayer data.players }
 
 
 storeApiRoot : DataModel -> ApiRoot -> DataModel
