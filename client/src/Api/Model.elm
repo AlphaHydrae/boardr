@@ -39,7 +39,8 @@ type alias ApiBoard =
 
 
 type alias ApiGame =
-    { boardLink : HalLink
+    { actionsLink : HalLink
+    , boardLink : HalLink
     , createdAt : String
     , id : String
     , playersLink : HalLink
@@ -52,7 +53,8 @@ type alias ApiGame =
 
 
 type alias ApiGameDetailed =
-    { boardLink : HalLink
+    { actionsLink : HalLink
+    , boardLink : HalLink
     , createdAt : String
     , id : String
     , players : List ApiPlayer
@@ -103,6 +105,7 @@ type alias ApiPlayer =
     , id : String
     , number : Int
     , gameLink : HalLink
+    , selfLink : HalLink
     , userLink : HalLink
     }
 
@@ -159,6 +162,7 @@ apiBoardDecoder =
 apiGameDecoder : Decoder ApiGame
 apiGameDecoder =
     Decode.succeed ApiGame
+        |> required "_links" (field "boardr:actions" halLinkDecoder)
         |> required "_links" (field "boardr:board" halLinkDecoder)
         |> required "createdAt" string
         |> required "id" string
@@ -173,6 +177,7 @@ apiGameDecoder =
 apiGameDetailedDecoder : Decoder ApiGameDetailed
 apiGameDetailedDecoder =
     Decode.succeed ApiGameDetailed
+        |> required "_links" (field "boardr:actions" halLinkDecoder)
         |> required "_links" (field "boardr:board" halLinkDecoder)
         |> required "createdAt" string
         |> required "id" string
@@ -217,7 +222,8 @@ apiGameStateDecoder =
 
 apiGameWithoutDetails : ApiGameDetailed -> ApiGame
 apiGameWithoutDetails apiGame =
-    { boardLink = apiGame.boardLink
+    { actionsLink = apiGame.actionsLink
+    , boardLink = apiGame.boardLink
     , createdAt = apiGame.createdAt
     , id = apiGame.id
     , playersLink = apiGame.playersLink
@@ -259,6 +265,7 @@ apiPlayerDecoder =
         |> required "id" string
         |> required "number" int
         |> required "_links" (field "boardr:game" halLinkDecoder)
+        |> required "_links" (field "self" halLinkDecoder)
         |> required "_links" (field "boardr:user" halLinkDecoder)
 
 

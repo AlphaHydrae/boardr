@@ -1,7 +1,7 @@
 module Store.Update exposing (update)
 
 import Api.Model exposing (ApiGameDetailed, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiPlayer, ApiRoot, ApiUserWithToken, apiGameWithoutDetails, apiUserWithoutToken)
-import Api.Req exposing (authenticateLocally, createGame, createLocalIdentity, createPlayer, createUser, retrieveBoard, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames)
+import Api.Req exposing (authenticateLocally, createAction, createGame, createLocalIdentity, createPlayer, createUser, retrieveBoard, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames)
 import Browser
 import Browser.Navigation as Nav
 import Dict
@@ -111,6 +111,9 @@ update msg model =
 
         GamePage sub ->
             ( case sub of
+                ApiActionCreated ->
+                    model
+
                 ApiBoardRetrieved _ ->
                     sub |> GamePage.updateUi model.ui |> storeUi model
 
@@ -142,6 +145,9 @@ update msg model =
                 JoinGame _ ->
                     sub |> GamePage.updateUi model.ui |> storeUi model
 
+                Play _ _ _ ->
+                    model
+
                 RefreshGameState _ ->
                     sub |> GamePage.updateUi model.ui |> storeUi model
 
@@ -152,6 +158,14 @@ update msg model =
                     case model.session of
                         Just auth ->
                             createPlayer auth game
+
+                        _ ->
+                            Cmd.none
+
+                ( Play auth col row, GameRoute id, _ ) ->
+                    case Dict.get id model.data.games of
+                        Just apiGame ->
+                            createAction auth apiGame ( col, row )
 
                         _ ->
                             Cmd.none
