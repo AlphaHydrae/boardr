@@ -9,6 +9,7 @@ defmodule BoardrApi.Games.BoardView do
       dimensions: dimensions
     }
     |> omit_nil()
+    |> put_hal_curies_link()
     |> put_hal_links(%{
       'boardr:game': %{ href: Routes.games_url(Endpoint, :show, game_id) }
     })
