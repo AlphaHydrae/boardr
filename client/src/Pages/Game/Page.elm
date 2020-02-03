@@ -15,7 +15,8 @@ import Types exposing (RemoteData(..))
 
 init : Flags -> Model
 init _ =
-    { gameId = Loading
+    { board = NotAsked
+    , gameId = Loading
     , possibleActions = NotAsked
     }
 
@@ -23,6 +24,14 @@ init _ =
 update : Model -> Msg -> Model
 update model msg =
     case msg of
+        ApiBoardRetrieved res ->
+            case res of
+                Ok apiBoard ->
+                    { model | board = Loaded apiBoard }
+
+                Err err ->
+                    { model | board = Error err }
+
         ApiGamePageGameRetrieved res ->
             case res of
                 Ok apiGame ->
@@ -48,17 +57,6 @@ update model msg =
         JoinGame _ ->
             model
 
-        RefreshGamePossibleActions _ ->
-            case model.possibleActions of
-                NotAsked ->
-                    { model | possibleActions = Loading }
-
-                Loaded possibleActions ->
-                    { model | possibleActions = Refreshing possibleActions }
-
-                _ ->
-                    model
-
         RefreshGameState _ ->
             case model.gameId of
                 Loaded gameId ->
@@ -66,6 +64,30 @@ update model msg =
 
                 _ ->
                     model
+
+        RefreshOngoingGameState _ ->
+            { model
+                | board =
+                    case model.board of
+                        NotAsked ->
+                            Loading
+
+                        Loaded board ->
+                            Refreshing board
+
+                        _ ->
+                            model.board
+                , possibleActions =
+                    case model.possibleActions of
+                        NotAsked ->
+                            Loading
+
+                        Loaded possibleActions ->
+                            Refreshing possibleActions
+
+                        _ ->
+                            model.possibleActions
+            }
 
 
 updateUi : UiModel -> Msg -> UiModel
@@ -75,7 +97,8 @@ updateUi model msg =
 
 viewModel : String -> Store.Model.Model -> ViewModel
 viewModel id model =
-    { game =
+    { board = model.ui.game.board
+    , game =
         case ( model.ui.game.gameId, Dict.get id model.data.games ) of
             ( Refreshing _, Just apiGame ) ->
                 Refreshing apiGame

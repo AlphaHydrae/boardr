@@ -29,7 +29,7 @@ subscriptions model =
                     Time.every 1000 (\t -> GamePage (RefreshGameState t))
 
                 Just Playing ->
-                    Time.every 1000 (\t -> GamePage (RefreshGamePossibleActions t))
+                    Time.every 1000 (\t -> GamePage (RefreshOngoingGameState t))
 
                 _ ->
                     Sub.none

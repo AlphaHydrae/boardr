@@ -1,5 +1,6 @@
 module Api.Model exposing
-    ( ApiGame
+    ( ApiBoard
+    , ApiGame
     , ApiGameDetailed
     , ApiGameList
     , ApiGameState(..)
@@ -10,6 +11,7 @@ module Api.Model exposing
     , ApiRoot
     , ApiUser
     , ApiUserWithToken
+    , apiBoardDecoder
     , apiGameDecoder
     , apiGameDetailedDecoder
     , apiGameListDecoder
@@ -30,8 +32,15 @@ import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
 
 
+type alias ApiBoard =
+    { data : List ApiPiece
+    , dimensions : ( Int, Int )
+    }
+
+
 type alias ApiGame =
-    { createdAt : String
+    { boardLink : HalLink
+    , createdAt : String
     , id : String
     , playersLink : HalLink
     , possibleActionsLink : HalLink
@@ -43,7 +52,8 @@ type alias ApiGame =
 
 
 type alias ApiGameDetailed =
-    { createdAt : String
+    { boardLink : HalLink
+    , createdAt : String
     , id : String
     , players : List ApiPlayer
     , playersLink : HalLink
@@ -79,6 +89,12 @@ type alias ApiIdentity =
 type alias ApiLocalAuthentication =
     { token : String
     , user : ApiUser
+    }
+
+
+type alias ApiPiece =
+    { player : Int
+    , position : ( Int, Int )
     }
 
 
@@ -133,9 +149,17 @@ type alias WithToken a =
     { a | token : String }
 
 
+apiBoardDecoder : Decoder ApiBoard
+apiBoardDecoder =
+    Decode.succeed ApiBoard
+        |> required "data" (list apiPieceDecoder)
+        |> required "dimensions" apiPositionDecoder
+
+
 apiGameDecoder : Decoder ApiGame
 apiGameDecoder =
     Decode.succeed ApiGame
+        |> required "_links" (field "boardr:board" halLinkDecoder)
         |> required "createdAt" string
         |> required "id" string
         |> required "_links" (field "boardr:players" halLinkDecoder)
@@ -149,6 +173,7 @@ apiGameDecoder =
 apiGameDetailedDecoder : Decoder ApiGameDetailed
 apiGameDetailedDecoder =
     Decode.succeed ApiGameDetailed
+        |> required "_links" (field "boardr:board" halLinkDecoder)
         |> required "createdAt" string
         |> required "id" string
         |> required "_embedded" (field "boardr:players" (list apiPlayerDecoder))
@@ -192,7 +217,8 @@ apiGameStateDecoder =
 
 apiGameWithoutDetails : ApiGameDetailed -> ApiGame
 apiGameWithoutDetails apiGame =
-    { createdAt = apiGame.createdAt
+    { boardLink = apiGame.boardLink
+    , createdAt = apiGame.createdAt
     , id = apiGame.id
     , playersLink = apiGame.playersLink
     , possibleActionsLink = apiGame.possibleActionsLink
@@ -217,6 +243,13 @@ apiLocalAuthenticationDecoder =
     Decode.succeed ApiLocalAuthentication
         |> required "_embedded" (field "boardr:token" (field "value" string))
         |> required "_embedded" (field "boardr:user" apiUserDecoder)
+
+
+apiPieceDecoder : Decoder ApiPiece
+apiPieceDecoder =
+    Decode.succeed ApiPiece
+        |> required "player" int
+        |> required "position" apiPositionDecoder
 
 
 apiPlayerDecoder : Decoder ApiPlayer

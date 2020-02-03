@@ -1,6 +1,6 @@
-module Api.Req exposing (authenticateLocally, createGame, createLocalIdentity, createPlayer, createUser, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames, retrieveRoot)
+module Api.Req exposing (authenticateLocally, createGame, createLocalIdentity, createPlayer, createUser, retrieveBoard, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames, retrieveRoot)
 
-import Api.Model exposing (ApiGame, ApiIdentity, ApiRoot, apiGameDetailedDecoder, apiGameListDecoder, apiIdentityDecoder, apiLocalAuthenticationDecoder, apiPlayerDecoder, apiPossibleActionListDecoder, apiRootDecoder, apiUserWithTokenDecoder)
+import Api.Model exposing (ApiGame, ApiIdentity, ApiRoot, apiBoardDecoder, apiGameDetailedDecoder, apiGameListDecoder, apiIdentityDecoder, apiLocalAuthenticationDecoder, apiPlayerDecoder, apiPossibleActionListDecoder, apiRootDecoder, apiUserWithTokenDecoder)
 import Dict
 import Http exposing (header)
 import Json.Encode as E
@@ -67,6 +67,14 @@ createUser name apiIdentity apiRoot =
         , timeout = Nothing
         , tracker = Nothing
         , expect = Http.expectJson ApiUserCreated apiUserWithTokenDecoder
+        }
+
+
+retrieveBoard : ApiGame -> Cmd Msg
+retrieveBoard apiGame =
+    Http.get
+        { url = apiGame.boardLink.href
+        , expect = Http.expectJson (\d -> GamePage (ApiBoardRetrieved d)) apiBoardDecoder
         }
 
 

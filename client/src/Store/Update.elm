@@ -1,7 +1,7 @@
 module Store.Update exposing (update)
 
 import Api.Model exposing (ApiGameDetailed, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiPlayer, ApiRoot, ApiUserWithToken, apiGameWithoutDetails, apiUserWithoutToken)
-import Api.Req exposing (authenticateLocally, createGame, createLocalIdentity, createPlayer, createUser, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames)
+import Api.Req exposing (authenticateLocally, createGame, createLocalIdentity, createPlayer, createUser, retrieveBoard, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames)
 import Browser
 import Browser.Navigation as Nav
 import Dict
@@ -111,6 +111,9 @@ update msg model =
 
         GamePage sub ->
             ( case sub of
+                ApiBoardRetrieved _ ->
+                    sub |> GamePage.updateUi model.ui |> storeUi model
+
                 ApiGamePageGameRetrieved res ->
                     case res of
                         -- Store game data from the API.
@@ -134,16 +137,16 @@ update msg model =
                             model
 
                 ApiGamePagePossibleActionsRetrieved _ ->
-                    model
+                    sub |> GamePage.updateUi model.ui |> storeUi model
 
                 JoinGame _ ->
-                    model
-
-                RefreshGamePossibleActions _ ->
-                    model
+                    sub |> GamePage.updateUi model.ui |> storeUi model
 
                 RefreshGameState _ ->
-                    model
+                    sub |> GamePage.updateUi model.ui |> storeUi model
+
+                RefreshOngoingGameState _ ->
+                    sub |> GamePage.updateUi model.ui |> storeUi model
             , case ( sub, model.location.route, model.data.root ) of
                 ( JoinGame game, _, _ ) ->
                     case model.session of
@@ -156,10 +159,13 @@ update msg model =
                 ( RefreshGameState _, GameRoute id, Just apiRoot ) ->
                     retrieveGamePageGame id apiRoot
 
-                ( RefreshGamePossibleActions _, GameRoute id, _ ) ->
+                ( RefreshOngoingGameState _, GameRoute id, _ ) ->
                     case Dict.get id model.data.games of
                         Just apiGame ->
-                            retrieveGamePossibleActions apiGame
+                            Cmd.batch
+                                [ retrieveBoard apiGame
+                                , retrieveGamePossibleActions apiGame
+                                ]
 
                         _ ->
                             Cmd.none
