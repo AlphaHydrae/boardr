@@ -9,6 +9,7 @@
 ## Important
 
 * Frontend
+  * Deploy
   * Style
   * Stats page
     * REST operations executed by node
