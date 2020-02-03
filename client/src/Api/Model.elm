@@ -49,6 +49,7 @@ type alias ApiGame =
     , selfLink : HalLink
     , state : ApiGameState
     , title : Maybe String
+    , winners : List ApiPlayer
     }
 
 
@@ -64,6 +65,7 @@ type alias ApiGameDetailed =
     , selfLink : HalLink
     , state : ApiGameState
     , title : Maybe String
+    , winners : List ApiPlayer
     }
 
 
@@ -172,6 +174,7 @@ apiGameDecoder =
         |> required "_links" (field "self" halLinkDecoder)
         |> required "state" apiGameStateDecoder
         |> optional "title" (maybe string) Nothing
+        |> optional "_embedded" (field "boardr:winners" (list apiPlayerDecoder)) []
 
 
 apiGameDetailedDecoder : Decoder ApiGameDetailed
@@ -188,6 +191,7 @@ apiGameDetailedDecoder =
         |> required "_links" (field "self" halLinkDecoder)
         |> required "state" apiGameStateDecoder
         |> optional "title" (maybe string) Nothing
+        |> optional "_embedded" (field "boardr:winners" (list apiPlayerDecoder)) []
 
 
 apiGameListDecoder : Decoder ApiGameList
@@ -232,6 +236,7 @@ apiGameWithoutDetails apiGame =
     , selfLink = apiGame.selfLink
     , state = apiGame.state
     , title = apiGame.title
+    , winners = apiGame.winners
     }
 
 

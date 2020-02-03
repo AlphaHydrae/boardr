@@ -11,7 +11,6 @@ import Pages.Game.Model exposing (Model, ViewModel)
 import Pages.Game.Msg exposing (Msg(..))
 import Routes exposing (Route(..))
 import Store.Model exposing (UiModel)
-import Store.Session exposing (AuthModel)
 import Types exposing (RemoteData(..), getRemoteData)
 
 
@@ -188,7 +187,29 @@ viewGame game vmodel =
                         "Draw"
 
                     Win ->
-                        "Win!"
+                        let
+                            winner =
+                                List.head game.winners
+                        in
+                        case winner of
+                            Just player ->
+                                case vmodel.auth of
+                                    Just auth ->
+                                        if isInGame auth.user vmodel then
+                                            if player.userLink.href == auth.user.selfLink.href then
+                                                "You win!"
+
+                                            else
+                                                "You lose."
+
+                                        else
+                                            "Player " ++ String.fromInt player.number ++ " wins"
+
+                                    Nothing ->
+                                        "Player " ++ String.fromInt player.number ++ " wins"
+
+                            Nothing ->
+                                "Win!"
                 )
             ]
         ]
@@ -244,15 +265,17 @@ piece vmodel col row =
             case List.Extra.find (\p -> p.position == ( col, row )) board.data of
                 Just p ->
                     case p.player of
-                        1 -> "X"
-                        _ -> "O"
+                        1 ->
+                            "X"
+
+                        _ ->
+                            "O"
 
                 Nothing ->
                     "_"
 
         Nothing ->
             "_"
-
 
 
 viewOngoingGameState : ViewModel -> String

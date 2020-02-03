@@ -1,6 +1,6 @@
 module Store.Update exposing (update)
 
-import Api.Model exposing (ApiGameDetailed, ApiGameList, ApiIdentity, ApiLocalAuthentication, ApiPlayer, ApiRoot, ApiUserWithToken, apiGameWithoutDetails, apiUserWithoutToken)
+import Api.Model exposing (ApiGame, ApiGameDetailed, ApiGameList, ApiGameState(..), ApiIdentity, ApiLocalAuthentication, ApiPlayer, ApiRoot, ApiUserWithToken, apiGameWithoutDetails, apiUserWithoutToken)
 import Api.Req exposing (authenticateLocally, createAction, createGame, createLocalIdentity, createPlayer, createUser, retrieveBoard, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames)
 import Browser
 import Browser.Navigation as Nav
@@ -122,7 +122,7 @@ update msg model =
                         -- Store game data from the API.
                         Ok apiGame ->
                             { model
-                                | data = apiGame |> storeApiGame model.data
+                                | data = apiGame |> storeApiGameDetailed model.data
                                 , ui = sub |> GamePage.updateUi model.ui
                             }
 
@@ -139,8 +139,17 @@ update msg model =
                         Err _ ->
                             model
 
-                ApiGamePagePossibleActionsRetrieved _ ->
-                    sub |> GamePage.updateUi model.ui |> storeUi model
+                ApiGamePagePossibleActionsRetrieved res ->
+                    { model
+                        | data =
+                            case res of
+                                Ok possibleActionList ->
+                                    possibleActionList.game |> storeApiGame model.data
+
+                                _ ->
+                                    model.data
+                        , ui = sub |> GamePage.updateUi model.ui
+                    }
 
                 JoinGame _ ->
                     sub |> GamePage.updateUi model.ui |> storeUi model
@@ -154,6 +163,17 @@ update msg model =
                 RefreshOngoingGameState _ ->
                     sub |> GamePage.updateUi model.ui |> storeUi model
             , case ( sub, model.location.route, model.data.root ) of
+                ( ApiGamePageGameRetrieved (Ok apiGame), GameRoute _, _ ) ->
+                    case apiGame.state of
+                        Draw ->
+                            retrieveBoard (apiGameWithoutDetails apiGame)
+
+                        Win ->
+                            retrieveBoard (apiGameWithoutDetails apiGame)
+
+                        _ ->
+                            Cmd.none
+
                 ( JoinGame game, _, _ ) ->
                     case model.session of
                         Just auth ->
@@ -281,8 +301,13 @@ forgetAuth _ =
     Nothing
 
 
-storeApiGame : DataModel -> ApiGameDetailed -> DataModel
+storeApiGame : DataModel -> ApiGame -> DataModel
 storeApiGame data apiGame =
+    { data | games = Dict.insert apiGame.id apiGame data.games }
+
+
+storeApiGameDetailed : DataModel -> ApiGameDetailed -> DataModel
+storeApiGameDetailed data apiGame =
     { data
         | games = Dict.insert apiGame.id (apiGameWithoutDetails apiGame) data.games
         , players = List.foldl (\p d -> Dict.insert p.id p d) data.players apiGame.players
@@ -293,7 +318,7 @@ storeApiHomePageCreatedGame : DataModel -> Result Http.Error ApiGameDetailed -> 
 storeApiHomePageCreatedGame data res =
     case res of
         Ok apiGame ->
-            storeApiGame data apiGame
+            storeApiGameDetailed data apiGame
 
         Err _ ->
             data
