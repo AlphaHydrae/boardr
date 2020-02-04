@@ -27,7 +27,7 @@ defmodule Boardr.Gaming.GameServer do
     rules_state: nil
   )
 
-  @default_timeout 5_000
+  @default_timeout 60_000
 
   def start_link(game_id) when is_binary(game_id) do
     GenServer.start_link(__MODULE__, game_id)
