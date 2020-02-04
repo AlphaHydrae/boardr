@@ -7,7 +7,7 @@
 
 <body>
   <div id='elm'></div>
-  <script src='/elm.js'></script>
+  <script src=<%= bundlePath %>></script>
   <script>
     var flags = {
       apiUrl: <%= apiUrl %>,

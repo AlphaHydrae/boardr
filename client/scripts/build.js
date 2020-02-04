@@ -21,7 +21,8 @@ async function build() {
   const indexTemplate = template(indexTemplateContents);
 
   const indexContents = indexTemplate({
-    apiUrl: JSON.stringify(process.env.BOARDR_API_URL || 'http://localhost:4000/api')
+    apiUrl: JSON.stringify(process.env.BOARDR_API_URL || 'http://localhost:4000/api'),
+    bundlePath: JSON.stringify(process.env.BOARDR_BUNDLE || '/elm.js')
   });
 
   await writeFile(indexPath, indexContents, 'utf8');

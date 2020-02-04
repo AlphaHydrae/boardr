@@ -25,7 +25,7 @@
     name: "{{ boardr_release_deploy_name }}"
     state: restarted
   when: boardr_release_deploy_enabled and restart
-  tags: [ boardr-release-deploy, deploy ]
+  tags: [ boardr-release-deploy, deploy, deploy-restart ]
 
 - name: Wait for boardr API to start
   wait_for:

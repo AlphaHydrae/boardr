@@ -1,0 +1,7 @@
+---
+dependencies:
+
+  - role: asdf
+    asdf_plugins: [ elm, nodejs ]
+
+  - role: boardr-repo

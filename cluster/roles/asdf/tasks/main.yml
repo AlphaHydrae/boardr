@@ -8,6 +8,7 @@
       - curl
       - libffi-dev
       - libncurses-dev
+      - libncurses5-dev
       - libreadline-dev
       - libssl-dev
       - libtool

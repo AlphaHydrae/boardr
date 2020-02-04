@@ -2,8 +2,16 @@
 
 - name: Install boardr tools
   command:
-    chdir: "{{ boardr_repo_path }}"
-    cmd: "{{ asdf_binary }} install"
+    # FIXME: take erlang version from .tool-versions
+    cmd: "{{ asdf_binary }} install erlang 22.2.3"
+  become_user: "{{ boardr_release_tools_user }}"
+  changed_when: false
+  tags: [ boardr-release-tools, install ]
+
+- name: Install boardr tools
+  command:
+    # FIXME: take elixir version from .tool-versions
+    cmd: "{{ asdf_binary }} install elixir 1.10.0-otp-22"
   become_user: "{{ boardr_release_tools_user }}"
   changed_when: false
   tags: [ boardr-release-tools, install ]

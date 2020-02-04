@@ -1,0 +1,19 @@
+---
+
+- name: Build frontend locally
+  command:
+    cmd: npm run build
+    chdir: "{{ playbook_dir }}/../client"
+  become: false
+  delegate_to: 127.0.0.1
+  environment:
+    BOARDR_API_URL: http://boardr.cluster/api
+    BOARDR_BUNDLE: /elm.min.js
+  tags: [ boardr-frontend ]
+
+- name: Copy the compiled frontend to the server
+  synchronize:
+    src: "{{ playbook_dir }}/../client/dist/"
+    dest: /var/www/html/
+    delete: true
+  tags: [ boardr-frontend ]

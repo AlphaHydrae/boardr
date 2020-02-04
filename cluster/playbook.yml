@@ -9,6 +9,7 @@
     - [ variables.local.yml, variables.default.yml ]
   roles:
     - role: server
+    - role: boardr-frontend
     - role: rp
 
 # Database server
