@@ -11,6 +11,7 @@ defmodule BoardrApi.Router do
     pipe_through :api
 
     get "/", ApiRootController, :index
+    get "/stats", StatsController, :show
 
     scope "/auth" do
       post "/google", AuthController, :google

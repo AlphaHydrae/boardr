@@ -40,8 +40,8 @@
 ## Important
 
 * Frontend
-  * Deploy
   * Style
+  * List only waiting_for_players & playing games
   * Stats page
     * REST operations executed by node
     * Number of game servers running by node
