@@ -4,11 +4,39 @@ services:
 
   locust:
     build: .
+    depends_on:
+      - rp
     environment:
-      TARGET_URL: "http://api:5000"
+      TARGET_URL: "http://boardr"
     image: boardr/locust
     ports:
       - "8089:8089"
+
+  rp:
+    image: nginx:1.17.8-alpine
+    depends_on:
+      - api
+    networks:
+      default:
+        aliases:
+          - boardr
+      web:
+    ports:
+      - "${PORT:-5000}:80"
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf:ro"
+
+  # FIXME: frontend does not work due to API redirecting to http://boardr
+  frontend:
+    image: boardr/client
+    build:
+      context: ../client
+      args:
+        BOARDR_API_URL: http://localhost:${PORT:-5000}/api
+    depends_on:
+      - api
+    networks:
+      - web
 
   api:
     image: boardr/server
@@ -16,18 +44,14 @@ services:
     depends_on:
       - db
     environment:
-      BOARDR_BASE_URL: http://api:5000
+      BOARDR_BASE_URL: http://boardr
       BOARDR_DATABASE_URL: ecto://boardr:changeme@db/boardr
-      BOARDR_PORT: 5000
       BOARDR_SECRET: changeme
     networks:
       - db
-      - default
+      - web
     ports:
       - "${SSH_PORT:-2222}:22"
-      - "${PORT:-5000}:5000"
-    volumes:
-      - "./tmp/id_rsa:/etc/boardr/id_rsa:ro"
 
   db:
     image: postgres:12.1-alpine
@@ -42,6 +66,7 @@ services:
 
 networks:
   db:
+  web:
 
 volumes:
   db_data:
