@@ -3,6 +3,7 @@
 ## Critical
 
 * Test distribution on cluster
+* Optimize possible actions resource (cache actions, use ETS)
 * Fix FIXMEs & TODOs
 * Create script to quickly perform demo
 
