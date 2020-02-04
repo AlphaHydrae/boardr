@@ -1,6 +1,8 @@
 /client/dist
 /client/elm.js
 /client/elm-stuff
+/client/.env*
+/client/index.html
 /client/node_modules
 /cluster/inventory.yml
 /cluster/*.log

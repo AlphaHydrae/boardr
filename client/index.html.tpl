@@ -10,7 +10,7 @@
   <script src='/elm.js'></script>
   <script>
     var flags = {
-      apiUrl: 'http://localhost:4000/api',
+      apiUrl: <%= apiUrl %>,
     };
 
     var session = localStorage.getItem('boardr');
