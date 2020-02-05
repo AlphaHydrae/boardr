@@ -7,6 +7,8 @@ defmodule BoardrApi.StatsServer do
 
   import Ecto.Query, only: [from: 2]
 
+  @stats_refresh_interval 5_000
+
   def start_link(_) do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
@@ -36,6 +38,11 @@ defmodule BoardrApi.StatsServer do
     {:noreply, compute_stats()}
   end
 
+  @impl true
+  def handle_info(:refresh, _) do
+    {:noreply, compute_stats()}
+  end
+
   defp compute_stats() do
     counts =
       [{:actions, Action}, {:identities, Identity}, {:players, Player}, {:users, User}]
@@ -55,6 +62,7 @@ defmodule BoardrApi.StatsServer do
     }
 
     :ets.insert(:stats, {:cache, stats})
+    Process.send_after(self(), :refresh, @stats_refresh_interval)
 
     stats
   end
