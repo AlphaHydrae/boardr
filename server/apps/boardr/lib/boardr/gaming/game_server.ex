@@ -357,6 +357,8 @@ defmodule Boardr.Gaming.GameServer do
         10_000
       )
 
+    Swarm.join(:game_servers, pid)
+
     try do
       GenServer.call(pid, request, 10_000)
     catch
