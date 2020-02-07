@@ -9,5 +9,4 @@ type Msg
     = ApiHomePageGameCreated (Result Http.Error ApiGameDetailed)
     | ApiHomePageGamesRetrieved (Result Http.Error ApiGameList)
     | CreateGame
-    | LogOut
     | RefreshDisplayedGames Time.Posix

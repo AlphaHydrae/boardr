@@ -23,6 +23,8 @@ type
     | HomePage HomePage.Msg
     | LoginPage LoginPage.Msg
     | RegisterPage RegisterPage.Msg
+      -- Authentication
+    | LogOut
       -- Navigation
     | RequestUrl UrlRequest
     | UrlChanged Url

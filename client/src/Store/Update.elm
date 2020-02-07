@@ -219,12 +219,6 @@ update msg model =
                         , ui = sub |> HomePage.updateUi model.ui
                     }
 
-                LogOut ->
-                    { model
-                        | session = forgetAuth model.session
-                        , ui = LogOut |> HomePage.updateUi model.ui
-                    }
-
                 _ ->
                     sub |> HomePage.updateUi model.ui |> storeUi model
             , case ( sub, model.data.root, model.session ) of
@@ -233,9 +227,6 @@ update msg model =
 
                 ( CreateGame, Just apiRoot, Just auth ) ->
                     createGame auth apiRoot
-
-                ( LogOut, _, _ ) ->
-                    saveSession (sessionEncoder (forgetAuth model.session))
 
                 ( RefreshDisplayedGames _, Just apiRoot, _ ) ->
                     retrieveHomePageGames apiRoot
@@ -252,6 +243,14 @@ update msg model =
 
                 _ ->
                     Cmd.none
+            )
+
+        LogOut ->
+            let
+                newSession = forgetAuth model.session
+            in
+            ( newSession |> storeSession model
+            , newSession |> sessionEncoder |> saveSession
             )
 
         RegisterPage sub ->

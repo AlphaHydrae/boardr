@@ -44,9 +44,6 @@ update model msg =
         CreateGame ->
             model
 
-        LogOut ->
-            model
-
         RefreshDisplayedGames _ ->
             model
 
@@ -82,27 +79,9 @@ view : ViewModel -> Html Msg
 view vmodel =
     div []
         [ h1 [] [ text "Boardr" ]
-        , p [] (viewNavLinks vmodel)
         , viewGameCreationControls vmodel.currentUser
         , viewGameList vmodel.displayedGames
         ]
-
-
-viewNavLinks : ViewModel -> List (Html Msg)
-viewNavLinks vmodel =
-    a [ href "/stats" ] [ text "Stats" ] :: viewAuthNavLinks vmodel
-
-
-viewAuthNavLinks : ViewModel -> List (Html Msg)
-viewAuthNavLinks vmodel =
-    case vmodel.currentUser of
-        Just _ ->
-            [ a [ href "#", onClick LogOut ] [ text "Log out" ] ]
-
-        Nothing ->
-            [ a [ href "/login" ] [ text "Log in" ]
-            , a [ href "/register" ] [ text "Register" ]
-            ]
 
 
 viewGameCreationControls : Maybe ApiUser -> Html Msg

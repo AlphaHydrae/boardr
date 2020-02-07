@@ -1,8 +1,8 @@
 module Pages.Login.Page exposing (init, store, view)
 
 import Flags exposing (Flags)
-import Html exposing (Html, button, form, h2, input, label, text)
-import Html.Attributes exposing (for, type_)
+import Html exposing (Html, button, div, form, h2, input, label, text)
+import Html.Attributes exposing (class, for, type_)
 import Html.Events exposing (onInput, onSubmit)
 import Pages.Login.Model exposing (Model)
 import Pages.Login.Msg exposing (Msg(..))
@@ -31,10 +31,13 @@ update msg model =
 
 view : List (Html Msg)
 view =
-    [ h2 [] [ text "Log in" ]
-    , form [ onSubmit SubmitLoginForm ]
-        [ label [ for "login-email" ] [ text "Email" ]
-        , input [ type_ "text", onInput EditLoginEmail ] []
-        , button [ type_ "submit" ] [ text "Submit" ]
+    [ div [ class "col-12 col-md-4 offset-md-4" ]
+        [ form [ onSubmit SubmitLoginForm ]
+            [ div [ class "form-group" ]
+                [ label [ for "login-email" ] [ text "Email" ]
+                , input [ class "form-control", type_ "text", onInput EditLoginEmail ] []
+                ]
+            , button [ class "btn btn-block btn-primary", type_ "submit" ] [ text "Submit" ]
+            ]
         ]
     ]

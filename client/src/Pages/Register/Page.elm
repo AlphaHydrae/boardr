@@ -1,8 +1,8 @@
 module Pages.Register.Page exposing (init, store, view)
 
 import Flags exposing (Flags)
-import Html exposing (Html, button, div, form, h2, input, label, text)
-import Html.Attributes exposing (for, type_)
+import Html exposing (Html, button, div, form, input, label, text)
+import Html.Attributes exposing (class, for, type_)
 import Html.Events exposing (onInput, onSubmit)
 import Pages.Register.Model exposing (Model)
 import Pages.Register.Msg exposing (Msg(..))
@@ -36,13 +36,16 @@ update msg model =
 
 view : Html Msg
 view =
-    div []
-        [ h2 [] [ text "Register" ]
-        , form [ onSubmit SubmitRegisterForm ]
-            [ label [ for "register-email" ] [ text "Email" ]
-            , input [ type_ "text", onInput EditRegisterEmail ] []
-            , label [ for "register-name" ] [ text "Username" ]
-            , input [ type_ "text", onInput EditRegisterUsername ] []
-            , button [ type_ "submit" ] [ text "Submit" ]
+    div [ class "col-12 col-md-4 offset-md-4" ]
+        [ form [ onSubmit SubmitRegisterForm ]
+            [ div [ class "form-group" ]
+                [ label [ for "register-email" ] [ text "Email" ]
+                , input [ class "form-control", type_ "text", onInput EditRegisterEmail ] []
+                ]
+            , div [ class "form-group" ]
+                [ label [ for "register-name" ] [ text "Username" ]
+                , input [ class "form-control", type_ "text", onInput EditRegisterUsername ] []
+                ]
+            , button [ class "btn btn-block btn-primary", type_ "submit" ] [ text "Submit" ]
             ]
         ]
