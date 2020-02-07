@@ -1,7 +1,7 @@
 module Pages.Login.Page exposing (init, store, view)
 
 import Flags exposing (Flags)
-import Html exposing (Html, button, div, form, h2, input, label, text)
+import Html exposing (Html, button, div, form, input, label, text)
 import Html.Attributes exposing (class, for, type_)
 import Html.Events exposing (onInput, onSubmit)
 import Pages.Login.Model exposing (Model)
