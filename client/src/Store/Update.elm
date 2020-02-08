@@ -20,6 +20,7 @@ import Routes exposing (Route(..), toRoute)
 import Store.Model exposing (DataModel, LocationModel, Model, UiModel)
 import Store.Msg exposing (Msg(..))
 import Store.Session exposing (AuthModel, SessionModel, sessionEncoder)
+import Time exposing (Zone)
 import Url exposing (Url)
 import Url.Builder
 
@@ -273,6 +274,9 @@ update msg model =
                 Browser.External href ->
                     ( model, Nav.load href )
 
+        TimeZoneRetrieved zone ->
+            ( zone |> storeTimeZone model.ui |> storeUi model, Cmd.none )
+
         UrlChanged url ->
             let
                 route =
@@ -369,6 +373,11 @@ storeLocalAuthentication _ localAuth =
 storeSession : Model -> SessionModel -> Model
 storeSession model session =
     { model | session = session }
+
+
+storeTimeZone : UiModel -> Zone -> UiModel
+storeTimeZone ui zone =
+    { ui | zone = Just zone }
 
 
 storeUi : Model -> UiModel -> Model

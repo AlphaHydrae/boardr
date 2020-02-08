@@ -7,6 +7,7 @@ import Pages.Game.Msg as GamePage
 import Pages.Home.Msg as HomePage
 import Pages.Login.Msg as LoginPage
 import Pages.Register.Msg as RegisterPage
+import Time exposing (Zone)
 import Url exposing (Url)
 
 
@@ -28,3 +29,5 @@ type
       -- Navigation
     | RequestUrl UrlRequest
     | UrlChanged Url
+      -- Other
+    | TimeZoneRetrieved Zone

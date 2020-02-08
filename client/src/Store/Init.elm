@@ -43,4 +43,5 @@ initUiModel flags =
     , home = HomePage.init flags
     , login = LoginPage.init flags
     , register = RegisterPage.init flags
+    , zone = Nothing
     }

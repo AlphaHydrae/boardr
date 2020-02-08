@@ -16,10 +16,10 @@
             "elm/url": "1.0.0",
             "elm-community/list-extra": "8.2.3",
             "ericgj/elm-uri-template": "1.0.1",
-            "rundis/elm-bootstrap": "5.2.0"
+            "jweir/elm-iso8601": "7.0.0",
+            "ryannhg/date-format": "2.3.0"
         },
         "indirect": {
-            "avh4/elm-color": "1.0.0",
             "elm/bytes": "1.0.8",
             "elm/file": "1.0.5",
             "elm/regex": "1.0.0",
@@ -29,6 +29,8 @@
     },
     "test-dependencies": {
         "direct": {},
-        "indirect": {}
+        "indirect": {
+            "avh4/elm-color": "1.0.0"
+        }
     }
 }

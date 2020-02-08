@@ -10,6 +10,7 @@ import Pages.Login.Model as LoginPage
 import Pages.Register.Model as RegisterPage
 import Routes exposing (Route)
 import Store.Session exposing (SessionModel)
+import Time exposing (Zone)
 import Url exposing (Url)
 
 
@@ -42,4 +43,5 @@ type alias UiModel =
     , home : HomePage.Model
     , login : LoginPage.Model
     , register : RegisterPage.Model
+    , zone : Maybe Zone
     }

@@ -14,6 +14,8 @@ import Pages.Home.Page as HomePage
 import Pages.Login.Page as LoginPage
 import Pages.Register.Page as RegisterPage
 import Routes exposing (Route(..))
+import Task
+import Time
 import Store.Init
 import Store.Model exposing (Model)
 import Store.Msg exposing (Msg(..))
@@ -42,7 +44,10 @@ init flags url key =
 initWithFlags : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 initWithFlags flags url key =
     ( Store.Init.init flags url key
-    , retrieveRoot flags.apiUrl
+    , Cmd.batch
+        [ retrieveRoot flags.apiUrl
+        , Task.perform TimeZoneRetrieved Time.here
+        ]
     )
 
 
