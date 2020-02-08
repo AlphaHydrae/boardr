@@ -1,23 +1,29 @@
 # TODO
 
+* bcrypt
+* Google auth
+* Write documentation
+* Check coverage
+* Write Doctests
+* README
+  * `env.exs` file
+    * Mix task to set up `env.exs` file
+  * Helper scripts
+* WebSocket
+* Travis CI
+* Coveralls
+* HAL browser
+
 ## API
 
 * https://github.com/jonasschmidt/ex_json_schema
 * https://hexdocs.pm/json_patch/JSONPatch.html
-
-## Database
-
-* Add indices
 
 ## Testing
 
 * https://github.com/thoughtbot/ex_machina
 * https://github.com/pspdfkit-labs/bypass
 * https://elixir-lang.org/blog/2017/10/31/stream-data-property-based-testing-and-data-generation-for-elixir/
-
-### Load Testing
-
-* Roles: normal, maniac, interloper
 
 ### Monitoring
 
