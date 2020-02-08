@@ -7,8 +7,7 @@ defmodule BoardrApi.Application do
 
   def start(_type, _args) do
     children = [
-      BoardrApi.Endpoint,
-      BoardrApi.StatsServer
+      BoardrApi.Endpoint
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

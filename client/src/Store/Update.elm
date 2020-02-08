@@ -1,7 +1,7 @@
 module Store.Update exposing (update)
 
 import Api.Model exposing (ApiGame, ApiGameDetailed, ApiGameList, ApiGameState(..), ApiIdentity, ApiLocalAuthentication, ApiPlayer, ApiRoot, ApiUserWithToken, apiGameWithoutDetails, apiUserWithoutToken)
-import Api.Req exposing (authenticateLocally, createAction, createGame, createLocalIdentity, createPlayer, createUser, retrieveBoard, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames)
+import Api.Req exposing (authenticateLocally, createAction, createGame, createLocalIdentity, createPlayer, createUser, retrieveBoard, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames, retrieveStats)
 import Browser
 import Browser.Navigation as Nav
 import Dict
@@ -15,6 +15,8 @@ import Pages.Login.Msg exposing (Msg(..))
 import Pages.Login.Page as LoginPage
 import Pages.Register.Msg exposing (Msg(..))
 import Pages.Register.Page as RegisterPage
+import Pages.Stats.Msg exposing (Msg(..))
+import Pages.Stats.Page as StatsPage
 import Platform.Cmd exposing (Cmd)
 import Ports exposing (saveSession)
 import Routes exposing (Route(..), toRoute)
@@ -277,6 +279,21 @@ update msg model =
                 Browser.External href ->
                     ( model, Nav.load href )
 
+        StatsPage sub ->
+            ( sub |> StatsPage.updateUi model.ui |> storeUi model
+            , case sub of
+                RefreshApiStats _ ->
+                    case model.data.root of
+                        Just root ->
+                            retrieveStats root
+
+                        Nothing ->
+                            Cmd.none
+
+                _ ->
+                    Cmd.none
+            )
+
         TimeZoneRetrieved zone ->
             ( zone |> storeTimeZone model.ui |> storeUi model, Cmd.none )
 
@@ -329,7 +346,7 @@ update msg model =
                 HomeRoute ->
                     case model.data.root of
                         Just root ->
-                        -- Retrieve the game list from the API when returning to the home page.
+                            -- Retrieve the game list from the API when returning to the home page.
                             retrieveHomePageGames root
 
                         _ ->

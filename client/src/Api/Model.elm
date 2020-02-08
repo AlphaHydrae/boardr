@@ -9,6 +9,7 @@ module Api.Model exposing
     , ApiPlayer
     , ApiPossibleActionList
     , ApiRoot
+    , ApiStats
     , ApiUser
     , ApiUserWithToken
     , apiBoardDecoder
@@ -21,13 +22,15 @@ module Api.Model exposing
     , apiPlayerDecoder
     , apiPossibleActionListDecoder
     , apiRootDecoder
+    , apiStatsDecoder
     , apiUserDecoder
     , apiUserEncoder
     , apiUserWithTokenDecoder
     , apiUserWithoutToken
     )
 
-import Json.Decode as Decode exposing (Decoder, andThen, bool, field, int, list, maybe, string)
+import Dict exposing (Dict)
+import Json.Decode as Decode exposing (Decoder, andThen, bool, dict, field, int, list, maybe, string)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
 
@@ -82,6 +85,15 @@ type alias ApiGameList =
     }
 
 
+type alias ApiGameStats =
+    { draw : Int
+    , inactive : Int
+    , playing : Int
+    , waitingForPlayers : Int
+    , win : Int
+    }
+
+
 type alias ApiIdentity =
     { createdAt : String
     , email : String
@@ -129,7 +141,18 @@ type alias ApiRoot =
     , gamesLink : HalLink
     , identitiesLink : HalLink
     , localAuthLink : HalLink
+    , statsLink : HalLink
     , usersLink : HalLink
+    }
+
+
+type alias ApiStats =
+    { actions : Int
+    , games : ApiGameStats
+    , identities : Int
+    , nodes : Dict String Int
+    , players : Int
+    , users : Int
     }
 
 
@@ -224,6 +247,16 @@ apiGameStateDecoder =
             )
 
 
+apiGameStatsDecoder : Decoder ApiGameStats
+apiGameStatsDecoder =
+    Decode.succeed ApiGameStats
+        |> required "draw" int
+        |> required "inactive" (field "count" int)
+        |> required "playing" int
+        |> required "waiting_for_players" int
+        |> required "win" int
+
+
 apiGameWithoutDetails : ApiGameDetailed -> ApiGame
 apiGameWithoutDetails apiGame =
     { actionsLink = apiGame.actionsLink
@@ -302,7 +335,19 @@ apiRootDecoder =
         |> required "_links" (field "boardr:games" halLinkDecoder)
         |> required "_links" (field "boardr:identities" halLinkDecoder)
         |> required "_links" (field "boardr:local-auth" halLinkDecoder)
+        |> required "_links" (field "boardr:stats" halLinkDecoder)
         |> required "_links" (field "boardr:users" halLinkDecoder)
+
+
+apiStatsDecoder : Decoder ApiStats
+apiStatsDecoder =
+    Decode.succeed ApiStats
+        |> required "db" (field "actions" int)
+        |> required "db" (field "games" apiGameStatsDecoder)
+        |> required "db" (field "identities" int)
+        |> required "nodes" (dict (field "game_servers" int))
+        |> required "db" (field "players" int)
+        |> required "db" (field "users" int)
 
 
 apiUserDecoder : Decoder ApiUser

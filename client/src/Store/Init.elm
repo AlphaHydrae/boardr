@@ -7,6 +7,7 @@ import Pages.Game.Page as GamePage
 import Pages.Home.Page as HomePage
 import Pages.Login.Page as LoginPage
 import Pages.Register.Page as RegisterPage
+import Pages.Stats.Page as StatsPage
 import Routes exposing (toRoute)
 import Store.Model exposing (DataModel, LocationModel, Model, UiModel)
 import Store.Session exposing (SessionModel)
@@ -43,5 +44,6 @@ initUiModel flags =
     , home = HomePage.init flags
     , login = LoginPage.init flags
     , register = RegisterPage.init flags
+    , stats = StatsPage.init flags
     , zone = Nothing
     }

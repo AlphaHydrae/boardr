@@ -4,6 +4,7 @@ import Api.Model exposing (ApiGameState(..))
 import Dict
 import Pages.Game.Msg exposing (Msg(..))
 import Pages.Home.Msg exposing (Msg(..))
+import Pages.Stats.Msg exposing (Msg(..))
 import Routes exposing (Route(..))
 import Store.Model exposing (Model)
 import Store.Msg exposing (Msg(..))
@@ -41,7 +42,7 @@ subscriptions model =
             Sub.none
 
         StatsRoute ->
-            Sub.none
+            Time.every 1000 (\t -> StatsPage (RefreshApiStats t))
 
         NotFound ->
             Sub.none

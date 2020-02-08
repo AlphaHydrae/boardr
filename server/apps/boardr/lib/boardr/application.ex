@@ -54,7 +54,9 @@ defmodule Boardr.Application do
       # Start a dynamic supervisor to manage gaming servers.
       {DynamicSupervisor, name: Boardr.DynamicSupervisor, strategy: :one_for_one},
       # Start a task supervisor to manage asynchronous tasks.
-      {Task.Supervisor, name: Boardr.TaskSupervisor}
+      {Task.Supervisor, name: Boardr.TaskSupervisor},
+      # Start a server that will keep track of what happens in the application.
+      Boardr.StatsServer
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

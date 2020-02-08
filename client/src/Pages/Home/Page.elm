@@ -126,7 +126,7 @@ viewGameList vmodel =
 
                 Error _ ->
                     [ tr [ class "table-warning" ]
-                        [ td []
+                        [ td [ colspan 2 ]
                             [ text "Could not load games."
                             ]
                         ]

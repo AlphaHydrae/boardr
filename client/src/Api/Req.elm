@@ -1,6 +1,19 @@
-module Api.Req exposing (authenticateLocally, createAction, createGame, createLocalIdentity, createPlayer, createUser, retrieveBoard, retrieveGamePageGame, retrieveGamePossibleActions, retrieveHomePageGames, retrieveRoot)
+module Api.Req exposing
+    ( authenticateLocally
+    , createAction
+    , createGame
+    , createLocalIdentity
+    , createPlayer
+    , createUser
+    , retrieveBoard
+    , retrieveGamePageGame
+    , retrieveGamePossibleActions
+    , retrieveHomePageGames
+    , retrieveRoot
+    , retrieveStats
+    )
 
-import Api.Model exposing (ApiGame, ApiIdentity, ApiRoot, apiBoardDecoder, apiGameDetailedDecoder, apiGameListDecoder, apiIdentityDecoder, apiLocalAuthenticationDecoder, apiPlayerDecoder, apiPossibleActionListDecoder, apiRootDecoder, apiUserWithTokenDecoder)
+import Api.Model exposing (ApiGame, ApiIdentity, ApiRoot, apiBoardDecoder, apiGameDetailedDecoder, apiGameListDecoder, apiIdentityDecoder, apiLocalAuthenticationDecoder, apiPlayerDecoder, apiPossibleActionListDecoder, apiRootDecoder, apiStatsDecoder, apiUserWithTokenDecoder)
 import Dict
 import Http exposing (header)
 import Json.Encode as E
@@ -8,6 +21,7 @@ import Pages.Game.Msg exposing (Msg(..))
 import Pages.Home.Msg exposing (Msg(..))
 import Pages.Login.Model as LoginPage
 import Pages.Register.Model as RegisterPage
+import Pages.Stats.Msg exposing (Msg(..))
 import Store.Msg exposing (Msg(..))
 import Store.Session exposing (AuthModel)
 import Url.Interpolate exposing (interpolate)
@@ -27,10 +41,13 @@ createAction auth apiGame ( col, row ) =
     Http.request
         { method = "POST"
         , url = apiGame.actionsLink.href
-        , body = Http.jsonBody (E.object [
-            ( "type", E.string "take" ),
-            ( "position", E.list E.int [ col, row ] )
-        ])
+        , body =
+            Http.jsonBody
+                (E.object
+                    [ ( "type", E.string "take" )
+                    , ( "position", E.list E.int [ col, row ] )
+                    ]
+                )
         , headers = [ header "Authorization" ("Bearer " ++ auth.token) ]
         , timeout = Nothing
         , tracker = Nothing
@@ -99,6 +116,14 @@ retrieveRoot apiUrl =
     Http.get
         { url = apiUrl
         , expect = Http.expectJson ApiRootRetrieved apiRootDecoder
+        }
+
+
+retrieveStats : ApiRoot -> Cmd Msg
+retrieveStats root =
+    Http.get
+        { url = root.statsLink.href
+        , expect = Http.expectJson (\d -> StatsPage (ApiStatsRetrieved d)) apiStatsDecoder
         }
 
 

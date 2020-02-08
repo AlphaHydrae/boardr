@@ -13,6 +13,7 @@ import Pages.Game.Page as GamePage
 import Pages.Home.Page as HomePage
 import Pages.Login.Page as LoginPage
 import Pages.Register.Page as RegisterPage
+import Pages.Stats.Page as StatsPage
 import Routes exposing (Route(..))
 import Store.Init
 import Store.Model exposing (Model)
@@ -86,7 +87,7 @@ viewBody model =
                 [ Html.map RegisterPage RegisterPage.view ]
 
             StatsRoute ->
-                [ p [] [ text "Stats" ] ]
+                [ Html.map StatsPage (StatsPage.view model.ui.stats) ]
 
             NotFound ->
                 [ p [] [ text "Page not found" ] ]

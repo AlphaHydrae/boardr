@@ -23,6 +23,7 @@ defmodule BoardrApi.ApiRootTest do
       |> assert_hal_link("boardr:identities", test_api_url("/identities"))
       |> assert_hal_link("boardr:identity", test_api_url("/identities/{id}"), %{"templated" => true})
       |> assert_hal_link("boardr:local-auth", test_api_url("/auth/local"))
+      |> assert_hal_link("boardr:stats", test_api_url("/stats"))
       |> assert_hal_link("boardr:users", test_api_url("/users"))
       |> assert_hal_link("self", test_api_url())
     end)

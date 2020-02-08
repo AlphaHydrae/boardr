@@ -8,6 +8,7 @@ import Pages.Game.Model as GamePage
 import Pages.Home.Model as HomePage
 import Pages.Login.Model as LoginPage
 import Pages.Register.Model as RegisterPage
+import Pages.Stats.Model as StatsPage
 import Routes exposing (Route)
 import Store.Session exposing (SessionModel)
 import Time exposing (Zone)
@@ -43,5 +44,6 @@ type alias UiModel =
     , home : HomePage.Model
     , login : LoginPage.Model
     , register : RegisterPage.Model
+    , stats : StatsPage.Model
     , zone : Maybe Zone
     }

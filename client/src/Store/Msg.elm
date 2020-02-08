@@ -7,6 +7,7 @@ import Pages.Game.Msg as GamePage
 import Pages.Home.Msg as HomePage
 import Pages.Login.Msg as LoginPage
 import Pages.Register.Msg as RegisterPage
+import Pages.Stats.Msg as StatsPage
 import Time exposing (Zone)
 import Url exposing (Url)
 
@@ -24,6 +25,7 @@ type
     | HomePage HomePage.Msg
     | LoginPage LoginPage.Msg
     | RegisterPage RegisterPage.Msg
+    | StatsPage StatsPage.Msg
       -- Authentication
     | LogOut
       -- Navigation
