@@ -63,7 +63,7 @@ defmodule BoardrApi.ActionsTest do
       updated_game = Repo.get!(Game, game.id)
       assert {:ok, _} = just_after(updated_game.updated_at, expected_action.performed_at)
       assert updated_game.state == "playing"
-      assert Map.drop(game, [:creator, :state, :updated_at]) == Map.drop(updated_game, [:creator, :state, :updated_at])
+      assert Map.drop(game, [:creator, :lock_version, :state, :updated_at]) == Map.drop(updated_game, [:creator, :lock_version, :state, :updated_at])
     end
   end
 

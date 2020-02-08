@@ -16,6 +16,7 @@ defmodule Boardr.Game do
     has_many :players, Player
     many_to_many :winners, Player, join_through: "winners", on_replace: :mark_as_invalid
 
+    field :lock_version, :integer
     field :rules, :string
     field :settings, EctoJsonb
     field :state, :string
@@ -29,5 +30,6 @@ defmodule Boardr.Game do
     game
     |> cast(attrs, [:state, :title])
     |> validate_inclusion(:state, ["waiting_for_players", "playing", "draw", "win"])
+    |> optimistic_lock(:lock_version)
   end
 end

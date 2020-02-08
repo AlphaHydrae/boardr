@@ -121,8 +121,8 @@ defmodule BoardrApi.GamesPlayersTest do
       assert {:ok, _} = just_after(updated_game.updated_at, expected_player.created_at)
       assert updated_game.state == "playing"
 
-      assert Map.drop(game, [:creator, :state, :updated_at]) ==
-               Map.drop(updated_game, [:creator, :state, :updated_at])
+      assert Map.drop(game, [:creator, :lock_version, :state, :updated_at]) ==
+               Map.drop(updated_game, [:creator, :lock_version, :state, :updated_at])
     end
 
     test "a tic-tac-toe game that has already started cannot be joined", %{

@@ -68,7 +68,7 @@ defmodule BoardrApi.GamesTest do
 
       # Database changes
       assert_db_queries(insert: 2)
-      assert_in_db(Game, game_id, expected_game)
+      assert_in_db(Game, game_id, Map.put(expected_game, :lock_version, 1))
 
       player = Repo.one!(from(p in Player, where: p.game_id == ^game_id))
       assert %Player{
@@ -179,7 +179,7 @@ defmodule BoardrApi.GamesTest do
 
       # Database changes
       assert_db_queries(insert: 2)
-      assert_in_db(Game, game_id, expected_game)
+      assert_in_db(Game, game_id, Map.put(expected_game, :lock_version, 1))
       assert_in_db(Player, player_id, expected_player)
     end
   end

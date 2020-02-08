@@ -45,7 +45,7 @@ defmodule Boardr.Fixtures do
       state: Keyword.get(properties, :state, "waiting_for_players"),
       updated_at: Keyword.get(properties, :updated_at)
     }
-    |> Repo.insert!(returning: [:id])
+    |> Repo.insert!(returning: [:id, :lock_version])
     |> Repo.preload(:creator)
   end
 
