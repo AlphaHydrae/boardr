@@ -42,7 +42,7 @@ defmodule Boardr.Auth.Token do
 
       default_claims(
         default_exp: 3600 * 24 * 7,
-        skip: [:aud, :iss]
+        skip: [:aud, :iss, :nbf]
       )
       |> add_claim("aud", fn -> issuer end, &(&1 == issuer))
       |> add_claim("iss", fn -> issuer end, &(&1 == issuer))
