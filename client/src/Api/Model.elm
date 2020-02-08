@@ -27,7 +27,7 @@ module Api.Model exposing
     , apiUserWithoutToken
     )
 
-import Json.Decode as Decode exposing (Decoder, bool, field, int, list, maybe, string)
+import Json.Decode as Decode exposing (Decoder, andThen, bool, field, int, list, maybe, string)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
 
@@ -49,7 +49,7 @@ type alias ApiGame =
     , selfLink : HalLink
     , state : ApiGameState
     , title : Maybe String
-    , winners : List ApiPlayer
+    , winners : Maybe (List ApiPlayer)
     }
 
 
@@ -65,7 +65,7 @@ type alias ApiGameDetailed =
     , selfLink : HalLink
     , state : ApiGameState
     , title : Maybe String
-    , winners : List ApiPlayer
+    , winners : Maybe (List ApiPlayer)
     }
 
 
@@ -174,7 +174,7 @@ apiGameDecoder =
         |> required "_links" (field "self" halLinkDecoder)
         |> required "state" apiGameStateDecoder
         |> optional "title" (maybe string) Nothing
-        |> optional "_embedded" (field "boardr:winners" (list apiPlayerDecoder)) []
+        |> optional "_embedded" (maybe (field "boardr:winners" (list apiPlayerDecoder))) Nothing
 
 
 apiGameDetailedDecoder : Decoder ApiGameDetailed
@@ -191,7 +191,7 @@ apiGameDetailedDecoder =
         |> required "_links" (field "self" halLinkDecoder)
         |> required "state" apiGameStateDecoder
         |> optional "title" (maybe string) Nothing
-        |> optional "_embedded" (field "boardr:winners" (list apiPlayerDecoder)) []
+        |> optional "_embedded" (maybe (field "boardr:winners" (list apiPlayerDecoder))) Nothing
 
 
 apiGameListDecoder : Decoder ApiGameList

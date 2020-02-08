@@ -1,3 +1,32 @@
 body {
   padding-top: 5rem;
 }
+
+.board td {
+  width: 120px;
+  height: 120px;
+  font-size: 80px;
+  text-align: center;
+  vertical-align: middle;
+  border: 1px solid #777777;
+}
+
+.board tr:first-child td {
+  border-top: 0;
+}
+
+.board tr:last-child td {
+  border-bottom: 0;
+}
+
+.board td:first-child {
+  border-left: 0;
+}
+
+.board td:last-child {
+  border-right: 0;
+}
+
+.game {
+  text-align: center;
+}

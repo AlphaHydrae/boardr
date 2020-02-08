@@ -3,8 +3,8 @@
 <head>
   <meta charset='UTF-8'>
   <title>Boardr</title>
-  <link rel='stylesheet' type='text/css' href='./assets/bootstrap.min.css'>
-  <link rel='stylesheet' type='text/css' href='./assets/style.css'>
+  <link rel='stylesheet' type='text/css' href='/assets/bootstrap.min.css'>
+  <link rel='stylesheet' type='text/css' href='/assets/style.css'>
 </head>
 
 <body>

@@ -3,8 +3,8 @@ module Pages.Game.Page exposing (init, updateUi, view, viewModel)
 import Api.Model exposing (ApiGame, ApiGameState(..), ApiPlayer, ApiPossibleActionList, ApiUser)
 import Dict
 import Flags exposing (Flags)
-import Html exposing (Html, a, button, div, li, p, strong, table, td, text, tr, ul)
-import Html.Attributes exposing (href, type_)
+import Html exposing (Html, a, button, div, li, main_, p, strong, table, td, text, tr, ul)
+import Html.Attributes exposing (class, href, type_)
 import Html.Events exposing (onClick)
 import List.Extra
 import Pages.Game.Model exposing (Model, ViewModel)
@@ -126,9 +126,14 @@ viewModel id model =
     , joinable =
         case ( Dict.get id model.data.games, model.session ) of
             ( Just apiGame, Just auth ) ->
-                List.all
-                    (\p -> p.gameLink.href /= apiGame.selfLink.href || p.userLink.href /= auth.user.selfLink.href)
-                    (Dict.values model.data.players)
+                case apiGame.state of
+                    WaitingForPlayers ->
+                        List.all
+                            (\p -> p.gameLink.href /= apiGame.selfLink.href || p.userLink.href /= auth.user.selfLink.href)
+                            (Dict.values model.data.players)
+
+                    _ ->
+                        False
 
             _ ->
                 False
@@ -143,83 +148,83 @@ viewModel id model =
     }
 
 
-view : ViewModel -> Html Msg
-view model =
-    div []
-        [ p []
-            [ a [ href "/" ] [ text "Home" ]
-            ]
-        , p []
-            (case model.game of
-                NotAsked ->
-                    [ text "Loading..." ]
-
-                Loading ->
-                    [ text "Loading..." ]
-
-                Loaded game ->
-                    viewGame game model
-
-                Refreshing game ->
-                    viewGame game model
-
-                Error _ ->
-                    [ text "Could not load game." ]
-            )
-        ]
+view : ViewModel -> List (Html Msg)
+view vmodel =
+    [ main_ [ class "col-12 col-lg-6 offset-lg-3 game" ]
+        (viewStatusBar vmodel ++ viewBoard vmodel ++ viewGameControls vmodel)
+    ]
 
 
-viewGame : ApiGame -> ViewModel -> List (Html Msg)
-viewGame game vmodel =
-    ul []
-        [ li []
-            [ strong [] [ text "State:" ]
-            , text " "
-            , text
-                (case game.state of
-                    WaitingForPlayers ->
-                        "Waiting for players..."
+viewStatusBar : ViewModel -> List (Html msg)
+viewStatusBar vmodel =
+    [ case vmodel.game of
+        NotAsked ->
+            viewLoadingStatusBar
 
-                    Playing ->
-                        viewOngoingGameState vmodel
+        Loading ->
+            viewLoadingStatusBar
 
-                    Draw ->
-                        "Draw"
+        Loaded game ->
+            viewLoadedGameStatusBar vmodel game
 
-                    Win ->
-                        let
-                            winner =
-                                List.head game.winners
-                        in
-                        case winner of
-                            Just player ->
-                                case vmodel.auth of
-                                    Just auth ->
-                                        if isInGame auth.user vmodel then
-                                            if player.userLink.href == auth.user.selfLink.href then
-                                                "You win!"
+        Refreshing game ->
+            viewLoadedGameStatusBar vmodel game
 
-                                            else
-                                                "You lose."
+        Error _ ->
+            div [ class "alert alert-danger" ] [ text "Could not load game." ]
+    ]
 
-                                        else
-                                            "Player " ++ String.fromInt player.number ++ " wins"
 
-                                    Nothing ->
-                                        "Player " ++ String.fromInt player.number ++ " wins"
+viewLoadingStatusBar : Html msg
+viewLoadingStatusBar =
+    div [ class "alert alert-secondary text-center" ] [ text "Loading..." ]
 
-                            Nothing ->
-                                "Win!"
-                )
-            ]
-        ]
-        :: viewGameControls game vmodel.joinable
-        ++ viewBoard vmodel
+
+viewLoadedGameStatusBar : ViewModel -> ApiGame -> Html msg
+viewLoadedGameStatusBar vmodel game =
+    case game.state of
+        WaitingForPlayers ->
+            div [ class "alert alert-secondary" ] [ text "Waiting for players..." ]
+
+        Playing ->
+            let
+                ( msg, alertType ) =
+                    viewOngoingGameState vmodel
+            in
+            div [ class ("alert alert-" ++ alertType) ] [ text msg ]
+
+        Draw ->
+            div [ class "alert alert-primary" ] [ text "Draw" ]
+
+        Win ->
+            let
+                winner =
+                    List.head (Maybe.withDefault [] game.winners)
+            in
+            case winner of
+                Just player ->
+                    case vmodel.auth of
+                        Just auth ->
+                            if isInGame auth.user vmodel then
+                                if player.userLink.href == auth.user.selfLink.href then
+                                    div [ class "alert alert-success" ] [ text "You win!" ]
+
+                                else
+                                    div [ class "alert alert-danger" ] [ text "You lose." ]
+
+                            else
+                                div [ class "alert alert-primary" ] [ text ("Player " ++ String.fromInt player.number ++ " wins") ]
+
+                        Nothing ->
+                            div [ class "alert alert-primary" ] [ text ("Player " ++ String.fromInt player.number ++ " wins") ]
+
+                Nothing ->
+                    div [ class "alert alert-primary" ] [ text "Win!" ]
 
 
 viewBoard : ViewModel -> List (Html Msg)
 viewBoard vmodel =
-    [ table []
+    [ table [ class "board ml-auto mr-auto mt-4" ]
         [ tr []
             [ cell vmodel 0 0
             , cell vmodel 1 0
@@ -272,50 +277,55 @@ piece vmodel col row =
                             "O"
 
                 Nothing ->
-                    "_"
+                    " "
 
         Nothing ->
-            "_"
+            " "
 
 
-viewOngoingGameState : ViewModel -> String
+viewOngoingGameState : ViewModel -> ( String, String )
 viewOngoingGameState vmodel =
     case ( Maybe.map .user vmodel.auth, getRemoteData vmodel.possibleActions ) of
         ( Just user, Just actions ) ->
             if canPlay user actions vmodel then
-                "Your turn"
+                ( "Your turn", "primary" )
 
             else if isInGame user vmodel then
-                "Waiting for your opponent's move"
+                ( "Waiting for your opponent's move", "warning" )
 
             else
-                case currentPlayer actions vmodel of
+                ( case currentPlayer actions vmodel of
                     Just player ->
                         "Waiting for player " ++ String.fromInt player.number ++ "'s move"
 
                     Nothing ->
                         "Waiting for the next move"
+                , "warning"
+                )
 
         ( _, Just actions ) ->
-            case currentPlayer actions vmodel of
+            ( case currentPlayer actions vmodel of
                 Just player ->
                     "Waiting for player " ++ String.fromInt player.number ++ "'s move"
 
                 Nothing ->
                     "Waiting for the next move"
+            , "warning"
+            )
 
         _ ->
-            "Playing"
+            ( "Playing", "warning" )
 
 
-viewGameControls : ApiGame -> Bool -> List (Html Msg)
-viewGameControls game joinable =
-    if joinable then
-        [ button [ onClick (JoinGame game), type_ "button" ] [ text "Join" ]
-        ]
+viewGameControls : ViewModel -> List (Html Msg)
+viewGameControls vmodel =
+    case ( getRemoteData vmodel.game, vmodel.joinable ) of
+        ( Just game, True ) ->
+            [ button [ class "btn btn-lg btn-primary mt-4", onClick (JoinGame game), type_ "button" ] [ text "Join" ]
+            ]
 
-    else
-        []
+        _ ->
+            []
 
 
 canPlay : ApiUser -> ApiPossibleActionList -> ViewModel -> Bool
