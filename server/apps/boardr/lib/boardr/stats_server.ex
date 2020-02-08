@@ -40,7 +40,8 @@ defmodule Boardr.StatsServer do
   defp compute_stats() do
 
     stats = %{
-      game_servers: length(Swarm.members(:game_servers))
+      game_servers: length(Swarm.members(:game_servers)),
+      swarm_processes: length(Swarm.registered())
     }
 
     :ets.insert(:stats, {:cache, stats})

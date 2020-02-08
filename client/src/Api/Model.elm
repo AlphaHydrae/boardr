@@ -6,6 +6,7 @@ module Api.Model exposing
     , ApiGameState(..)
     , ApiIdentity
     , ApiLocalAuthentication
+    , ApiNodeStats
     , ApiPlayer
     , ApiPossibleActionList
     , ApiRoot
@@ -108,6 +109,12 @@ type alias ApiLocalAuthentication =
     }
 
 
+type alias ApiNodeStats =
+    { gameServers : Int,
+      swarmProcesses : Int
+    }
+
+
 type alias ApiPiece =
     { player : Int
     , position : ( Int, Int )
@@ -150,7 +157,7 @@ type alias ApiStats =
     { actions : Int
     , games : ApiGameStats
     , identities : Int
-    , nodes : Dict String Int
+    , nodes : Dict String ApiNodeStats
     , players : Int
     , users : Int
     }
@@ -289,6 +296,13 @@ apiLocalAuthenticationDecoder =
         |> required "_embedded" (field "boardr:user" apiUserDecoder)
 
 
+apiNodeStatsDecoder : Decoder ApiNodeStats
+apiNodeStatsDecoder =
+    Decode.succeed ApiNodeStats
+        |> required "game_servers" int
+        |> required "swarm_processes" int
+
+
 apiPieceDecoder : Decoder ApiPiece
 apiPieceDecoder =
     Decode.succeed ApiPiece
@@ -345,7 +359,7 @@ apiStatsDecoder =
         |> required "db" (field "actions" int)
         |> required "db" (field "games" apiGameStatsDecoder)
         |> required "db" (field "identities" int)
-        |> required "nodes" (dict (field "game_servers" int))
+        |> required "nodes" (dict apiNodeStatsDecoder)
         |> required "db" (field "players" int)
         |> required "db" (field "users" int)
 

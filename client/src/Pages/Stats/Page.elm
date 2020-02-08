@@ -1,5 +1,6 @@
 module Pages.Stats.Page exposing (init, updateUi, view)
 
+import Api.Model exposing (ApiNodeStats)
 import Dict
 import Flags exposing (Flags)
 import Html exposing (Html, div, table, tbody, td, text, th, thead, tr)
@@ -113,6 +114,7 @@ view model =
                         [ tr []
                             [ th [] [ text "Node" ]
                             , th [] [ text "Game Servers" ]
+                            , th [] [ text "Swarm Processes" ]
                             ]
                         ]
                     , tbody []
@@ -125,9 +127,10 @@ view model =
         )
 
 
-viewNodeStats : ( String, Int ) -> Html msg
-viewNodeStats ( node, gameServersCount ) =
+viewNodeStats : ( String, ApiNodeStats ) -> Html msg
+viewNodeStats ( node, stats ) =
     tr []
         [ td [] [ text node ]
-        , td [] [ text (String.fromInt gameServersCount) ]
+        , td [] [ text (String.fromInt stats.gameServers) ]
+        , td [] [ text (String.fromInt stats.swarmProcesses) ]
         ]
