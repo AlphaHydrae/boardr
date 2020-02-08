@@ -121,6 +121,6 @@ retrieveGamePossibleActions game =
 retrieveHomePageGames : ApiRoot -> Cmd Msg
 retrieveHomePageGames apiRoot =
     Http.get
-        { url = apiRoot.gamesLink.href ++ "?embed=boardr:players"
+        { url = apiRoot.gamesLink.href ++ "?embed=boardr:players&state=playing&state=waiting_for_players"
         , expect = Http.expectJson (\d -> HomePage (ApiHomePageGamesRetrieved d)) apiGameListDecoder
         }

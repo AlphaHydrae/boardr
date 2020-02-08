@@ -212,7 +212,7 @@ defmodule BoardrApi.GamesTest do
   end
 
   describe "GET /api/games" do
-    setup [:create_three_games, :count_queries]
+    setup [:create_four_games, :count_queries]
 
     test "retrieve all games", %{conn: %Conn{} = conn, games: games} do
       body =
@@ -235,6 +235,7 @@ defmodule BoardrApi.GamesTest do
         embedded
         |> assert_key("boardr:games", fn embedded_games ->
           assert_list(embedded_games)
+          |> assert_next_member(&assert_game_resource(&1, Enum.at(games, 3)))
           |> assert_next_member(&assert_game_resource(&1, Enum.at(games, 2)))
           |> assert_next_member(&assert_game_resource(&1, Enum.at(games, 1)))
           |> assert_next_member(&assert_game_resource(&1, Enum.at(games, 0)))
@@ -268,6 +269,7 @@ defmodule BoardrApi.GamesTest do
         embedded
         |> assert_key("boardr:games", fn embedded_games ->
           assert_list(embedded_games)
+          |> assert_next_member(&assert_game_resource(&1, Enum.at(games, 3)))
           |> assert_next_member(&assert_game_resource(&1, Enum.at(games, 2)))
           |> assert_next_member(&assert_game_resource(&1, Enum.at(games, 1)))
           |> assert_next_member(&assert_game_resource(&1, Enum.at(games, 0)))
@@ -275,6 +277,8 @@ defmodule BoardrApi.GamesTest do
         end)
         |> assert_key("boardr:players", fn embedded_players ->
           assert_list(embedded_players)
+          |> assert_next_member(&assert_player_resource(&1, Enum.at(players, 5)))
+          |> assert_next_member(&assert_player_resource(&1, Enum.at(players, 6)))
           |> assert_next_member(&assert_player_resource(&1, Enum.at(players, 3)))
           |> assert_next_member(&assert_player_resource(&1, Enum.at(players, 4)))
           |> assert_next_member(&assert_player_resource(&1, Enum.at(players, 1)))
@@ -308,6 +312,35 @@ defmodule BoardrApi.GamesTest do
           assert_list(embedded_games)
           |> assert_next_member(&assert_game_resource(&1, Enum.at(games, 2)))
           |> assert_next_member(&assert_game_resource(&1, Enum.at(games, 1)))
+          |> assert_no_more_members()
+        end)
+      end)
+    end
+
+    test "retrieve games filtered by multiple states", %{conn: %Conn{} = conn, games: games} do
+      body =
+        conn
+        |> get("#{@api_path}?state=playing&state=waiting_for_players")
+        |> json_response(200)
+
+      # Response
+      assert_api_map(body)
+
+      # HAL links
+      |> assert_hal_links(fn links ->
+        links
+        |> assert_hal_curies()
+        |> assert_hal_link("self", test_api_url("/games"))
+      end)
+
+      # Embedded HAL documents
+      |> assert_hal_embedded(fn embedded ->
+        embedded
+        |> assert_key("boardr:games", fn embedded_games ->
+          assert_list(embedded_games)
+          |> assert_next_member(&assert_game_resource(&1, Enum.at(games, 2)))
+          |> assert_next_member(&assert_game_resource(&1, Enum.at(games, 1)))
+          |> assert_next_member(&assert_game_resource(&1, Enum.at(games, 0)))
           |> assert_no_more_members()
         end)
       end)
@@ -419,23 +452,27 @@ defmodule BoardrApi.GamesTest do
     Map.merge(context, %{game: game, players: [player1, player2]})
   end
 
-  defp create_three_games(context) when is_map(context) do
+  defp create_four_games(context) when is_map(context) do
     now = DateTime.utc_now()
 
-    game1 = Fixtures.game(created_at: DateTime.add(now, -4 * 3600, :second))
+    game1 = Fixtures.game(created_at: DateTime.add(now, -4 * 3600, :second), state: "waiting_for_players")
     player1 = Fixtures.player(game: game1, user: game1.creator)
 
     game2 = Fixtures.game(created_at: DateTime.add(now, -3 * 3600, :second), state: "playing")
     player2 = Fixtures.player(game: game2, user: game2.creator)
-    player3 = Fixtures.player(game: player2.game, number: 2)
+    player3 = Fixtures.player(game: game2, number: 2)
 
     game3 = Fixtures.game(created_at: DateTime.add(now, -1 * 3600, :second), state: "playing")
     player4 = Fixtures.player(game: game3, user: game3.creator)
     player5 = Fixtures.player(game: game3, number: 2, user: game1.creator)
 
+    game4 = Fixtures.game(created_at: DateTime.add(now, -1800, :second), state: "win")
+    player6 = Fixtures.player(game: game4, user: game4.creator)
+    player7 = Fixtures.player(game: game4, number: 2)
+
     Map.merge(context, %{
-      games: [game1, game2, game3],
-      players: [player1, player2, player3, player4, player5]
+      games: [game1, game2, game3, game4],
+      players: [player1, player2, player3, player4, player5, player6, player7]
     })
   end
 end

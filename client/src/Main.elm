@@ -4,7 +4,7 @@ import Api.Req exposing (retrieveRoot)
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Flags exposing (Flags, ProgramFlags, defaultFlags, flagsDecoder)
-import Html exposing (Html, a, div, nav, p, text)
+import Html exposing (Html, a, div, nav, p, span, text)
 import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy)
@@ -14,13 +14,13 @@ import Pages.Home.Page as HomePage
 import Pages.Login.Page as LoginPage
 import Pages.Register.Page as RegisterPage
 import Routes exposing (Route(..))
-import Task
-import Time
 import Store.Init
 import Store.Model exposing (Model)
 import Store.Msg exposing (Msg(..))
 import Store.Sub exposing (subscriptions)
 import Store.Update exposing (update)
+import Task
+import Time
 import Url
 
 
@@ -97,30 +97,30 @@ viewBody model =
 viewNavbar : Model -> Html Msg
 viewNavbar model =
     nav [ class "navbar fixed-top navbar-dark bg-dark" ]
-        (a [ class "navbar-brand", href "/" ]
+        [ a [ class "navbar-brand", href "/" ]
             [ text "Boardr"
             ]
-            :: (case model.session of
-                    Nothing ->
-                        [ div [ class "btn-group" ]
-                            [ a [ class "btn btn-secondary navbar-btn", href "/login" ]
-                                [ text "Log in"
-                                ]
-                            , a [ class "btn btn-secondary navbar-btn", href "/register" ]
-                                [ text "Register"
-                                ]
-                            ]
+        , case model.session of
+            Nothing ->
+                div [ class "btn-group" ]
+                    [ a [ class "btn btn-secondary navbar-btn", href "/login" ]
+                        [ text "Log in"
                         ]
+                    , a [ class "btn btn-secondary navbar-btn", href "/register" ]
+                        [ text "Register"
+                        ]
+                    ]
 
-                    Just _ ->
-                        [ div [ class "btn-group" ]
-                            [ a [ class "btn btn-info navbar-btn", href "/stats" ]
-                                [ text "Stats"
-                                ]
-                            , a [ class "btn btn-secondary navbar-btn", onClick LogOut ]
-                                [ text "Log out"
-                                ]
+            Just auth ->
+                div []
+                    [ span [ class "navbar-text mr-3" ] [ text auth.user.name ]
+                    , div [ class "btn-group" ]
+                        [ a [ class "btn btn-info navbar-btn", href "/stats" ]
+                            [ text "Stats"
+                            ]
+                        , a [ class "btn btn-secondary navbar-btn", onClick LogOut ]
+                            [ text "Log out"
                             ]
                         ]
-               )
-        )
+                    ]
+        ]

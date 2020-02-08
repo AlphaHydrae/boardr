@@ -51,7 +51,7 @@ defmodule BoardrRest.GameResources do
 
     query =
       if state = Map.get(filters, "state") do
-        from(q in query, where: q.state == ^state)
+        from(q in query, where: q.state in ^state)
       else
         query
       end
@@ -103,7 +103,10 @@ defmodule BoardrRest.GameResources do
   defp decode_game_filters(query_string) when is_binary(query_string) do
     {
       :ok,
-      URI.decode_query(query_string)
+      URI.query_decoder(query_string)
+      |> Enum.reduce(%{}, fn {key, value}, acc ->
+        Map.update(acc, key, [value], fn previous_values -> previous_values ++ [value] end)
+      end)
     }
   end
 end

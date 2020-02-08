@@ -35,7 +35,7 @@ defmodule BoardrApi.StatsServer do
   @impl true
   def handle_continue(:init, nil) do
     :ets.new(:stats, [:named_table, :protected, :set])
-    {:noreply, compute_stats()}
+    {:noreply, nil}
   end
 
   @impl true
