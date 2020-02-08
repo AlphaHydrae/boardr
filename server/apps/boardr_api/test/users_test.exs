@@ -63,7 +63,6 @@ defmodule BoardrApi.UsersTest do
       |> assert_key("jti", ~r/^\w+$/)
       |> assert_key("iat", &(&1.subject |> just_after(truncated_test_start)))
       |> assert_key("iss", "boardr.alphahydrae.io")
-      |> assert_key("nbf", &(&1.subject |> just_after(truncated_test_start)))
       |> assert_key("scope", "api")
       |> assert_key("sub", "u:#{user_id}")
 

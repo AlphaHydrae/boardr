@@ -30,6 +30,6 @@ defmodule Boardr.Game do
     game
     |> cast(attrs, [:state, :title])
     |> validate_inclusion(:state, ["waiting_for_players", "playing", "draw", "win"])
-    |> optimistic_lock(:lock_version)
+    # |> optimistic_lock(:lock_version)
   end
 end

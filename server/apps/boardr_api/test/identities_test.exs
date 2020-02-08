@@ -62,7 +62,6 @@ defmodule BoardrApi.IdentitiesTest do
       |> assert_key("jti", ~r/^\w+$/)
       |> assert_key("iat", &(&1.subject |> just_after(truncated_test_start)))
       |> assert_key("iss", "boardr.alphahydrae.io")
-      |> assert_key("nbf", &(&1.subject |> just_after(truncated_test_start)))
       |> assert_key("scope", "register")
       |> assert_key("sub", "i:#{identity_id}")
 

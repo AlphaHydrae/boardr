@@ -7,7 +7,7 @@ stuff "ssh -t ubuntu@10.0.1.201 sudo journalctl -fu boardr_api\012"
 screen -t api 2
 stuff "ssh -t ubuntu@10.0.1.201 sudo su - boardr /srv/boardr_api/bin/boardr_api remote\012"
 screen -t shell 2
-stuff "ansible-playbook -D -vv -i inventory.yml -l db -t cleanup playbook.yml && ansible-playbook -D -vv -i inventory.yml -l api,workers -t build,deploy -e restart=true playbook.yml"
+stuff "ansible-playbook -D -vv -i inventory.yml -l db -t cleanup playbook.yml && ansible-playbook -D -vv -i inventory.yml -l rp -t boardr-frontend playbook.yml && ansible-playbook -D -vv -i inventory.yml -l api,workers -t build,deploy -e restart=true playbook.yml"
 screen -t w1 3
 stuff "ssh -t ubuntu@10.0.1.203 sudo su - boardr /srv/boardr/bin/boardr remote\012"
 screen -t w2 4
