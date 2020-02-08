@@ -3,8 +3,8 @@ module Pages.Game.Page exposing (init, updateUi, view, viewModel)
 import Api.Model exposing (ApiGame, ApiGameState(..), ApiPlayer, ApiPossibleActionList, ApiUser)
 import Dict
 import Flags exposing (Flags)
-import Html exposing (Html, a, button, div, li, main_, p, strong, table, td, text, tr, ul)
-import Html.Attributes exposing (class, href, type_)
+import Html exposing (Html, button, div, main_, table, td, text, tr)
+import Html.Attributes exposing (class, type_)
 import Html.Events exposing (onClick)
 import List.Extra
 import Pages.Game.Model exposing (Model, ViewModel)

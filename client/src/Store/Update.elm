@@ -6,6 +6,7 @@ import Browser
 import Browser.Navigation as Nav
 import Dict
 import Http
+import Pages.Game.Model as GamePageModel
 import Pages.Game.Msg exposing (Msg(..))
 import Pages.Game.Page as GamePage
 import Pages.Home.Msg exposing (Msg(..))
@@ -21,6 +22,7 @@ import Store.Model exposing (DataModel, LocationModel, Model, UiModel)
 import Store.Msg exposing (Msg(..))
 import Store.Session exposing (AuthModel, SessionModel, sessionEncoder)
 import Time exposing (Zone)
+import Types exposing (RemoteData(..))
 import Url exposing (Url)
 import Url.Builder
 
@@ -248,7 +250,8 @@ update msg model =
 
         LogOut ->
             let
-                newSession = forgetAuth model.session
+                newSession =
+                    forgetAuth model.session
             in
             ( newSession |> storeSession model
             , newSession |> sessionEncoder |> saveSession
@@ -281,22 +284,65 @@ update msg model =
             let
                 route =
                     toRoute url
+
+                ui =
+                    model.ui
             in
             -- Update the current location.
-            ( { model | location = updateLocation url route model.location }
-            , case model.data.root of
-                Just root ->
-                    case route of
+            ( { model
+                | location = updateLocation url route model.location
+                , ui =
+                    case ( model.location.route, route ) of
+                        ( GameRoute a, GameRoute b ) ->
+                            if a == b then
+                                ui
+
+                            else
+                                { ui | game = clearGameState model.ui.game }
+
+                        ( GameRoute _, _ ) ->
+                            { ui | game = clearGameState model.ui.game }
+
+                        _ ->
+                            ui
+              }
+            , case route of
+                GameRoute id ->
+                    case Dict.get id model.data.games of
+                        Just game ->
+                            case game.state of
+                                Draw ->
+                                    retrieveBoard game
+
+                                Playing ->
+                                    Cmd.none
+
+                                Win ->
+                                    retrieveBoard game
+
+                                WaitingForPlayers ->
+                                    Cmd.none
+
+                        Nothing ->
+                            Cmd.none
+
+                HomeRoute ->
+                    case model.data.root of
+                        Just root ->
                         -- Retrieve the game list from the API when returning to the home page.
-                        HomeRoute ->
                             retrieveHomePageGames root
 
                         _ ->
                             Cmd.none
 
-                Nothing ->
+                _ ->
                     Cmd.none
             )
+
+
+clearGameState : GamePageModel.Model -> GamePageModel.Model
+clearGameState model =
+    { model | board = NotAsked, possibleActions = NotAsked }
 
 
 forgetAuth : SessionModel -> SessionModel
