@@ -2,8 +2,6 @@
 defmodule Boardr.StatsServer do
   use GenServer
 
-  @stats_refresh_interval 2_000
-
   def start_link(_) do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
