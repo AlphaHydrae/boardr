@@ -180,7 +180,7 @@ class NormalPlayerBehavior(TaskSet):
 class WebsiteUser(HttpLocust):
   former_players = []
   task_set = NormalPlayerBehavior
-  wait_time = between(1, 5)
+  wait_time = between(3, 8)
 
   def __init__(self, *args):
     super().__init__(*args)
