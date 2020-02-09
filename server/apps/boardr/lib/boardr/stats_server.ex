@@ -30,7 +30,7 @@ defmodule Boardr.StatsServer do
   end
 
   defp count_local_game_servers() do
-    Swarm.members(:game_servers) |> Enum.filter(fn pid ->
+    Swarm.registered() |> Enum.map(fn reg -> Map.fetch!(reg, :pid) end) |> Enum.filter(fn pid ->
       try do
         Process.alive?(pid)
       rescue
