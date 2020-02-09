@@ -1,5 +1,6 @@
 defmodule Boardr.Rules.DomainTest do
   use ExUnit.Case, async: true
+  doctest Boardr.Rules.Domain
 
   alias Boardr.Rules.Domain
 

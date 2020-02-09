@@ -29,11 +29,28 @@ defmodule Boardr.Rules.Domain do
     @max_board_dimension_size
   end
 
+  @doc ~S"""
+  Converts a list containing a column a row into a boardr 2D position.
+
+  ## Examples
+
+      iex> Boardr.Rules.Domain.position_from_list([0, 2])
+      {:d2, 0, 2}
+  """
   def position_from_list([col, row])
       when is_position_coordinate(col) and is_position_coordinate(row) do
     d2(col: col, row: row)
   end
 
+  @doc ~S"""
+  Converts a boardr 2D position into a list containing a column and row.
+
+  ## Examples
+
+      iex> pos = Boardr.Rules.Domain.d2(col: 1, row: 0)
+      iex> Boardr.Rules.Domain.position_to_list(pos)
+      [1, 0]
+  """
   def position_to_list(d2(col: col, row: row)) do
     [col, row]
   end
