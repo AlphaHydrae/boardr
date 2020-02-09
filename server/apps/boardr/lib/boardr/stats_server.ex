@@ -1,3 +1,4 @@
+# TODO: use telemetry somehow
 defmodule Boardr.StatsServer do
   use GenServer
 
@@ -8,45 +9,35 @@ defmodule Boardr.StatsServer do
   end
 
   def stats() do
-    case :ets.lookup(:stats, :cache) do
-      [cache: cache] -> cache
-      _ -> GenServer.call(__MODULE__, :stats)
-    end
+    GenServer.call(__MODULE__, :stats)
   end
 
   # Server (callbacks)
 
   @impl true
   def init(_) do
-    {:ok, nil, {:continue, :init}}
+    {:ok, nil}
   end
 
   @impl true
   def handle_call(:stats, _from, state) do
-    {:reply, state, state}
-  end
-
-  @impl true
-  def handle_continue(:init, nil) do
-    :ets.new(:stats, [:named_table, :protected, :set])
-    {:noreply, compute_stats()}
-  end
-
-  @impl true
-  def handle_info(:refresh, _) do
-    {:noreply, compute_stats()}
+    {:reply, compute_stats(), state}
   end
 
   defp compute_stats() do
-
-    stats = %{
-      game_servers: length(Swarm.members(:game_servers)),
+    %{
+      game_servers: count_local_game_servers(),
       swarm_processes: length(Swarm.registered())
     }
+  end
 
-    :ets.insert(:stats, {:cache, stats})
-    Process.send_after(self(), :refresh, @stats_refresh_interval)
-
-    stats
+  defp count_local_game_servers() do
+    Swarm.members(:game_servers) |> Enum.filter(fn pid ->
+      try do
+        Process.alive?(pid)
+      rescue
+        _ -> false
+      end
+    end) |> length()
   end
 end

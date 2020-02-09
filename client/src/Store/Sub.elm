@@ -42,7 +42,7 @@ subscriptions model =
             Sub.none
 
         StatsRoute ->
-            Time.every 1000 (\t -> StatsPage (RefreshApiStats t))
+            Time.every 7500 (\t -> StatsPage (RefreshApiStats t))
 
         NotFound ->
             Sub.none

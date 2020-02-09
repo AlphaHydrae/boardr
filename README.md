@@ -20,6 +20,8 @@ A distributed web application to play board games.
   - [Backend](#backend)
   - [Frontend](#frontend)
 - [TODO](#todo)
+  - [Documentation](#documentation)
+  - [Roadmap](#roadmap)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -186,7 +188,19 @@ Open http://localhost:8000.
 
 ## TODO
 
+### Documentation
+
 * There are working Dockerfiles in `server` which should be documented.
+* Document commands to set up the other environments (production, docker, load
+  testing, Vagrant, cluster).
+
+### Roadmap
+
+* Use WebSocket, because an HTTP API for a web game was a bad idea to begin with
+  (duh).
+* See if Locust can be coerced into testing a non-request-response-based
+  WebSocket API, or find another load testing tool.
+* Find more things that don't fit to shoehorn into this project.
 
 
 

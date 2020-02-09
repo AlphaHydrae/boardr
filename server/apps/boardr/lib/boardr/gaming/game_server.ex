@@ -98,7 +98,7 @@ defmodule Boardr.Gaming.GameServer do
       |> Multi.insert(:player, player, returning: [:id])
       |> Multi.run(:game, fn repo, %{player: inserted_player} ->
         if inserted_player.number == 2 do
-          %Game{id: game_id, lock_version: game.lock_version}
+          game
           |> Game.changeset(%{state: "playing"})
           |> repo.update()
         else

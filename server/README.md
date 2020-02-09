@@ -1,4 +1,0 @@
-# Boardr
-
-**TODO: Add description**
-
