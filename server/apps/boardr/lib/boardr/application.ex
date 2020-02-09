@@ -7,6 +7,8 @@ defmodule Boardr.Application do
 
   alias Boardr.Config
 
+  require Logger
+
   @epmd_cluster_vars ~w(BOARDR_EPMD_HOSTS)
   @k8s_cluster_vars ~w(BOARDR_K8S_NAMESPACE BOARDR_K8S_NODE_BASENAME BOARDR_K8S_POLLING_INTERVAL BOARDR_K8S_SELECTOR)
   @log_levels ~w(debug info warn error)
@@ -30,6 +32,16 @@ defmodule Boardr.Application do
 
     if env != compiled_env,
       do: Application.put_env(:boardr, Boardr.Auth, env)
+
+    if node_whitelist_string = System.get_env("BOARDR_SWARM_NODE_WHITELIST") do
+      Application.put_env(:swarm, :node_whitelist, String.split(node_whitelist_string, ","))
+      Logger.info("Configured swarm node whitelist to #{node_whitelist_string}")
+    end
+
+    if node_blacklist_string = System.get_env("BOARDR_SWARM_NODE_BLACKLIST") do
+      Application.put_env(:swarm, :node_blacklist, String.split(node_blacklist_string, ","))
+      Logger.info("Configured swarm node blacklist to #{node_blacklist_string}")
+    end
 
     :ok =
       :telemetry.attach(:boardr, [:boardr, :repo, :query], &Boardr.Telemetry.handle_event/4, %{})
@@ -93,7 +105,7 @@ defmodule Boardr.Application do
     hosts_string = System.get_env("BOARDR_EPMD_HOSTS")
     case hosts_string do
       nil -> []
-      _ -> hosts_string |> String.split(",") |> String.to_atom()
+      _ -> hosts_string |> String.split(",") |> Enum.map(&String.to_atom/1)
     end
   end
 

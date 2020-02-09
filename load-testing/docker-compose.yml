@@ -1,5 +1,23 @@
 version: '3.7'
 
+x-worker: &worker
+  image: boardr/worker
+  build:
+    context: ../server
+    dockerfile: Dockerfile.worker
+  depends_on:
+    - db
+
+x-worker-environment: &worker-environment
+  BOARDR_BASE_URL: http://boardr
+  BOARDR_DATABASE_URL: ecto://boardr:changeme@db/boardr
+  BOARDR_LOG_LEVEL: INFO
+  BOARDR_SECRET: changeme
+  RELEASE_COOKIE: changeme
+
+x-worker-networks: &worker-networks
+  db:
+
 services:
 
   locust:
@@ -46,12 +64,64 @@ services:
     environment:
       BOARDR_BASE_URL: http://boardr
       BOARDR_DATABASE_URL: ecto://boardr:changeme@db/boardr
+      BOARDR_EPMD_HOSTS: boardr@172.28.1.2,boardr@172.28.1.3,boardr@172.28.1.4
+      # BOARDR_EPMD_HOSTS: boardr@172.28.1.1,boardr@172.28.1.2,boardr@172.28.1.3,boardr@172.28.1.4
+      BOARDR_LOG_LEVEL: INFO
+      BOARDR_RELEASE_NODE_ADDRESS: 172.28.1.1
+      BOARDR_RELEASE_NODE_NAME: boardr
       BOARDR_SECRET: changeme
+      # BOARDR_SWARM_NODE_BLACKLIST: boardr@172.28.1.1
+      # BOARDR_SWARM_NODE_WHITELIST: boardr@172.28.1.2,boardr@172.28.1.3,boardr@172.28.1.4
+      RELEASE_COOKIE: changeme
     networks:
-      - db
-      - web
+      db:
+      web:
+      workers:
+        ipv4_address: 172.28.1.1
     ports:
       - "${SSH_PORT:-2222}:22"
+
+  worker1:
+    <<: *worker
+    environment:
+      <<: *worker-environment
+      # BOARDR_EPMD_HOSTS: boardr@172.28.1.1,boardr@172.28.1.3,boardr@172.28.1.4
+      # BOARDR_EPMD_HOSTS: boardr@172.28.1.1,boardr@172.28.1.2,boardr@172.28.1.3,boardr@172.28.1.4
+      BOARDR_RELEASE_NODE_ADDRESS: 172.28.1.2
+      # BOARDR_SWARM_NODE_BLACKLIST: boardr@172.28.1.1
+      # BOARDR_SWARM_NODE_WHITELIST: boardr@172.28.1.2,boardr@172.28.1.3,boardr@172.28.1.4
+    networks:
+      <<: *worker-networks
+      workers:
+        ipv4_address: 172.28.1.2
+
+  worker2:
+    <<: *worker
+    environment:
+      <<: *worker-environment
+      # BOARDR_EPMD_HOSTS: boardr@172.28.1.1,boardr@172.28.1.2,boardr@172.28.1.4
+      # BOARDR_EPMD_HOSTS: boardr@172.28.1.1,boardr@172.28.1.2,boardr@172.28.1.3,boardr@172.28.1.4
+      BOARDR_RELEASE_NODE_ADDRESS: 172.28.1.3
+      # BOARDR_SWARM_NODE_BLACKLIST: boardr@172.28.1.1
+      # BOARDR_SWARM_NODE_WHITELIST: boardr@172.28.1.2,boardr@172.28.1.3,boardr@172.28.1.4
+    networks:
+      <<: *worker-networks
+      workers:
+        ipv4_address: 172.28.1.3
+
+  worker3:
+    <<: *worker
+    environment:
+      <<: *worker-environment
+      # BOARDR_EPMD_HOSTS: boardr@172.28.1.1,boardr@172.28.1.2,boardr@172.28.1.3
+      # BOARDR_EPMD_HOSTS: boardr@172.28.1.1,boardr@172.28.1.2,boardr@172.28.1.3,boardr@172.28.1.4
+      BOARDR_RELEASE_NODE_ADDRESS: 172.28.1.4
+      # BOARDR_SWARM_NODE_BLACKLIST: boardr@172.28.1.1
+      # BOARDR_SWARM_NODE_WHITELIST: boardr@172.28.1.2,boardr@172.28.1.3,boardr@172.28.1.4
+    networks:
+      <<: *worker-networks
+      workers:
+        ipv4_address: 172.28.1.4
 
   db:
     image: postgres:12.1-alpine
@@ -67,6 +137,11 @@ services:
 networks:
   db:
   web:
+  workers:
+    ipam:
+      driver: default
+      config:
+          - subnet: 172.28.0.0/16
 
 volumes:
   db_data:

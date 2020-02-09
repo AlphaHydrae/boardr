@@ -10,6 +10,6 @@ pushd load-testing 1>/dev/null
 docker-compose down -v
 docker-compose up --build -d
 docker-compose exec api /usr/src/app/bin/boardr_api eval "Boardr.Release.migrate"
-docker-compose logs -f api locust
+docker-compose logs -f api locust worker1 worker2 worker3
 
 popd
