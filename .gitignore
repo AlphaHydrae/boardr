@@ -15,7 +15,8 @@
 /*.log
 /server/_build
 /server/config/env.exs
-/server/cover
+/server/apps/boardr/cover
+/server/apps/boardr_api/cover
 /server/deps
 /server/doc
 /server/erl_crash.dump
