@@ -118,7 +118,7 @@ of [Raspberry Pi single-board computers][rpi].
 
 ### Runtime
 
-As described in [`.tool-versions`](./tool-versions):
+As described in [`.tool-versions`](./.tool-versions):
 
 ```
 elixir 1.10.0-otp-22
